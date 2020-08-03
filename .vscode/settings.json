@@ -1,0 +1,7 @@
+{
+  "clang.cxxflags": "-std=c++17",
+
+  "files.associations": {
+    "random": "cpp",
+  },
+}
