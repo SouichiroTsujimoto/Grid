@@ -3,7 +3,6 @@ import pegs, strutils, sequtils
 # 括弧の処理
 proc exprReplace(init_number: int, token_list: seq[string]): seq[(int, seq[string])] =
   var nesting_count = 0
-  var new_token_list: seq[string]
   var token_stack: seq[string]
   var expr_list: seq[(int, seq[string])]
   var number = init_number
