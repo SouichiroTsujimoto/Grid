@@ -1,12 +1,12 @@
 import pegs, strutils, sequtils
 
 # 括弧の処理
-proc exprReplace(init_number: int, token_list: seq[string]): seq[(int, seq[string])] =
+proc exprReplace(parent_numbers: string, token_list: seq[string]): seq[(string, seq[string])] =
   var nesting_count = 0
   var token_stack: seq[string]
-  var expr_list: seq[(int, seq[string])]
-  var number = init_number
-  expr_list.add((number, @[]))
+  var expr_list: seq[(string, seq[string])]
+  var number = 0
+  expr_list.add((parent_numbers, @[]))
 
   for token in token_list:
     # 開き括弧
@@ -18,8 +18,9 @@ proc exprReplace(init_number: int, token_list: seq[string]): seq[(int, seq[strin
     elif token == "RPAREN:":
       if nesting_count == 1:
         number = number + 1
-        expr_list.add((exprReplace(number, token_stack)))
-        expr_list[0][1].add("EXPR:" & $number)
+        expr_list.add(exprReplace(parent_numbers & "-" & $number, token_stack))
+        expr_list[0][1].add("EXPR:" & parent_numbers & "-" & $number)
+        token_stack = @[]
       else:
         token_stack.add(token)
       nesting_count = nesting_count - 1
@@ -50,10 +51,12 @@ proc exprReplace(init_number: int, token_list: seq[string]): seq[(int, seq[strin
 　　　　　　＼ノ
 ]#
 
+
 proc parser*(token_list: seq[string]): seq[string] =
 
   # まず括弧の処理
-  echo exprReplace(0, token_list)
+  for exprs in exprReplace("0", token_list):
+    echo exprs
   # 演算子を前に
 
   # 式を合体
