@@ -35,14 +35,10 @@ proc exprReplace(parent_numbers: string, token_list: seq[string]): seq[(string, 
 
 proc checkPrecedence(token_content: string): int =
   case token_content
-  of "EOE", "EOL":
-    return 1
-  of "ADD", "SUB":
-    return 2
-  of "MUL", "DIV":
-    return 3
-
-  return -1
+  of "EOE", "EOL":  return 1
+  of "ADD", "SUB":  return 2
+  of "MUL", "DIV":  return 3
+  else:             return -1
 
 proc transformExpr(tree: seq[(string, seq[string])]): seq[(string, seq[string])] =
   var t_t, t_c: string

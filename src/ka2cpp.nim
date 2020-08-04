@@ -6,14 +6,10 @@ proc tokenToCpp(token_type: string, token_content: string): (char, int, string) 
     return ('v', 0, "(" & token_content & ")")
   of "OPERATOR", "OTHER":
     case token_content
-    of "ADD":
-      return ('f', 2, "ka2_add")
-    of "SUB":
-      return ('f', 2, "ka2_sub")
-    of "MUL":
-      return ('f', 2, "ka2_mul")
-    of "DIV":
-      return ('f', 2, "ka2_div")
+    of "ADD":   return ('f', 2, "ka2_add")
+    of "SUB":   return ('f', 2, "ka2_sub")
+    of "MUL":   return ('f', 2, "ka2_mul")
+    of "DIV":   return ('f', 2, "ka2_div")
   of "EXPR":
     return ('e', 0, token_content)
 
