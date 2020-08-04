@@ -16,6 +16,11 @@ auto ka2_div = [](int a) {
   return [a](int b) {return a / b;};
 };
 
-int main() {
-  std::cout << ka2_sub(ka2_mul(ka2_add(1)(2))(3))(4) << "\n";
+void ka2_puts(std::string a) {
+  std::cout << a << "\n";
 }
+/*
+int main() {
+  std::cout << ka2_mul (ka2_add (3) (2)) (4) << "\n";
+}
+*/

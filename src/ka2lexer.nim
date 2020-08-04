@@ -12,7 +12,7 @@ proc tokenize(str: string): string =
 proc lexer*(code: string): seq[string] =
   var character_stack: string
   var token_list: seq[string]
-  var new_token: string = "NIL"
+  var new_token: string = "NIL:"
   var tokenize_flag: bool = false
   var state: State = INITIAL
 
@@ -25,11 +25,12 @@ proc lexer*(code: string): seq[string] =
       # コメント状態に変更
       elif character == '#':          tokenize_flag = true; state = COMMENT
       # OPERATOR
-      elif character == ';':          tokenize_flag = true; new_token = "EOE:"
-      elif character == '+':          tokenize_flag = true; new_token = "ADD:"
-      elif character == '-':          tokenize_flag = true; new_token = "SUB:"
-      elif character == '*':          tokenize_flag = true; new_token = "MUL:"
-      elif character == '/':          tokenize_flag = true; new_token = "DIV:"
+      elif character == '\n':         tokenize_flag = true; new_token = "OPERATOR:EOL"
+      elif character == ';':          tokenize_flag = true; new_token = "OPERATOR:EOE"
+      elif character == '+':          tokenize_flag = true; new_token = "OPERATOR:ADD"
+      elif character == '-':          tokenize_flag = true; new_token = "OPERATOR:SUB"
+      elif character == '*':          tokenize_flag = true; new_token = "OPERATOR:MUL"
+      elif character == '/':          tokenize_flag = true; new_token = "OPERATOR:DIV"
       elif character == '(':          tokenize_flag = true; new_token = "LPAREN:"
       elif character == ')':          tokenize_flag = true; new_token = "RPAREN:"
       # これら以外ならcharacter_stackに追加

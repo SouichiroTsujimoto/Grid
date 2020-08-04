@@ -3,5 +3,6 @@
 
   "files.associations": {
     "random": "cpp",
+    "string": "cpp"
   },
 }
