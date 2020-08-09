@@ -10,12 +10,13 @@ type Precedence* = enum
   Call
 
 type NodeKind* = enum
-  nkRoot
+  nkNil
   nkIdent
   nkIntLiteral
   nkPrefixExpression
   nkInfixExpression
   nkLetStatement
+  nkDefineStatement
   nkExpressionStatement
   nkFunctionLiteral
   nkCallExpression
@@ -30,7 +31,7 @@ proc tokenPrecedence*(tok: Token): Precedence =
   else: return Lowest
 
 type Node* = ref object of RootObj
-  node_kind*: NodeKind
+  kind*: NodeKind
   token*: Token
   operator*: string
   left*: Node
@@ -39,3 +40,7 @@ type Node* = ref object of RootObj
   args*: seq[Node]
   intValue*: int
   identValue*: string
+  let_name*: Node
+  let_value*: Node
+  define_name*: Node
+  define_value*: Node
