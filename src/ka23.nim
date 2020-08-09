@@ -1,24 +1,29 @@
-import strutils
-import ka2lexer, ka2parser, ka2cpp
+import  ka2parser, ka2cpp, ka2token, ka2node
 
-#[
-  TODO ファイル読み込み、ファイル書き出しができるようにする
-  TODO puts関数を実装する
-  TODO 変数を実装
-]#
-
-var cpp_code = """
-#include <iostream>
-#include "ka2calc.h"
-
-int main() {
-"""
+proc echoNode(node: Node): string =
+  var str: string = ""
+  case node.node_kind
+  of nkIntLiteral:
+    str.add(node.token.Literal)
+  of nkIdent:
+    str.add(node.token.Literal)
+  of nkInfixExpression:
+    str.add(node.operator)
+    if node.left != nil:
+      str.add("(" & node.left.echoNode & ")")
+    if node.right != nil:
+      str.add("(" & node.right.echoNode & ")")
+  of nkCallExpression:
+    str.add(node.function.echoNode)
+    for arg in node.args:
+      str.add("(" & arg.echoNode & ")")
+  else:
+    return str
+  
+  return str
 
 when isMainModule:
-  var cpp_code_parts = makeCppCodeParts("0", "(3 + 2) * 4".lexer.parser)
-
-  cpp_code.add("  int expr = " & cpp_code_parts & ";\n")
-  cpp_code.add("  std::cout << expr << std::endl;\n")
-  cpp_code.add("}")
-
-  echo cpp_code
+  var input = """puts(s)"""
+  var node = makeAST(input)
+  echo echoNode(node)
+  #echo repr node

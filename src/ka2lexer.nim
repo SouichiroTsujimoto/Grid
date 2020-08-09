@@ -1,57 +1,95 @@
-import pegs
+import ka2token
 
-type State = enum
-  INITIAL
-  COMMENT
+type Lexer* = ref object of RootObj
+  input: string
+  position: int
+  readPosition: int
+  ch: char
 
-proc tokenize(str: string): string =
-  if str =~ peg"\d+!\.":      return "INT:"   & str
-  elif str =~ peg"\d+\.\d+":  return "FLOAT:" & str
-  else:                       return "OTHER:" & str
+proc newToken(tokenType: string, ch: char): Token =
+  return Token(Type: tokenType, Literal: $ch)
 
-proc lexer*(code: string): seq[string] =
-  var character_stack: string
-  var token_list: seq[string]
-  var new_token: string = "NIL:"
-  var tokenize_flag: bool = false
-  var state: State = INITIAL
+proc nextChar(l: Lexer) =
+  if l.readPosition >= len(l.input):
+    l.ch = ' '
+  else:
+    l.ch = l.input[l.readPosition]
+  l.position = l.readPosition
+  l.readPosition += 1
 
-  for i, character in code:
-    case state
-    # 初期状態
-    of INITIAL:
-      # 空白、改行は無視
-      if $character =~ peg"\s/\n":    tokenize_flag = true
-      # コメント状態に変更
-      elif character == '#':          tokenize_flag = true; state = COMMENT
-      # OPERATOR
-      elif character == '\n':         tokenize_flag = true; new_token = "OPERATOR:EOL"
-      elif character == ';':          tokenize_flag = true; new_token = "OPERATOR:EOE"
-      elif character == '+':          tokenize_flag = true; new_token = "OPERATOR:ADD"
-      elif character == '-':          tokenize_flag = true; new_token = "OPERATOR:SUB"
-      elif character == '*':          tokenize_flag = true; new_token = "OPERATOR:MUL"
-      elif character == '/':          tokenize_flag = true; new_token = "OPERATOR:DIV"
-      elif character == '(':          tokenize_flag = true; new_token = "LPAREN:"
-      elif character == ')':          tokenize_flag = true; new_token = "RPAREN:"
-      # これら以外ならcharacter_stackに追加
-      else:                           character_stack.add(character)
-      # character_stackをトークン化してリストに追加
-      if tokenize_flag:
-        if character_stack != "":
-          token_list.add(tokenize(character_stack))
-        character_stack = ""
-        tokenize_flag = false
-      # new_tokenをリストに追加
-      if new_token != "NIL:":
-        token_list.add(new_token)
-        new_token = "NIL:"
-      # 最後の文字だった場合
-      if i == code.len()-1:
-        if character_stack != "":
-          token_list.add(tokenize(character_stack))
-        character_stack = ""
-    # コメント状態
-    of COMMENT:
-      if character == ';': state = INITIAL
+proc peekChar(l: Lexer): char =
+  if l.readPosition >= len(l.input):
+    return ' '
+  else:
+    return l.input[l.readPosition]
+
+proc newLexer*(input: string): Lexer =
+  var l = Lexer(input: input)
+  l.nextChar()
+  return l
+
+proc isLetter(ch: char): bool =
+  return ('a' <= ch and ch <= 'z') or ('A' <= ch and ch <= 'Z') or ch == '_'
+
+proc isDigit(ch: char): bool =
+    '0' <= ch and ch <= '9'
+
+proc readIdent(l: Lexer): string =
+  let position = l.position
+  while isLetter(l.ch):
+    l.nextChar()
+  return l.input[position..l.position-1]
+
+proc readNumber(l: Lexer): string =
+  let position = l.position
+  while isDigit(l.ch):
+    l.nextChar()
+  return l.input[position..l.position-1]
+
+proc skipWhitespace(l: Lexer) =
+  while (l.ch == ' ' or l.ch == '\t' or l.ch == '\n') and l.input.len() > l.position:
+    l.nextChar()
+
+proc nextToken*(l: Lexer): Token =
+  var tok: Token
+  l.skipWhitespace()
+
+  case l.ch
+  of '=':
+    if l.peekChar() == '=':
+      let ch = l.ch
+      l.nextChar()
+      let literal = $ch & $l.ch
+      tok = Token(Type: EQ, Literal: literal)
+    else:
+      tok = newToken(ASSIGN, l.ch)
+  of '|':
+    if l.peekChar() == '>':
+      let ch = l.ch
+      l.nextChar()
+      let literal = $ch & $l.ch
+      tok = Token(Type: PIPE, Literal: literal)
+  of ';': tok = newToken(SEMICOLON, l.ch)
+  of '(': tok = newToken(LPAREN, l.ch)
+  of ')': tok = newToken(RPAREN, l.ch)
+  of ',': tok = newToken(COMMA, l.ch)
+  of '+': tok = newToken(PLUS, l.ch)
+  of '-': tok = newToken(MINUS, l.ch)
+  of '*': tok = newToken(ASTERISC, l.ch)
+  of '/': tok = newToken(SLASH, l.ch)
+  of '<': tok = newToken(LT, l.ch)
+  of '>': tok = newToken(GT, l.ch)
+  else:
+    if isLetter(l.ch):
+      let lit = l.readIdent()
+      let typ = LookupIdent(lit)
+      return Token(Type: typ, Literal: lit)
+    elif isDigit(l.ch):
+      let lit = l.readNumber
+      let typ = INT
+      return Token(Type: typ, Literal: lit)
+    else:
+      tok = newToken(ILLEGAL, l.ch)
   
-  return token_list
+  l.nextChar()
+  return tok

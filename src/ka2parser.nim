@@ -1,104 +1,119 @@
-import strutils, tables
+import strutils
+import ka2token, ka2lexer, ka2node
 
-# 括弧の処理
-proc exprReplace(parent_numbers: string, token_list: seq[string]): seq[(string, seq[string])] =
-  var nesting_count = 0
-  var token_stack: seq[string]
-  var expr_list: seq[(string, seq[string])]
-  var number = 0
-  expr_list.add((parent_numbers, @[]))
+type Parser = ref object of RootObj
+  lexer: Lexer
+  curToken: Token
+  peekToken: Token
+  errors: string
 
-  for token in token_list:
-    # 開き括弧
-    if token == "LPAREN:":
-      if nesting_count != 0:
-        token_stack.add(token)
-      nesting_count = nesting_count + 1
-    # 閉じ括弧
-    elif token == "RPAREN:":
-      if nesting_count == 1:
-        number = number + 1
-        expr_list.add(exprReplace(parent_numbers & "_" & $number, token_stack))
-        expr_list[0][1].add("EXPR:" & parent_numbers & "_" & $number)
-        token_stack = @[]
-      else:
-        token_stack.add(token)
-      nesting_count = nesting_count - 1
-    # 括弧が開いている場合
-    elif nesting_count != 0:
-      token_stack.add(token)
-    # 括弧が開いていない場合
-    else:
-      expr_list[0][1].add(token)
+proc newParser(l: Lexer): Parser =
+  let p = Parser(lexer: l, curToken: l.nextToken(), peekToken: l.nextToken())
+  return p
+
+proc shiftToken(p: Parser) =
+  p.curToken = p.peekToken
+  p.peekToken = p.lexer.nextToken()
+
+proc parseLetStatement(p: Parser): Node =
+  return Node()
+  # TODO
+
+proc parseDefineStatement(p: Parser): Node =
+  return Node()
+  # TODO
+
+proc parseExpression(p: Parser, precedence: Precedence): Node
+
+proc parseInfixExpression(p: Parser, left: Node): Node =
+  let operator = p.curToken.Type
+  let cp = p.curToken.tokenPrecedence()
+  p.shiftToken()
+  let right = p.parseExpression(cp)
+  let node = Node(
+    node_kind:  nkInfixExpression,
+    token:      p.curToken,
+    operator:   operator,
+    left:       left,
+    right:      right,
+  )
+  return node
+
+proc parseExpressionList(p: Parser, endToken: string): seq[Node] =
+  var list = newSeq[Node]()
+  if p.peekToken.Type == endToken:
+    p.shiftToken()
+    return list
+
+  p.shiftToken()
+  list.add(p.parseExpression(Lowest))
+
+  while p.peekToken.Type == COMMA:
+    p.shiftToken()
+    p.shiftToken()
+    list.add(p.parseExpression(Lowest))
   
-  return expr_list
+  return list
 
-proc checkPrecedence(token_content: string): int =
-  case token_content
-  of "EOE", "EOL":  return 1
-  of "ADD", "SUB":  return 2
-  of "MUL", "DIV":  return 3
-  else:             return -1
+proc parseCallExpression(p: Parser, left: Node): Node =
+  var res = Node(
+    node_kind: nkCallExpression,
+    token:     p.curToken,
+    function:  left,
+  )
+  p.shiftToken()
+  res.args = p.parseExpressionList(RPAREN)
+  return res
+  # TODO
 
-proc transformExpr(tree: seq[(string, seq[string])]): seq[(string, seq[string])] =
-  var t_t, t_c: string
-  var token_stack: seq[string]
-  var operator_token_stack: seq[string]
-  var pop: string
-  var new_tree: seq[(string, seq[string])]
-  # 反転させた式を後置記法に
-  for (node_number, node_expr) in tree:
-    for token in node_expr:
-      # TODO注意
-      (t_t, t_c) = token.split(":")
-      case t_t
-      of "INT", "FLOAT", "EXPR":
-        token_stack.add(token)
-      of "OTHER":
-        while true:
-          # スタックが空なら無条件で追加
-          if operator_token_stack.len == 0:
-            operator_token_stack.add(token)
-            break
-          # スタックの最後の要素と比較
-          pop = operator_token_stack.pop
-          if checkPrecedence(pop.split(":")[1]) >= 0:
-            token_stack.add(pop)
-          else:
-            operator_token_stack.add(pop)
-            operator_token_stack.add(token)
-            break
-      of "OPERATOR":
-        while true:
-          # スタックが空なら無条件で追加
-          if operator_token_stack.len == 0:
-            operator_token_stack.add(token)
-            break
-          # スタックの最後の要素と比較
-          pop = operator_token_stack.pop
-          if checkPrecedence(pop.split(":")[1]) >= checkPrecedence(t_c):
-            token_stack.add(pop)
-          else:
-            operator_token_stack.add(pop)
-            operator_token_stack.add(token)
-            break
-    # 残った演算子をtoken_stackに追加
-    while true:
-      if operator_token_stack.len != 0:
-        token_stack.add(operator_token_stack.pop)
-      else:
-        break
-    new_tree.add((node_number, token_stack))
-    token_stack = @[]
-    operator_token_stack = @[]
+proc parseIdent(p: Parser): Node =
+  let node = Node(
+    node_kind:  nkIdent,
+    token:      p.curToken,
+    identValue: p.curToken.Literal,
+  )
+  return node
 
-  return new_tree
+proc parseIntLiteral(p: Parser): Node =
+  let node = Node(
+    node_kind: nkIntLiteral,
+    token:     p.curToken,
+    intValue:  p.curToken.Literal.parseInt
+  )
+  return node
 
-proc parser*(token_list: seq[string]): Table[string, seq[string]] =
-  var exprs: seq[(string, seq[string])]
-  # まず括弧の処理
-  exprs = exprReplace("0", token_list)
-  # 演算子を前に
-  exprs = transformExpr(exprs)
+proc parseExpression(p: Parser, precedence: Precedence): Node =
+  var left: Node
+  case p.curToken.Type
+  of IDENT:  left = p.parseIdent()
+  of INT:    left = p.parseIntLiteral()
+  else:      left = nil
 
-  return exprs.toTable
+  while precedence < p.peekToken.tokenPrecedence() and p.peekToken.Type != SEMICOLON:
+    case p.peekToken.Type
+    of PLUS, MINUS, ASTERISC, SLASH, LT, GT:
+      p.shiftToken()
+      left = p.parseInfixExpression(left)
+    of LPAREN:
+      left = p.parseCallExpression(left)
+    else:
+      return left
+  
+  return left
+
+proc parseExpressionStatement(p: Parser): Node =
+    let res = p.parseExpression(Lowest)
+    if p.peekToken.Type == SEMICOLON:
+      p.shiftToken()
+    return res
+
+proc parseStatement(p: Parser): Node =
+  case p.curToken.Type
+  of "LET":    return p.parseLetStatement()
+  of "DEFINE": return p.parseDefineStatement()
+  else:        return p.parseExpressionStatement()
+
+proc makeAST*(input: string): Node =
+  var lex = newLexer(input)
+  let tree = lex.newParser().parseStatement()
+  return tree
