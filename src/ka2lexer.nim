@@ -32,7 +32,7 @@ proc isLetter(ch: char): bool =
   return ('a' <= ch and ch <= 'z') or ('A' <= ch and ch <= 'Z') or ch == '_'
 
 proc isDigit(ch: char): bool =
-    '0' <= ch and ch <= '9'
+    ('0' <= ch and ch <= '9') or ch == '.'
 
 proc readIdent(l: Lexer): string =
   let position = l.position
@@ -72,8 +72,6 @@ proc nextToken*(l: Lexer): Token =
   of ';': tok = newToken(SEMICOLON, l.ch)
   of '(': tok = newToken(LPAREN, l.ch)
   of ')': tok = newToken(RPAREN, l.ch)
-  of '{': tok = newToken(LBRACE, l.ch)
-  of '}': tok = newToken(RBRACE, l.ch)
   of ',': tok = newToken(COMMA, l.ch)
   of '+': tok = newToken(PLUS, l.ch)
   of '-': tok = newToken(MINUS, l.ch)

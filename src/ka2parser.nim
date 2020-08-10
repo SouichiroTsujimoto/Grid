@@ -121,8 +121,8 @@ proc parseCallExpression(p: Parser, left: Node): Node =
 # 名前
 proc parseIdent(p: Parser): Node =
   let node = Node(
-    kind:  nkIdent,
-    token:      p.curToken,
+    kind: nkIdent,
+    token: p.curToken,
     identValue: p.curToken.Literal,
   )
   return node
@@ -131,8 +131,17 @@ proc parseIdent(p: Parser): Node =
 proc parseIntLiteral(p: Parser): Node =
   let node = Node(
     kind: nkIntLiteral,
-    token:     p.curToken,
-    intValue:  p.curToken.Literal.parseInt
+    token: p.curToken,
+    intValue: p.curToken.Literal.parseInt
+  )
+  return node
+
+# 真偽値リテラル
+proc parseBoolLiteral(p: Parser): Node =
+  let node = Node(
+    kind: nkBoolLiteral,
+    token: p.curToken,
+    boolValue: p.curToken.Literal.parseBool
   )
   return node
 
@@ -142,6 +151,7 @@ proc parseIfExpression(p: Parser): Node =
     kind: nkIfExpression,
     token: p.curToken,
   )
+  
   if p.peekToken.Type != LPAREN:
     return Node(kind: nkNil)
   p.shiftToken()
@@ -150,15 +160,17 @@ proc parseIfExpression(p: Parser): Node =
   if p.peekToken.Type != RPAREN:
     return Node(kind: nkNil)
   p.shiftToken()
-  if p.peekToken.Type != LBRACE:
+
+  if p.peekToken.Type != DO:
     return Node(kind: nkNil)
   p.shiftToken()
-
   node.consequence = p.parseBlockStatement()
 
+  # elseがあった場合
   if p.peekToken.Type == ELSE:
+    node.kind = nkIfAndElseExpression
     p.shiftToken()
-    if p.peekToken.Type != LBRACE:
+    if p.peekToken.Type != DO:
       return Node(kind: nkNil)
     else:
       p.shiftToken()
@@ -171,8 +183,10 @@ proc parseIfExpression(p: Parser): Node =
 proc parseExpression(p: Parser, precedence: Precedence): Node =
   var left: Node
   case p.curToken.Type
-  of IDENT:  left = p.parseIdent()
-  of INT:    left = p.parseIntLiteral()
+  of IDENT :  left = p.parseIdent()
+  of INT   :  left = p.parseIntLiteral()
+  of TRUE  :  left = p.parseBoolLiteral()
+  of FALSE :  left = p.parseBoolLiteral()
   else:      left = nil
   
   while precedence < p.peekToken.tokenPrecedence() and p.peekToken.Type != SEMICOLON:
@@ -189,10 +203,10 @@ proc parseExpression(p: Parser, precedence: Precedence): Node =
 
 # 式文の処理
 proc parseExpressionStatement(p: Parser): Node =
-    let res = p.parseExpression(Lowest)
+    let node = p.parseExpression(Lowest)
     if p.peekToken.Type == SEMICOLON:
       p.shiftToken()
-    return res
+    return node
 
 # ブロック文の処理
 proc parseBlockStatement(p: Parser): BlockStatement =
@@ -200,7 +214,7 @@ proc parseBlockStatement(p: Parser): BlockStatement =
   bs.statements = newSeq[Node]()
 
   p.shiftToken()
-  while p.curToken.Type != RBRACE and p.curToken.Type != EOF:
+  while p.curToken.Type != END and p.curToken.Type != EOF:
     let statement = p.parseStatement()
     if statement != nil:
       bs.statements.add(statement)

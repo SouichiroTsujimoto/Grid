@@ -13,23 +13,23 @@ const
   # 演算子
   ASSIGN*    = "="
   PLUS*      = "+"
-  MINUS*    = "-"
-  ASTERISC* = "*"
-  SLASH*    = "/"
+  MINUS*     = "-"
+  ASTERISC*  = "*"
+  SLASH*     = "/"
   # 比較演算子
-  LT*       = "<"
-  GT*       =" >"
-  EQ*       = "=="
-  PIPE*     = "|>"
+  LT*        = "<"
+  GT*        =" >"
+  EQ*        = "=="
+  PIPE*      = "|>"
   # デリミタ
   COMMA*     = ","
   SEMICOLON* = ";"
   # 括弧
   LPAREN*    = "("
   RPAREN*    = ")"
-  LBRACE*    = "{"
-  RBRACE*    = "}"
   # キーワード
+  TRUE*      = "TRUE"
+  FALSE*     = "FALSE"
   LET*       = "LET"
   DEFINE*    = "DEFINE"
   IF*        = "IF"
@@ -38,12 +38,14 @@ const
   END*       = "END"
 
 let keywords = {
-  "let"    : LET,
-  "def"    : DEFINE,
-  "if"     : IF,
-  "else"   : ELSE,
-  "do"     : DO,
-  "end"    : END,
+  "True"  : TRUE,
+  "False" : FALSE,
+  "let"   : LET,
+  "def"   : DEFINE,
+  "if"    : IF,
+  "else"  : ELSE,
+  "do"    : DO,
+  "end"   : END,
 }.newTable
 
 proc LookupIdent*(ident: string): string =

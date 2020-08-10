@@ -13,6 +13,7 @@ type NodeKind* = enum
   nkNil
   nkIdent
   nkIntLiteral
+  nkBoolLiteral
   nkPrefixExpression
   nkInfixExpression
   nkLetStatement
@@ -20,6 +21,7 @@ type NodeKind* = enum
   nkExpressionStatement
   nkCallExpression
   nkIfExpression
+  nkIfAndElseExpression
 
 proc tokenPrecedence*(tok: Token): Precedence =
   case tok.Type
@@ -42,6 +44,7 @@ type
     args*:         seq[Node]
     intValue*:     int
     identValue*:   string
+    boolValue*:    bool
     let_name*:     Node
     let_value*:    Node
     define_name*:  Node
