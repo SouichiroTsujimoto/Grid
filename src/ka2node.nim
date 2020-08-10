@@ -1,4 +1,4 @@
-import ka2token
+import ka2token, ka2parser
 
 type Precedence* = enum
   Lowest = 0
@@ -18,29 +18,38 @@ type NodeKind* = enum
   nkLetStatement
   nkDefineStatement
   nkExpressionStatement
-  nkFunctionLiteral
   nkCallExpression
+  nkIfExpression
 
 proc tokenPrecedence*(tok: Token): Precedence =
   case tok.Type
-  of LPAREN: return Call
+  of LPAREN:          return Call
   of SLASH, ASTERISC: return Product
-  of PLUS, MINUS: return Sum
-  of LT, GT: return Lg
-  of EQ: return Equals
-  else: return Lowest
+  of PLUS, MINUS:     return Sum
+  of LT, GT:          return Lg
+  of EQ:              return Equals
+  else:               return Lowest
 
-type Node* = ref object of RootObj
-  kind*: NodeKind
-  token*: Token
-  operator*: string
-  left*: Node
-  right*: Node
-  function*: Node
-  args*: seq[Node]
-  intValue*: int
-  identValue*: string
-  let_name*: Node
-  let_value*: Node
-  define_name*: Node
-  define_value*: Node
+type 
+  # ノードクラス
+  Node* = ref object of RootObj
+    kind*:         NodeKind
+    token*:        Token
+    operator*:     string
+    left*:         Node
+    right*:        Node
+    function*:     Node
+    args*:         seq[Node]
+    intValue*:     int
+    identValue*:   string
+    let_name*:     Node
+    let_value*:    Node
+    define_name*:  Node
+    define_value*: Node
+    condition*:    Node
+    consequence*:  BlockStatement
+    alternative*:  BlockStatement
+  # ブロック文クラス
+  BlockStatement* = ref object of RootObj
+    token*: Token
+    statements*: seq[Node]

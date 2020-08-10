@@ -25,13 +25,30 @@ proc echoNode(node: Node): string =
     str.add(node.function.echoNode())
     for arg in node.args:
       str.add("(" & arg.echoNode() & ")")
+  of nkIfExpression:
+    str.add("(" & node.condition.echoNode() & ")")
+    str.add("{")
+    for statement in node.consequence.statements:
+      str.add(statement.echoNode())
+    str.add("}")
+    if node.alternative != nil:
+      str.add("{")
+      for statement in node.alternative.statements:
+        str.add(statement.echoNode())
+      str.add("}")
   else:
     return str
   
   return str
 
 when isMainModule:
-  var input = """def a = 1 + 2 + 3;"""
+  var input = """ if (True) {
+                    1 + 2
+                    4 + 5
+                  }
+                  else {
+                    1 + 3
+                  }"""
   var node = makeAST(input)
   echo echoNode(node)
   #echo repr node

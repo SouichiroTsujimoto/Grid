@@ -11,6 +11,7 @@ type Parser = ref object of RootObj
 # プロトタイプ宣言
 proc parseExpression(p: Parser, precedence: Precedence): Node
 proc parseStatement(p: Parser): Node
+proc parseBlockStatement(p: Parser): BlockStatement
 
 # パーサクラスのインスタンスを作る
 proc newParser(l: Lexer): Parser =
@@ -135,6 +136,37 @@ proc parseIntLiteral(p: Parser): Node =
   )
   return node
 
+# if式
+proc parseIfExpression(p: Parser): Node =
+  var node = Node(
+    kind: nkIfExpression,
+    token: p.curToken,
+  )
+  if p.peekToken.Type != LPAREN:
+    return Node(kind: nkNil)
+  p.shiftToken()
+  p.shiftToken()
+  node.condition = p.parseExpression(Lowest)
+  if p.peekToken.Type != RPAREN:
+    return Node(kind: nkNil)
+  p.shiftToken()
+  if p.peekToken.Type != LBRACE:
+    return Node(kind: nkNil)
+  p.shiftToken()
+
+  node.consequence = p.parseBlockStatement()
+
+  if p.peekToken.Type == ELSE:
+    p.shiftToken()
+    if p.peekToken.Type != LBRACE:
+      return Node(kind: nkNil)
+    else:
+      p.shiftToken()
+      node.alternative = p.parseBlockStatement()
+      return node
+  
+  return node
+
 # 式の処理
 proc parseExpression(p: Parser, precedence: Precedence): Node =
   var left: Node
@@ -162,11 +194,26 @@ proc parseExpressionStatement(p: Parser): Node =
       p.shiftToken()
     return res
 
+# ブロック文の処理
+proc parseBlockStatement(p: Parser): BlockStatement =
+  var bs = BlockStatement(token: p.curToken)
+  bs.statements = newSeq[Node]()
+
+  p.shiftToken()
+  while p.curToken.Type != RBRACE and p.curToken.Type != EOF:
+    let statement = p.parseStatement()
+    if statement != nil:
+      bs.statements.add(statement)
+    p.shiftToken()
+  
+  return bs
+
 # 文の処理
 proc parseStatement(p: Parser): Node =
   case p.curToken.Type
   of "LET":    return p.parseLetStatement()
   of "DEFINE": return p.parseDefineStatement()
+  of "IF":     return p.parseIfExpression()
   else:        return p.parseExpressionStatement()
 
 # ASTを作る
