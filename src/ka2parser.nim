@@ -11,7 +11,9 @@ type Parser = ref object of RootObj
 # プロトタイプ宣言
 proc parseExpression(p: Parser, precedence: Precedence): Node
 proc parseStatement(p: Parser): Node
-proc parseBlockStatement(p: Parser): BlockStatement
+proc parseBlockStatement(p: Parser, endTokenTypes: seq[string]): BlockStatement
+proc parseCallExpression(p: Parser, left: Node): Node
+proc parseExpressionList(p: Parser, endToken: string): seq[Node]
 
 # パーサクラスのインスタンスを作る
 proc newParser(l: Lexer): Parser =
@@ -53,7 +55,7 @@ proc parseLetStatement(p: Parser): Node =
 # 関数定義
 # TODO DO-END
 proc parseDefineStatement(p: Parser): Node =
-  let node = Node(
+  var node = Node(
     kind: nkDefineStatement,
     token: p.curToken,
   )
@@ -66,12 +68,19 @@ proc parseDefineStatement(p: Parser): Node =
     token: p.curToken,
     identValue: p.curToken.Literal
   )
+  
+  if p.peekToken.Type != LPAREN:
+    return Node(kind: nkNil)
+  p.shiftToken()
+  node.define_args = p.parseExpressionList(RPAREN)
+  p.shiftToken()
   if p.peekToken.Type != ASSIGN:
     return node
-  
   p.shiftToken()
+  if p.peekToken.Type != DO:
+    return node
   p.shiftToken()
-  node.define_value = p.parseStatement()
+  node.define_block = p.parseBlockStatement(@[END])
   return node
 
 # 中置演算子の処理
@@ -98,7 +107,6 @@ proc parseExpressionList(p: Parser, endToken: string): seq[Node] =
 
   p.shiftToken()
   list.add(p.parseExpression(Lowest))
-
   while p.peekToken.Type == COMMA:
     p.shiftToken()
     p.shiftToken()
@@ -106,16 +114,16 @@ proc parseExpressionList(p: Parser, endToken: string): seq[Node] =
   
   return list
 
-# 引数の処理
+# 関数呼び出しの処理
 proc parseCallExpression(p: Parser, left: Node): Node =
-  var res = Node(
+  var node = Node(
     kind: nkCallExpression,
     token:     p.curToken,
     function:  left,
   )
   p.shiftToken()
-  res.args = p.parseExpressionList(RPAREN)
-  return res
+  node.args = p.parseExpressionList(RPAREN)
+  return node
   # TODO
 
 # 名前
@@ -178,30 +186,20 @@ proc parseIfExpression(p: Parser): Node =
     kind: nkIfExpression,
     token: p.curToken,
   )
-  
-  if p.peekToken.Type != LPAREN:
-    return Node(kind: nkNil)
-  p.shiftToken()
   p.shiftToken()
   node.condition = p.parseExpression(Lowest)
-  if p.peekToken.Type != RPAREN:
-    return Node(kind: nkNil)
-  p.shiftToken()
-
+  
   if p.peekToken.Type != DO:
     return Node(kind: nkNil)
-  p.shiftToken()
-  node.consequence = p.parseBlockStatement()
-
+  node.consequence = p.parseBlockStatement(@[END, ELSE])
   # elseがあった場合
-  if p.peekToken.Type == ELSE:
+  if p.curToken.Type == ELSE:
     node.kind = nkIfAndElseExpression
     p.shiftToken()
-    if p.peekToken.Type != DO:
+    if p.curToken.Type != DO:
       return Node(kind: nkNil)
     else:
-      p.shiftToken()
-      node.alternative = p.parseBlockStatement()
+      node.alternative = p.parseBlockStatement(@[END])
       return node
   
   return node
@@ -239,16 +237,24 @@ proc parseExpressionStatement(p: Parser): Node =
     return node
 
 # ブロック文の処理
-proc parseBlockStatement(p: Parser): BlockStatement =
+proc parseBlockStatement(p: Parser, endTokenTypes: seq[string]): BlockStatement =
   var bs = BlockStatement(token: p.curToken)
+  var endLoop = false
   bs.statements = newSeq[Node]()
 
   p.shiftToken()
-  while p.curToken.Type != END and p.curToken.Type != EOF:
-    let statement = p.parseStatement()
-    if statement != nil:
-      bs.statements.add(statement)
-    p.shiftToken()
+  while p.curToken.Type != EOF:
+    for ett in endTokenTypes:
+      if p.curToken.Type == ett:
+        endLoop = true
+        break
+    if endLoop:
+      break
+    else:
+      let statement = p.parseStatement()
+      if statement != nil:
+        bs.statements.add(statement)
+      p.shiftToken()
   
   return bs
 

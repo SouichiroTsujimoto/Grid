@@ -54,7 +54,8 @@ type
     let_name*:     Node
     let_value*:    Node
     define_name*:  Node
-    define_value*: Node
+    define_args*:  seq[Node]
+    define_block*: BlockStatement
     condition*:    Node
     consequence*:  BlockStatement
     alternative*:  BlockStatement

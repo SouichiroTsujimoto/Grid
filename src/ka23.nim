@@ -21,8 +21,14 @@ proc echoNode(node: Node): string =
     str.add("(" & node.let_value.echoNode() & ")")
   of nkDefineStatement:
     str.add(node.token.Literal)
-    str.add("(" & node.define_name.echoNode() & ")")
-    str.add("(" & node.define_value.echoNode() & ")")
+    str.add("<" & node.define_name.echoNode())
+    for arg in node.define_args:
+      str.add("[" & arg.echoNode() & "]")
+    str.add(">")
+    str.add("{")
+    for statement in node.define_block.statements:
+      str.add(statement.echoNode())
+    str.add("}")
   of nkInfixExpression:
     str.add(node.operator)
     if node.left != nil:
@@ -58,14 +64,17 @@ proc echoNode(node: Node): string =
   return str
 
 when isMainModule:
-  var input = """1.2 + 3.4"""
+  var input = """ def nibai(x) = do
+                    x * 2
+                  end"""
   var node = makeAST(input)
   echo echoNode(node)
   #echo repr node
 
 #[
-  やること
+  TODO
   ・ 関数をちゃんと宣言できるようにする
   ・ c++のコードに変換できるようにする
   ・ elifを実装する
+  ・ 比較演算子を実装する
 ]#
