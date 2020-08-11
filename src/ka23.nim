@@ -7,6 +7,10 @@ proc echoNode(node: Node): string =
     str.add($node.intValue)
   of nkBoolLiteral:
     str.add($node.boolValue)
+  of nkCharLiteral:
+    str.add("\'" & node.charValue & "\'")
+  of nkStringLiteral:
+    str.add("\"" & node.stringValue & "\"")
   of nkIdent:
     str.add($node.identValue)
   of nkLetStatement:
@@ -52,13 +56,7 @@ proc echoNode(node: Node): string =
   return str
 
 when isMainModule:
-  var input = """ if (True) do
-                    1 + 2
-                    4 + 5
-                  end
-                  else do
-                    1 + 3
-                  end"""
+  var input = """ puts('adsdiau') """
   var node = makeAST(input)
   echo echoNode(node)
   #echo repr node
@@ -67,7 +65,7 @@ when isMainModule:
   やること
   ・ LBRACE RBRACEをDO ENDに置き換える ✅
   ・ 真偽値を実装する ✅
-  ・ 文字 文字列を実装する
+  ・ 文字 文字列を実装する ✅
   ・ 小数を実装する
   ・ 関数をちゃんと宣言できるようにする
   ・ c++のコードに変換できるようにする

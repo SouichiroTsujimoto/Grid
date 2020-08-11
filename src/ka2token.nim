@@ -5,37 +5,39 @@ type Token* = ref object of RootObj
   Literal*: string
 
 const
-  ILLEGAL*   = "ILLEGAL"
-  EOF*       = "EOF"
-  # 識別子+リテラル
-  IDENT*     = "IDENT"
-  INT*       = "INT"
+  ILLEGAL*      = "ILLEGAL"
+  EOF*          = "EOF"
+  # リテラル
+  IDENT*        = "IDENT"
+  INT*          = "INT"
+  CHAR*         = "CHAR"
+  STRING*       = "STRING"
   # 演算子
-  ASSIGN*    = "="
-  PLUS*      = "+"
-  MINUS*     = "-"
-  ASTERISC*  = "*"
-  SLASH*     = "/"
+  ASSIGN*       = "="
+  PLUS*         = "+"
+  MINUS*        = "-"
+  ASTERISC*     = "*"
+  SLASH*        = "/"
   # 比較演算子
-  LT*        = "<"
-  GT*        =" >"
-  EQ*        = "=="
-  PIPE*      = "|>"
+  LT*           = "<"
+  GT*           =" >"
+  EQ*           = "=="
+  PIPE*         = "|>"
   # デリミタ
-  COMMA*     = ","
-  SEMICOLON* = ";"
+  COMMA*        = ","
+  SEMICOLON*    = ";"
   # 括弧
-  LPAREN*    = "("
-  RPAREN*    = ")"
+  LPAREN*       = "("
+  RPAREN*       = ")"
   # キーワード
-  TRUE*      = "TRUE"
-  FALSE*     = "FALSE"
-  LET*       = "LET"
-  DEFINE*    = "DEFINE"
-  IF*        = "IF"
-  ELSE*      = "ELSE"
-  DO*        = "DO"
-  END*       = "END"
+  TRUE*         = "TRUE"
+  FALSE*        = "FALSE"
+  LET*          = "LET"
+  DEFINE*       = "DEFINE"
+  IF*           = "IF"
+  ELSE*         = "ELSE"
+  DO*           = "DO"
+  END*          = "END"
 
 let keywords = {
   "True"  : TRUE,

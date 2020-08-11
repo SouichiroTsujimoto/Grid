@@ -145,6 +145,24 @@ proc parseBoolLiteral(p: Parser): Node =
   )
   return node
 
+# 文字リテラル
+proc parseCharLiteral(p: Parser): Node =
+  let node = Node(
+    kind: nkCharLiteral,
+    token: p.curToken,
+    charValue: p.curToken.Literal[0],
+  )
+  return node
+
+# 文字列リテラル
+proc parseStringLiteral(p: Parser): Node =
+  let node = Node(
+    kind: nkStringLiteral,
+    token: p.curToken,
+    stringValue: p.curToken.Literal,
+  )
+  return node
+
 # if式
 proc parseIfExpression(p: Parser): Node =
   var node = Node(
@@ -183,10 +201,12 @@ proc parseIfExpression(p: Parser): Node =
 proc parseExpression(p: Parser, precedence: Precedence): Node =
   var left: Node
   case p.curToken.Type
-  of IDENT :  left = p.parseIdent()
-  of INT   :  left = p.parseIntLiteral()
-  of TRUE  :  left = p.parseBoolLiteral()
-  of FALSE :  left = p.parseBoolLiteral()
+  of IDENT  : left = p.parseIdent()
+  of INT    : left = p.parseIntLiteral()
+  of CHAR   : left = p.parseCharLiteral()
+  of STRING : left = p.parseStringLiteral()
+  of TRUE   : left = p.parseBoolLiteral()
+  of FALSE  : left = p.parseBoolLiteral()
   else:      left = nil
   
   while precedence < p.peekToken.tokenPrecedence() and p.peekToken.Type != SEMICOLON:

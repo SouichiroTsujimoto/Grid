@@ -14,6 +14,8 @@ type NodeKind* = enum
   nkIdent
   nkIntLiteral
   nkBoolLiteral
+  nkCharLiteral
+  nkStringLiteral
   nkPrefixExpression
   nkInfixExpression
   nkLetStatement
@@ -45,6 +47,8 @@ type
     intValue*:     int
     identValue*:   string
     boolValue*:    bool
+    charValue*:    char
+    stringValue*:  string
     let_name*:     Node
     let_value*:    Node
     define_name*:  Node
