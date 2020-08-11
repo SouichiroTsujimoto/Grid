@@ -10,6 +10,7 @@ const
   # リテラル
   IDENT*        = "IDENT"
   INT*          = "INT"
+  FLOAT*        = "FLOAT"
   CHAR*         = "CHAR"
   STRING*       = "STRING"
   # 演算子

@@ -5,6 +5,8 @@ proc echoNode(node: Node): string =
   case node.kind
   of nkIntLiteral:
     str.add($node.intValue)
+  of nkFloatLiteral:
+    str.add($node.floatValue)
   of nkBoolLiteral:
     str.add($node.boolValue)
   of nkCharLiteral:
@@ -56,17 +58,13 @@ proc echoNode(node: Node): string =
   return str
 
 when isMainModule:
-  var input = """ puts('adsdiau') """
+  var input = """1.2 + 3.4"""
   var node = makeAST(input)
   echo echoNode(node)
   #echo repr node
 
 #[
   やること
-  ・ LBRACE RBRACEをDO ENDに置き換える ✅
-  ・ 真偽値を実装する ✅
-  ・ 文字 文字列を実装する ✅
-  ・ 小数を実装する
   ・ 関数をちゃんと宣言できるようにする
   ・ c++のコードに変換できるようにする
   ・ elifを実装する

@@ -13,6 +13,7 @@ type NodeKind* = enum
   nkNil
   nkIdent
   nkIntLiteral
+  nkFloatLiteral
   nkBoolLiteral
   nkCharLiteral
   nkStringLiteral
@@ -45,6 +46,7 @@ type
     function*:     Node
     args*:         seq[Node]
     intValue*:     int
+    floatValue*:   float
     identValue*:   string
     boolValue*:    bool
     charValue*:    char

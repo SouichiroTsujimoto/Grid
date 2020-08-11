@@ -31,9 +31,8 @@ proc newLexer*(input: string): Lexer =
 proc isLetter(ch: char): bool =
   return ('a' <= ch and ch <= 'z') or ('A' <= ch and ch <= 'Z') or ch == '_'
 
-# TODO 小数
 proc isDigit(ch: char): bool =
-  return ('0' <= ch and ch <= '9') or ch == '.'
+  return '0' <= ch and ch <= '9'
 
 # TODO バックスラッシュ
 proc isSingleQuote(ch: char): bool =
@@ -48,11 +47,17 @@ proc readIdent(l: Lexer): string =
     l.nextChar()
   return l.input[position..l.position-1]
 
-proc readNumber(l: Lexer): string =
+proc readNumber(l: Lexer): (string, bool) =
   let position = l.position
   while isDigit(l.ch):
     l.nextChar()
-  return l.input[position..l.position-1]
+  if l.ch == '.':
+    l.nextChar()
+    while isDigit(l.ch):
+      l.nextChar()
+    return (l.input[position..l.position-1], true)
+  else:
+    return (l.input[position..l.position-1], false)
 
 proc readChar(l: Lexer): string =
   l.nextChar()
@@ -118,9 +123,11 @@ proc nextToken*(l: Lexer): Token =
       let typ = LookupIdent(lit)
       return Token(Type: typ, Literal: lit)
     elif l.ch.isDigit():
-      let lit = l.readNumber
-      let typ = INT
-      return Token(Type: typ, Literal: lit)
+      let (lit, decimal) = l.readNumber
+      if decimal:
+        return Token(Type: FLOAT, Literal: lit)
+      else:
+        return Token(Type: INT, Literal: lit)
     else:
       tok = newToken(ILLEGAL, l.ch)
   

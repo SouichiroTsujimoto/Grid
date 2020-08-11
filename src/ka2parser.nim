@@ -127,12 +127,21 @@ proc parseIdent(p: Parser): Node =
   )
   return node
 
-# 整数リテラル
+# 整数値リテラル
 proc parseIntLiteral(p: Parser): Node =
   let node = Node(
     kind: nkIntLiteral,
     token: p.curToken,
     intValue: p.curToken.Literal.parseInt
+  )
+  return node
+
+# 小数値リテラル
+proc parseFloatLiteral(p: Parser): Node =
+  let node = Node(
+    kind: nkFloatLiteral,
+    token: p.curToken,
+    floatValue: p.curToken.Literal.parseFloat
   )
   return node
 
@@ -203,6 +212,7 @@ proc parseExpression(p: Parser, precedence: Precedence): Node =
   case p.curToken.Type
   of IDENT  : left = p.parseIdent()
   of INT    : left = p.parseIntLiteral()
+  of FLOAT  : left = p.parseFloatLiteral()
   of CHAR   : left = p.parseCharLiteral()
   of STRING : left = p.parseStringLiteral()
   of TRUE   : left = p.parseBoolLiteral()
