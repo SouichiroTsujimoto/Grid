@@ -35,20 +35,22 @@ const
   FALSE*        = "FALSE"
   LET*          = "LET"
   DEFINE*       = "DEFINE"
+  RETURN*       = "RETURN"
   IF*           = "IF"
   ELSE*         = "ELSE"
   DO*           = "DO"
   END*          = "END"
 
 let keywords = {
-  "True"  : TRUE,
-  "False" : FALSE,
-  "let"   : LET,
-  "def"   : DEFINE,
-  "if"    : IF,
-  "else"  : ELSE,
-  "do"    : DO,
-  "end"   : END,
+  "True"   : TRUE,
+  "False"  : FALSE,
+  "let"    : LET,
+  "def"    : DEFINE,
+  "return" : RETURN,
+  "if"     : IF,
+  "else"   : ELSE,
+  "do"     : DO,
+  "end"    : END,
 }.newTable
 
 proc LookupIdent*(ident: string): string =

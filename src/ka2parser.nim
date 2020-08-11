@@ -52,8 +52,18 @@ proc parseLetStatement(p: Parser): Node =
   node.let_value = p.parseExpression(Lowest)
   return node
 
+# return文
+proc parseReturnStatement(p: Parser): Node =
+  var node = Node(
+    kind: nkReturnStatement,
+    token: p.curToken,
+  )
+  p.shiftToken()
+  node.return_expression = p.parseExpression(Lowest)
+  return node
+
 # 関数定義
-# TODO DO-END
+# TODO return
 proc parseDefineStatement(p: Parser): Node =
   var node = Node(
     kind: nkDefineStatement,
@@ -72,15 +82,27 @@ proc parseDefineStatement(p: Parser): Node =
   if p.peekToken.Type != LPAREN:
     return Node(kind: nkNil)
   p.shiftToken()
+
   node.define_args = p.parseExpressionList(RPAREN)
   p.shiftToken()
+
   if p.peekToken.Type != ASSIGN:
     return node
   p.shiftToken()
+
   if p.peekToken.Type != DO:
     return node
   p.shiftToken()
-  node.define_block = p.parseBlockStatement(@[END])
+
+  node.define_block = p.parseBlockStatement(@[RETURN])
+  if p.curToken.Type != RETURN:
+    return Node(kind: nkNil)
+  node.return_statement = p.parseReturnStatement()
+  
+  if p.peekToken.Type != END:
+    return Node(kind: nkNil)
+  p.shiftToken()
+
   return node
 
 # 中置演算子の処理
@@ -200,6 +222,7 @@ proc parseIfExpression(p: Parser): Node =
       return Node(kind: nkNil)
     else:
       node.alternative = p.parseBlockStatement(@[END])
+      p.shiftToken()
       return node
   
   return node
@@ -261,9 +284,10 @@ proc parseBlockStatement(p: Parser, endTokenTypes: seq[string]): BlockStatement 
 # 文の処理
 proc parseStatement(p: Parser): Node =
   case p.curToken.Type
-  of "LET":    return p.parseLetStatement()
-  of "DEFINE": return p.parseDefineStatement()
-  of "IF":     return p.parseIfExpression()
+  of LET:    return p.parseLetStatement()
+  of DEFINE: return p.parseDefineStatement()
+  of RETURN: return p.parseReturnStatement()
+  of IF:     return p.parseIfExpression()
   else:        return p.parseExpressionStatement()
 
 # ASTを作る
