@@ -50,6 +50,7 @@ proc parseLetStatement(p: Parser): Node =
   p.shiftToken()
   p.shiftToken()
   node.let_value = p.parseExpression(Lowest)
+  p.shiftToken()
   return node
 
 # return文
@@ -60,6 +61,7 @@ proc parseReturnStatement(p: Parser): Node =
   )
   p.shiftToken()
   node.return_expression = p.parseExpression(Lowest)
+  p.shiftToken()
   return node
 
 # 関数定義
@@ -98,8 +100,7 @@ proc parseDefineStatement(p: Parser): Node =
   if p.curToken.Type != RETURN:
     return Node(kind: nkNil)
   node.return_statement = p.parseReturnStatement()
-  
-  if p.peekToken.Type != END:
+  if p.curToken.Type != END:
     return Node(kind: nkNil)
   p.shiftToken()
 
@@ -202,7 +203,7 @@ proc parseStringLiteral(p: Parser): Node =
   )
   return node
 
-# if式
+# if文
 proc parseIfExpression(p: Parser): Node =
   var node = Node(
     kind: nkIfExpression,
@@ -217,14 +218,11 @@ proc parseIfExpression(p: Parser): Node =
   # elseがあった場合
   if p.curToken.Type == ELSE:
     node.kind = nkIfAndElseExpression
+    node.alternative = p.parseBlockStatement(@[END])
     p.shiftToken()
-    if p.curToken.Type != DO:
-      return Node(kind: nkNil)
-    else:
-      node.alternative = p.parseBlockStatement(@[END])
-      p.shiftToken()
-      return node
+    return node
   
+  p.shiftToken()
   return node
 
 # 式の処理
@@ -254,10 +252,9 @@ proc parseExpression(p: Parser, precedence: Precedence): Node =
 
 # 式文の処理
 proc parseExpressionStatement(p: Parser): Node =
-    let node = p.parseExpression(Lowest)
-    if p.peekToken.Type == SEMICOLON:
-      p.shiftToken()
-    return node
+  let node = p.parseExpression(Lowest)
+  p.shiftToken()
+  return node
 
 # ブロック文の処理
 proc parseBlockStatement(p: Parser, endTokenTypes: seq[string]): BlockStatement =
@@ -283,15 +280,23 @@ proc parseBlockStatement(p: Parser, endTokenTypes: seq[string]): BlockStatement 
 
 # 文の処理
 proc parseStatement(p: Parser): Node =
+  echo p.curToken.Type
   case p.curToken.Type
   of LET:    return p.parseLetStatement()
   of DEFINE: return p.parseDefineStatement()
   of RETURN: return p.parseReturnStatement()
   of IF:     return p.parseIfExpression()
-  else:        return p.parseExpressionStatement()
+  else:      return p.parseExpressionStatement()
 
 # ASTを作る
-proc makeAST*(input: string): Node =
+proc makeAST*(input: string): seq[Node] =
+  var program: seq[Node]
   var lex = newLexer(input)
-  let tree = lex.newParser().parseStatement()
-  return tree
+  var p = lex.newParser()
+  var tree = p.parseStatement()
+  program.add(tree)
+  while p.peekToken.Type != EOF:
+    tree = p.parseStatement()
+    program.add(tree)
+
+  return program

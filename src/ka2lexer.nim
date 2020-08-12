@@ -129,7 +129,10 @@ proc nextToken*(l: Lexer): Token =
       else:
         return Token(Type: INT, Literal: lit)
     else:
-      tok = newToken(ILLEGAL, l.ch)
+      if l.input.len()-1 <= l.position:
+        tok = newToken(EOF, l.ch)
+      else:
+        tok = newToken(ILLEGAL, l.ch)
   
   l.nextChar()
   return tok

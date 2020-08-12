@@ -1,22 +1,22 @@
 #include<iostream>
 
-auto ka2_add = [](int a) {
+auto k_add = [](int a) {
   return [a](int b) { return a + b; };
 };
 
-auto ka2_sub = [](int a) {
+auto k_sub = [](int a) {
   return [a](int b) {return a - b;};
 };
 
-auto ka2_mul = [](int a) {
+auto k_mul = [](int a) {
   return [a](int b) {return a * b;};
 };
 
-auto ka2_div = [](int a) {
+auto k_div = [](int a) {
   return [a](int b) {return a / b;};
 };
 
-void ka2_puts(std::string a) {
+void k_puts(std::string a) {
   std::cout << a << "\n";
 }
 /*

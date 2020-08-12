@@ -1,9 +1,14 @@
 import  ka2parser, ka2cpp
 
 when isMainModule:
-  var input = """ def hoge(x) = do return 1 end"""
-  var node = makeAST(input)
-  echo makeCppCode(node)
+  var input = """ def a(x) = do
+                    return x * 3
+                  end
+                  let a = 1 + 2 + 3
+                  """
+  var program = makeAST(input)
+  for tree in program:
+    echo makeCppCode(tree)
 
 #[
   TODO

@@ -13,6 +13,17 @@ proc conversionCppType(kind: NodeKind): string =
   else:
     return "auto"
 
+proc conversionCppFunction(operator: string): string =
+  case operator
+  of PLUS:
+    return "k_add"
+  of MINUS:
+    return "k_sub"
+  of ASTERISC:
+    return "k_mul"
+  of SLASH:
+    return "k_div"
+
 proc makeCppCode*(node: Node): string =
   var str: string = ""
   case node.kind
@@ -38,7 +49,7 @@ proc makeCppCode*(node: Node): string =
     str.add(" " & node.let_name.makeCppCode())
     str.add(" =")
     str.add(" " & node.let_value.makeCppCode())
-    str.add(";\n")
+    str.add(";")
   of nkDefineStatement:
     str.add(node.return_statement.return_expression.kind.conversionCppType())
     str.add(" " & node.define_name.makeCppCode())
@@ -58,10 +69,11 @@ proc makeCppCode*(node: Node): string =
   of nkReturnStatement:
     str.add(node.token.Literal)
     str.add("(" & node.return_expression.makeCppCode() & ")")
+    str.add(";")
   
   # 中置
   of nkInfixExpression:
-    str.add(node.operator)
+    str.add(node.operator.conversionCppFunction())
     if node.left != nil:
       str.add("(" & node.left.makeCppCode() & ")")
     if node.right != nil:
@@ -73,7 +85,7 @@ proc makeCppCode*(node: Node): string =
     for arg in node.args:
       str.add("(" & arg.makeCppCode() & ")")
   
-  # if式
+  # if文
   of nkIfExpression:
     str.add("if")
     str.add("(" & node.condition.makeCppCode() & ")")
@@ -82,7 +94,7 @@ proc makeCppCode*(node: Node): string =
       str.add(statement.makeCppCode())
     str.add("}")
   
-  # if-else式
+  # if-else文
   of nkIfAndElseExpression:
     str.add("if")
     str.add("(" & node.condition.makeCppCode() & ")")
