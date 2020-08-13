@@ -50,7 +50,6 @@ proc parseLetStatement(p: Parser): Node =
   p.shiftToken()
   p.shiftToken()
   node.let_value = p.parseExpression(Lowest)
-  p.shiftToken()
   return node
 
 # return文
@@ -61,11 +60,9 @@ proc parseReturnStatement(p: Parser): Node =
   )
   p.shiftToken()
   node.return_expression = p.parseExpression(Lowest)
-  p.shiftToken()
   return node
 
 # 関数定義
-# TODO return
 proc parseDefineStatement(p: Parser): Node =
   var node = Node(
     kind: nkDefineStatement,
@@ -97,13 +94,14 @@ proc parseDefineStatement(p: Parser): Node =
   p.shiftToken()
 
   node.define_block = p.parseBlockStatement(@[RETURN])
-  if p.curToken.Type != RETURN:
-    return Node(kind: nkNil)
-  node.return_statement = p.parseReturnStatement()
-  if p.curToken.Type != END:
+  if p.peekToken.Type != RETURN:
     return Node(kind: nkNil)
   p.shiftToken()
+  node.return_statement = p.parseReturnStatement()
+  if p.peekToken.Type != END:
+    return Node(kind: nkNil)
 
+  p.shiftToken()
   return node
 
 # 中置演算子の処理
@@ -211,19 +209,20 @@ proc parseIfExpression(p: Parser): Node =
   )
   p.shiftToken()
   node.condition = p.parseExpression(Lowest)
-  
   if p.peekToken.Type != DO:
     return Node(kind: nkNil)
+  p.shiftToken()
   node.consequence = p.parseBlockStatement(@[END, ELSE])
+
   # elseがあった場合
-  if p.curToken.Type == ELSE:
+  if p.peekToken.Type == ELSE:
+    p.shiftToken()
     node.kind = nkIfAndElseExpression
     node.alternative = p.parseBlockStatement(@[END])
     p.shiftToken()
     return node
-  
-  p.shiftToken()
-  return node
+  elif p.peekToken.Type == END:
+    return node
 
 # 式の処理
 proc parseExpression(p: Parser, precedence: Precedence): Node =
@@ -238,9 +237,9 @@ proc parseExpression(p: Parser, precedence: Precedence): Node =
   of FALSE  : left = p.parseBoolLiteral()
   else:      left = nil
   
-  while precedence < p.peekToken.tokenPrecedence() and p.peekToken.Type != SEMICOLON:
+  while precedence < p.peekToken.tokenPrecedence() and p.peekToken.Type != EOF:
     case p.peekToken.Type
-    of PLUS, MINUS, ASTERISC, SLASH, LT, GT:
+    of PLUS, MINUS, ASTERISC, SLASH, LT, GT, EQ:
       p.shiftToken()
       left = p.parseInfixExpression(left)
     of LPAREN:
@@ -253,7 +252,6 @@ proc parseExpression(p: Parser, precedence: Precedence): Node =
 # 式文の処理
 proc parseExpressionStatement(p: Parser): Node =
   let node = p.parseExpression(Lowest)
-  p.shiftToken()
   return node
 
 # ブロック文の処理
@@ -262,30 +260,28 @@ proc parseBlockStatement(p: Parser, endTokenTypes: seq[string]): BlockStatement 
   var endLoop = false
   bs.statements = newSeq[Node]()
 
-  p.shiftToken()
-  while p.curToken.Type != EOF:
-    for ett in endTokenTypes:
-      if p.curToken.Type == ett:
+  while true:
+    for ett in endTokenTypes & EOF:
+      if p.peekToken.Type == ett:
         endLoop = true
         break
     if endLoop:
       break
     else:
+      p.shiftToken()
       let statement = p.parseStatement()
       if statement != nil:
         bs.statements.add(statement)
-      p.shiftToken()
-  
+        
   return bs
 
 # 文の処理
 proc parseStatement(p: Parser): Node =
-  echo p.curToken.Type
   case p.curToken.Type
   of LET:    return p.parseLetStatement()
   of DEFINE: return p.parseDefineStatement()
-  of RETURN: return p.parseReturnStatement()
   of IF:     return p.parseIfExpression()
+  of RETURN: return p.parseReturnStatement()
   else:      return p.parseExpressionStatement()
 
 # ASTを作る
@@ -296,6 +292,11 @@ proc makeAST*(input: string): seq[Node] =
   var tree = p.parseStatement()
   program.add(tree)
   while p.peekToken.Type != EOF:
+    p.shiftToken()
+    # echo "###"
+    # echo p.curToken.Type
+    # echo p.peekToken.Type
+    # echo "###"
     tree = p.parseStatement()
     program.add(tree)
 

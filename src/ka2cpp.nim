@@ -23,6 +23,12 @@ proc conversionCppFunction(operator: string): string =
     return "k_mul"
   of SLASH:
     return "k_div"
+  of LT:
+    return "k_lt"
+  of GT:
+    return "k_gt"
+  of EQ:
+    return "k_eq"
 
 proc makeCppCode*(node: Node): string =
   var str: string = ""
@@ -53,8 +59,9 @@ proc makeCppCode*(node: Node): string =
   of nkDefineStatement:
     str.add(node.return_statement.return_expression.kind.conversionCppType())
     str.add(" " & node.define_name.makeCppCode())
-    str.add(" (")
+    str.add("(")
     for i, arg in node.define_args:
+      str.add("auto ")
       str.add(arg.makeCppCode())
       if i != node.define_args.len()-1:
         str.add(", ")
@@ -67,6 +74,7 @@ proc makeCppCode*(node: Node): string =
     str.add(node.return_statement.makeCppCode())
     str.add("\n}")
   of nkReturnStatement:
+    str.add("")
     str.add(node.token.Literal)
     str.add("(" & node.return_expression.makeCppCode() & ")")
     str.add(";")
@@ -84,29 +92,30 @@ proc makeCppCode*(node: Node): string =
     str.add(node.function.makeCppCode())
     for arg in node.args:
       str.add("(" & arg.makeCppCode() & ")")
+    str.add(";")
   
   # if文
   of nkIfExpression:
     str.add("if")
     str.add("(" & node.condition.makeCppCode() & ")")
-    str.add("{")
+    str.add("{\n")
     for statement in node.consequence.statements:
       str.add(statement.makeCppCode())
-    str.add("}")
+    str.add("\n}")
   
   # if-else文
   of nkIfAndElseExpression:
     str.add("if")
     str.add("(" & node.condition.makeCppCode() & ")")
-    str.add("{")
+    str.add("{\n")
     for statement in node.consequence.statements:
       str.add(statement.makeCppCode())
-    str.add("}")
+    str.add("\n}")
     str.add("else")
-    str.add("{")
+    str.add("{\n")
     for statement in node.alternative.statements:
       str.add(statement.makeCppCode())
-    str.add("}")
+    str.add("\n}")
   else:
     return str
   

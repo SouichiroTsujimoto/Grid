@@ -101,7 +101,6 @@ proc nextToken*(l: Lexer): Token =
       l.nextChar()
       let literal = $ch & $l.ch
       tok = Token(Type: PIPE, Literal: literal)
-  of ';' : tok = newToken(SEMICOLON, l.ch)
   of '(' : tok = newToken(LPAREN, l.ch)
   of ')' : tok = newToken(RPAREN, l.ch)
   of ',' : tok = newToken(COMMA, l.ch)

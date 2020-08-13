@@ -16,6 +16,18 @@ auto k_div = [](int a) {
   return [a](int b) {return a / b;};
 };
 
+auto k_lt = [](int a) {
+  return [a](int b) {return a < b;};
+};
+
+auto k_gt = [](int a) {
+  return [a](int b) {return a > b;};
+};
+
+auto k_eq = [](int a) {
+  return [a](int b) {return a == b;};
+};
+
 void k_puts(std::string a) {
   std::cout << a << "\n";
 }

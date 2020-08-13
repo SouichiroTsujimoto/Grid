@@ -1,14 +1,5 @@
 import ka2token
 
-type Precedence* = enum
-  Lowest = 0
-  Equals = 1
-  Lg
-  Sum
-  Product
-  Prefix
-  Call
-
 type NodeKind* = enum
   nkNil
   nkIdent
@@ -27,6 +18,15 @@ type NodeKind* = enum
   nkCallExpression
   nkIfExpression
   nkIfAndElseExpression
+
+type Precedence* = enum
+  Lowest = 0
+  Equals
+  Lg
+  Sum
+  Product
+  Prefix
+  Call
 
 proc tokenPrecedence*(tok: Token): Precedence =
   case tok.Type

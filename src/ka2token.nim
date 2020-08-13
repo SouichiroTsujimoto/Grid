@@ -26,7 +26,6 @@ const
   PIPE*         = "|>"
   # デリミタ
   COMMA*        = ","
-  SEMICOLON*    = ";"
   # 括弧
   LPAREN*       = "("
   RPAREN*       = ")"
