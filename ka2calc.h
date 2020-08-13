@@ -24,8 +24,20 @@ auto k_gt = [](int a) {
   return [a](int b) {return a > b;};
 };
 
+auto k_le = [](int a) {
+  return [a](int b) {return a <= b;};
+};
+
+auto k_ge = [](int a) {
+  return [a](int b) {return a >= b;};
+};
+
 auto k_eq = [](int a) {
   return [a](int b) {return a == b;};
+};
+
+auto k_ne = [](int a) {
+  return [a](int b) {return a != b;};
 };
 
 void k_puts(std::string a) {

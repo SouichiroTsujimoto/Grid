@@ -239,7 +239,7 @@ proc parseExpression(p: Parser, precedence: Precedence): Node =
   
   while precedence < p.peekToken.tokenPrecedence() and p.peekToken.Type != EOF:
     case p.peekToken.Type
-    of PLUS, MINUS, ASTERISC, SLASH, LT, GT, EQ:
+    of PLUS, MINUS, ASTERISC, SLASH, LT, GT, LE, GE, EQ, NE:
       p.shiftToken()
       left = p.parseInfixExpression(left)
     of LPAREN:

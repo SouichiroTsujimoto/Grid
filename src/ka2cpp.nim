@@ -27,8 +27,16 @@ proc conversionCppFunction(operator: string): string =
     return "k_lt"
   of GT:
     return "k_gt"
+  of LE:
+    return "k_le"
+  of GE:
+    return "k_ge"
   of EQ:
     return "k_eq"
+  of NE:
+    return "k_ne"
+  else:
+    return "k_hoge"
 
 proc makeCppCode*(node: Node): string =
   var str: string = ""
@@ -74,7 +82,6 @@ proc makeCppCode*(node: Node): string =
     str.add(node.return_statement.makeCppCode())
     str.add("\n}")
   of nkReturnStatement:
-    str.add("")
     str.add(node.token.Literal)
     str.add("(" & node.return_expression.makeCppCode() & ")")
     str.add(";")

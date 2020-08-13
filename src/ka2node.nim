@@ -33,8 +33,8 @@ proc tokenPrecedence*(tok: Token): Precedence =
   of LPAREN:          return Call
   of SLASH, ASTERISC: return Product
   of PLUS, MINUS:     return Sum
-  of LT, GT:          return Lg
-  of EQ:              return Equals
+  of LT, GT, LE, GE:  return Lg
+  of EQ, NE:          return Equals
   else:               return Lowest
 
 type 

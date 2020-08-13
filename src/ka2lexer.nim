@@ -95,6 +95,30 @@ proc nextToken*(l: Lexer): Token =
       tok = Token(Type: EQ, Literal: literal)
     else:
       tok = newToken(ASSIGN, l.ch)
+  of '!':
+    if l.peekChar() == '=':
+      let ch = l.ch
+      l.nextChar()
+      let literal = $ch & $l.ch
+      tok = Token(Type: NE, Literal: literal)
+    else:
+      tok = newToken(NOT, l.ch)
+  of '<':
+    if l.peekChar() == '=':
+      let ch = l.ch
+      l.nextChar()
+      let literal = $ch & $l.ch
+      tok = Token(Type: LE, Literal: literal)
+    else:
+      tok = newToken(LT, l.ch)
+  of '>':
+    if l.peekChar() == '=':
+      let ch = l.ch
+      l.nextChar()
+      let literal = $ch & $l.ch
+      tok = Token(Type: GE, Literal: literal)
+    else:
+      tok = newToken(GT, l.ch)
   of '|':
     if l.peekChar() == '>':
       let ch = l.ch
@@ -108,8 +132,6 @@ proc nextToken*(l: Lexer): Token =
   of '-' : tok = newToken(MINUS, l.ch)
   of '*' : tok = newToken(ASTERISC, l.ch)
   of '/' : tok = newToken(SLASH, l.ch)
-  of '<' : tok = newToken(LT, l.ch)
-  of '>' : tok = newToken(GT, l.ch)
   else:
     if l.ch.isSingleQuote:
       let lit = l.readChar()
