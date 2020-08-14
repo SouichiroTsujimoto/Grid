@@ -3,11 +3,17 @@ import ka2token
 type NodeKind* = enum
   nkNil
   nkIdent
+  nkNilLiteral
   nkIntLiteral
   nkFloatLiteral
   nkBoolLiteral
   nkCharLiteral
   nkStringLiteral
+  nkIntType
+  nkFloatType
+  nkBoolType
+  nkCharType
+  nkStringType
   nkPrefixExpression
   nkInfixExpression
   nkLetStatement
@@ -41,29 +47,31 @@ proc tokenPrecedence*(tok: Token): Precedence =
 type 
   # ノードクラス
   Node* = ref object of RootObj
-    kind*:              NodeKind
-    token*:             Token
-    operator*:          string
-    left*:              Node
-    right*:             Node
-    function*:          Node
-    args*:              seq[Node]
-    intValue*:          int
-    floatValue*:        float
-    identValue*:        string
-    boolValue*:         bool
-    charValue*:         char
-    stringValue*:       string
-    let_name*:          Node
-    let_value*:         Node
-    define_name*:       Node
-    define_args*:       seq[Node]
-    define_block*:      BlockStatement
-    condition*:         Node
-    consequence*:       BlockStatement
-    alternative*:       Node
-    return_statement*:  Node 
-    return_expression*: Node
+    kind*:                NodeKind
+    token*:               Token
+    operator*:            string
+    left*:                Node
+    right*:               Node
+    function*:            Node
+    args*:                seq[Node]
+    intValue*:            int
+    floatValue*:          float
+    identValue*:          string
+    boolValue*:           bool
+    charValue*:           char
+    stringValue*:         string
+    typeValue*:           string
+    let_name*:            Node
+    let_type*:            Node
+    let_value*:           Node
+    define_name*:         Node
+    define_args*:         seq[Node]
+    define_block*:        BlockStatement
+    define_type*:         Node
+    condition*:           Node
+    consequence*:         BlockStatement
+    alternative*:         Node
+    return_expression*:   Node
   # ブロック文クラス
   BlockStatement* = ref object of RootObj
     token*: Token

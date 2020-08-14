@@ -1,18 +1,5 @@
 import ka2token, ka2node
 
-proc conversionCppType(kind: NodeKind): string =
-  case kind
-  of nkIntLiteral:
-    return "int"
-  of nkFloatLiteral:
-    return "float"
-  of nkCharLiteral:
-    return "char"
-  of nkStringLiteral:
-    return "std::string"
-  else:
-    return "auto"
-
 proc conversionCppFunction(operator: string): string =
   case operator
   of PLUS:
@@ -52,6 +39,16 @@ proc makeCppCode*(node: Node): string =
     str.add("\'" & node.charValue & "\'")
   of nkStringLiteral:
     str.add("\"" & node.stringValue & "\"")
+  of nkIntType:
+    str.add(node.typeValue)
+  of nkFloatType:
+    str.add(node.typeValue)
+  of nkCharType:
+    str.add(node.typeValue)
+  of nkStringType:
+    str.add("std::" & node.typeValue)
+  of nkNIl:
+    str.add("NULL")
   
   # 名前
   of nkIdent:
@@ -59,13 +56,13 @@ proc makeCppCode*(node: Node): string =
   
   # 文
   of nkLetStatement:
-    str.add(node.let_value.kind.conversionCppType())
+    str.add(node.let_type.makeCppCode())
     str.add(" " & node.let_name.makeCppCode())
     str.add(" =")
     str.add(" " & node.let_value.makeCppCode())
     str.add(";")
   of nkDefineStatement:
-    str.add(node.return_statement.return_expression.kind.conversionCppType())
+    str.add(node.define_type.makeCppCode())
     str.add(" " & node.define_name.makeCppCode())
     str.add("(")
     for i, arg in node.define_args:
@@ -79,7 +76,6 @@ proc makeCppCode*(node: Node): string =
     str.add(" {\n")
     for statement in node.define_block.statements:
       str.add(statement.makeCppCode())
-    str.add(node.return_statement.makeCppCode())
     str.add("\n}")
   of nkReturnStatement:
     str.add(node.token.Literal)

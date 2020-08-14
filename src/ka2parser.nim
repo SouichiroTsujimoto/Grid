@@ -35,6 +35,9 @@ proc parseLetStatement(p: Parser): Node =
     kind: nkLetStatement,
     token: p.curToken,
   )
+  p.shiftToken()
+  node.let_type = p.parseExpression(Lowest)
+
   if p.peekToken.Type != IDENT:
     return Node(kind: nkNil)
   
@@ -68,6 +71,9 @@ proc parseDefineStatement(p: Parser): Node =
     kind: nkDefineStatement,
     token: p.curToken,
   )
+  p.shiftToken()
+  node.define_type = p.parseExpression(Lowest)
+
   if p.peekToken.Type != IDENT:
     return Node(kind: nkNil)
 
@@ -85,19 +91,11 @@ proc parseDefineStatement(p: Parser): Node =
   node.define_args = p.parseExpressionList(RPAREN)
   p.shiftToken()
 
-  if p.peekToken.Type != ASSIGN:
-    return node
-  p.shiftToken()
-
   if p.peekToken.Type != DO:
     return node
   p.shiftToken()
 
-  node.define_block = p.parseBlockStatement(@[RETURN])
-  if p.peekToken.Type != RETURN:
-    return Node(kind: nkNil)
-  p.shiftToken()
-  node.return_statement = p.parseReturnStatement()
+  node.define_block = p.parseBlockStatement(@[END])
   if p.peekToken.Type != END:
     return Node(kind: nkNil)
 
@@ -174,15 +172,6 @@ proc parseFloatLiteral(p: Parser): Node =
   )
   return node
 
-# 真偽値リテラル
-proc parseBoolLiteral(p: Parser): Node =
-  let node = Node(
-    kind: nkBoolLiteral,
-    token: p.curToken,
-    boolValue: p.curToken.Literal.parseBool
-  )
-  return node
-
 # 文字リテラル
 proc parseCharLiteral(p: Parser): Node =
   let node = Node(
@@ -198,6 +187,59 @@ proc parseStringLiteral(p: Parser): Node =
     kind: nkStringLiteral,
     token: p.curToken,
     stringValue: p.curToken.Literal,
+  )
+  return node
+
+# 真偽値リテラル
+proc parseBoolLiteral(p: Parser): Node =
+  let node = Node(
+    kind: nkBoolLiteral,
+    token: p.curToken,
+    boolValue: p.curToken.Literal.parseBool
+  )
+  return node
+
+# nil値
+proc parseNilLiteral(p: Parser): Node =
+  let node = Node(
+    kind: nkNilLiteral,
+    token: p.curToken,
+  )
+  return node
+
+# int型
+proc parseIntType(p: Parser): Node =
+  let node = Node(
+    kind: nkIntType,
+    token: p.curToken,
+    typeValue: p.curToken.Literal
+  )
+  return node
+
+# float型
+proc parseFloatType(p: Parser): Node =
+  let node = Node(
+    kind: nkFloatType,
+    token: p.curToken,
+    typeValue: p.curToken.Literal
+  )
+  return node
+
+# char型
+proc parseCharType(p: Parser): Node =
+  let node = Node(
+    kind: nkCharType,
+    token: p.curToken,
+    typeValue: p.curToken.Literal
+  )
+  return node
+
+# string型
+proc parseStringType(p: Parser): Node =
+  let node = Node(
+    kind: nkStringType,
+    token: p.curToken,
+    typeValue: p.curToken.Literal
   )
   return node
 
@@ -246,14 +288,19 @@ proc parseIfExpression(p: Parser): Node =
 proc parseExpression(p: Parser, precedence: Precedence): Node =
   var left: Node
   case p.curToken.Type
-  of IDENT  : left = p.parseIdent()
-  of INT    : left = p.parseIntLiteral()
-  of FLOAT  : left = p.parseFloatLiteral()
-  of CHAR   : left = p.parseCharLiteral()
-  of STRING : left = p.parseStringLiteral()
-  of TRUE   : left = p.parseBoolLiteral()
-  of FALSE  : left = p.parseBoolLiteral()
-  else:      left = nil
+  of IDENT      : left = p.parseIdent()
+  of INT        : left = p.parseIntLiteral()
+  of FLOAT      : left = p.parseFloatLiteral()
+  of CHAR       : left = p.parseCharLiteral()
+  of STRING     : left = p.parseStringLiteral()
+  of TRUE       : left = p.parseBoolLiteral()
+  of FALSE      : left = p.parseBoolLiteral()
+  of NIL        : left = p.parseNilLiteral()
+  of T_INT      : left = p.parseIntType()
+  of T_FLOAT    : left = p.parseFloatType()
+  of T_CHAR     : left = p.parseCharType()
+  of T_STRING   : left = p.parseStringType()
+  else:           left = nil
   
   while precedence < p.peekToken.tokenPrecedence() and p.peekToken.Type != EOF:
     case p.peekToken.Type
