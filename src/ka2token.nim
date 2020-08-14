@@ -40,6 +40,7 @@ const
   DEFINE*       = "DEFINE"
   RETURN*       = "RETURN"
   IF*           = "IF"
+  ELIF*         = "ELIF"
   ELSE*         = "ELSE"
   DO*           = "DO"
   END*          = "END"
@@ -51,6 +52,7 @@ let keywords = {
   "def"    : DEFINE,
   "return" : RETURN,
   "if"     : IF,
+  "elif"   : ELIF,
   "else"   : ELSE,
   "do"     : DO,
   "end"    : END,

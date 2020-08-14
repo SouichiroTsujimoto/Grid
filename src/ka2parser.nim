@@ -212,16 +212,34 @@ proc parseIfExpression(p: Parser): Node =
   if p.peekToken.Type != DO:
     return Node(kind: nkNil)
   p.shiftToken()
-  node.consequence = p.parseBlockStatement(@[END, ELSE])
+  node.consequence = p.parseBlockStatement(@[END, ELIF, ELSE])
 
-  # elseがあった場合
-  if p.peekToken.Type == ELSE:
+  # elifがあった場合
+  if p.peekToken.Type == ELIF:
     p.shiftToken()
-    node.kind = nkIfAndElseExpression
-    node.alternative = p.parseBlockStatement(@[END])
+    let res = p.parseIfExpression
+    node.alternative = Node(
+      kind: nkElifExpression,
+      token: p.curToken,
+      condition: res.condition,
+      consequence: res.consequence,
+      alternative: res.alternative,
+    )
     p.shiftToken()
     return node
+  # elseがあった場合
+  elif p.peekToken.Type == ELSE:
+    p.shiftToken()
+    node.alternative = Node(
+      kind: nkElseExpression,
+      token: p.curToken,
+      consequence: p.parseBlockStatement(@[END]),
+    )
+    p.shiftToken()
+    return node
+  # endの場合
   elif p.peekToken.Type == END:
+    p.shiftToken()
     return node
 
 # 式の処理

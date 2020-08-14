@@ -109,18 +109,25 @@ proc makeCppCode*(node: Node): string =
     for statement in node.consequence.statements:
       str.add(statement.makeCppCode())
     str.add("\n}")
-  
-  # if-else文
-  of nkIfAndElseExpression:
-    str.add("if")
+    if node.alternative != nil:
+      str.add(node.alternative.makeCppCode())
+
+  # elif文
+  of nkElifExpression:
+    str.add("elif")
     str.add("(" & node.condition.makeCppCode() & ")")
     str.add("{\n")
     for statement in node.consequence.statements:
       str.add(statement.makeCppCode())
     str.add("\n}")
+    if node.alternative != nil:
+      str.add(node.alternative.makeCppCode())
+
+  # else文
+  of nkElseExpression:
     str.add("else")
     str.add("{\n")
-    for statement in node.alternative.statements:
+    for statement in node.consequence.statements:
       str.add(statement.makeCppCode())
     str.add("\n}")
   else:

@@ -17,7 +17,8 @@ type NodeKind* = enum
   nkExpressionStatement
   nkCallExpression
   nkIfExpression
-  nkIfAndElseExpression
+  nkElifExpression 
+  nkElseExpression
 
 type Precedence* = enum
   Lowest = 0
@@ -60,8 +61,8 @@ type
     define_block*:      BlockStatement
     condition*:         Node
     consequence*:       BlockStatement
-    alternative*:       BlockStatement
-    return_statement*: Node 
+    alternative*:       Node
+    return_statement*:  Node 
     return_expression*: Node
   # ブロック文クラス
   BlockStatement* = ref object of RootObj
