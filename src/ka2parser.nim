@@ -14,6 +14,8 @@ proc parseStatement(p: Parser): Node
 proc parseBlockStatement(p: Parser, endTokenTypes: seq[string]): BlockStatement
 proc parseCallExpression(p: Parser, left: Node): Node
 proc parseExpressionList(p: Parser, endToken: string): seq[Node]
+proc parseType(p: Parser): Node
+proc parseNameProc(p: Parser, endToken: string): seq[Node]
 
 # パーサクラスのインスタンスを作る
 proc newParser(l: Lexer): Parser =
@@ -31,28 +33,20 @@ proc shiftToken(p: Parser) =
 
 # 変数定義
 proc parseLetStatement(p: Parser): Node =
-  let node = Node(
+  var node = Node(
     kind: nkLetStatement,
     token: p.curToken,
   )
   p.shiftToken()
-  node.let_type = p.parseExpression(Lowest)
+  node.let_ident = p.parseType()
 
-  if p.peekToken.Type != IDENT:
-    return Node(kind: nkNil)
-  
-  p.shiftToken()
-  node.let_name = Node(
-    kind: nkIdent,
-    token: p.curToken,
-    identValue: p.curToken.Literal,
-  )
   if p.peekToken.Type != ASSIGN:
     return node
   
   p.shiftToken()
   p.shiftToken()
   node.let_value = p.parseExpression(Lowest)
+
   return node
 
 # return文
@@ -66,33 +60,23 @@ proc parseReturnStatement(p: Parser): Node =
   return node
 
 # 関数定義
+# 引数無しに対応させろ
+# 引数に型を付けさせろ
+# TODO
 proc parseDefineStatement(p: Parser): Node =
   var node = Node(
     kind: nkDefineStatement,
     token: p.curToken,
   )
   p.shiftToken()
-  node.define_type = p.parseExpression(Lowest)
-
-  if p.peekToken.Type != IDENT:
-    return Node(kind: nkNil)
-
-  p.shiftToken()
-  node.define_name = Node(
-    kind: nkIdent,
-    token: p.curToken,
-    identValue: p.curToken.Literal
-  )
-  
+  node.define_ident = p.parseType()
   if p.peekToken.Type != LPAREN:
     return Node(kind: nkNil)
   p.shiftToken()
-
-  node.define_args = p.parseExpressionList(RPAREN)
-  p.shiftToken()
+  node.define_args = p.parseNameProc(RPAREN)
 
   if p.peekToken.Type != DO:
-    return node
+    return Node(kind: nkNil)
   p.shiftToken()
 
   node.define_block = p.parseBlockStatement(@[END])
@@ -118,6 +102,7 @@ proc parseInfixExpression(p: Parser, left: Node): Node =
   return node
 
 # 引数の処理
+# TODO
 proc parseExpressionList(p: Parser, endToken: string): seq[Node] =
   var list = newSeq[Node]()
   if p.peekToken.Type == endToken:
@@ -126,11 +111,31 @@ proc parseExpressionList(p: Parser, endToken: string): seq[Node] =
 
   p.shiftToken()
   list.add(p.parseExpression(Lowest))
+
   while p.peekToken.Type == COMMA:
     p.shiftToken()
     p.shiftToken()
     list.add(p.parseExpression(Lowest))
-  
+
+  p.shiftToken()
+  return list
+
+# 宣言の処理
+proc parseNameProc(p: Parser, endToken: string): seq[Node] =
+  var list = newSeq[Node]()
+  if p.peekToken.Type == endToken:
+    p.shiftToken()
+    return list
+
+  p.shiftToken()
+  list.add(p.parseType())
+
+  while p.peekToken.Type == COMMA:
+    p.shiftToken()
+    p.shiftToken()
+    list.add(p.parseType())
+
+  p.shiftToken()
   return list
 
 # 関数呼び出しの処理
@@ -159,7 +164,7 @@ proc parseIntLiteral(p: Parser): Node =
   let node = Node(
     kind: nkIntLiteral,
     token: p.curToken,
-    intValue: p.curToken.Literal.parseInt
+    intValue: p.curToken.Literal.parseInt()
   )
   return node
 
@@ -168,7 +173,7 @@ proc parseFloatLiteral(p: Parser): Node =
   let node = Node(
     kind: nkFloatLiteral,
     token: p.curToken,
-    floatValue: p.curToken.Literal.parseFloat
+    floatValue: p.curToken.Literal.parseFloat()
   )
   return node
 
@@ -195,7 +200,7 @@ proc parseBoolLiteral(p: Parser): Node =
   let node = Node(
     kind: nkBoolLiteral,
     token: p.curToken,
-    boolValue: p.curToken.Literal.parseBool
+    boolValue: p.curToken.Literal.parseBool()
   )
   return node
 
@@ -209,11 +214,14 @@ proc parseNilLiteral(p: Parser): Node =
 
 # int型
 proc parseIntType(p: Parser): Node =
-  let node = Node(
+  var node = Node(
     kind: nkIntType,
     token: p.curToken,
-    typeValue: p.curToken.Literal
+    typeValue: p.curToken.Literal,
   )
+  if p.peekToken.Type == IDENT:
+    p.shiftToken()
+    node.identValue = p.curToken.Literal
   return node
 
 # float型
@@ -221,8 +229,11 @@ proc parseFloatType(p: Parser): Node =
   let node = Node(
     kind: nkFloatType,
     token: p.curToken,
-    typeValue: p.curToken.Literal
+    typeValue: p.curToken.Literal,
   )
+  if p.peekToken.Type == IDENT:
+    p.shiftToken()
+    node.identValue = p.curToken.Literal
   return node
 
 # char型
@@ -230,8 +241,11 @@ proc parseCharType(p: Parser): Node =
   let node = Node(
     kind: nkCharType,
     token: p.curToken,
-    typeValue: p.curToken.Literal
+    typeValue: p.curToken.Literal,
   )
+  if p.peekToken.Type == IDENT:
+    p.shiftToken()
+    node.identValue = p.curToken.Literal
   return node
 
 # string型
@@ -239,8 +253,11 @@ proc parseStringType(p: Parser): Node =
   let node = Node(
     kind: nkStringType,
     token: p.curToken,
-    typeValue: p.curToken.Literal
+    typeValue: p.curToken.Literal,
   )
+  if p.peekToken.Type == IDENT:
+    p.shiftToken()
+    node.identValue = p.curToken.Literal
   return node
 
 # if文
@@ -284,6 +301,14 @@ proc parseIfExpression(p: Parser): Node =
     p.shiftToken()
     return node
 
+proc parseType(p: Parser): Node =
+  case p.curToken.Type
+  of T_INT      : return p.parseIntType()
+  of T_FLOAT    : return p.parseFloatType()
+  of T_CHAR     : return p.parseCharType()
+  of T_STRING   : return p.parseStringType()
+  else          : return nil
+
 # 式の処理
 proc parseExpression(p: Parser, precedence: Precedence): Node =
   var left: Node
@@ -296,10 +321,6 @@ proc parseExpression(p: Parser, precedence: Precedence): Node =
   of TRUE       : left = p.parseBoolLiteral()
   of FALSE      : left = p.parseBoolLiteral()
   of NIL        : left = p.parseNilLiteral()
-  of T_INT      : left = p.parseIntType()
-  of T_FLOAT    : left = p.parseFloatType()
-  of T_CHAR     : left = p.parseCharType()
-  of T_STRING   : left = p.parseStringType()
   else:           left = nil
   
   while precedence < p.peekToken.tokenPrecedence() and p.peekToken.Type != EOF:
@@ -358,10 +379,6 @@ proc makeAST*(input: string): seq[Node] =
   program.add(tree)
   while p.peekToken.Type != EOF:
     p.shiftToken()
-    # echo "###"
-    # echo p.curToken.Type
-    # echo p.peekToken.Type
-    # echo "###"
     tree = p.parseStatement()
     program.add(tree)
 

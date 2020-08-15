@@ -53,21 +53,21 @@ const
   T_STRING*     = "T_STRING"
 
 let keywords = {
-  "True"   : TRUE,
-  "False"  : FALSE,
-  "Nil"    : NIL,
-  "let"    : LET,
-  "def"    : DEFINE,
-  "return" : RETURN,
-  "if"     : IF,
-  "elif"   : ELIF,
-  "else"   : ELSE,
-  "do"     : DO,
-  "end"    : END,
-  "int"    : T_INT,
-  "float"  : T_FLOAT,
-  "char"   : T_CHAR,
-  "string" : T_STRING,
+  "True"    : TRUE,
+  "False"   : FALSE,
+  "Nil"     : NIL,
+  "let"     : LET,
+  "def"     : DEFINE,
+  "return"  : RETURN,
+  "if"      : IF,
+  "elif"    : ELIF,
+  "else"    : ELSE,
+  "do"      : DO,
+  "end"     : END,
+  "#int"    : T_INT,
+  "#float"  : T_FLOAT,
+  "#char"   : T_CHAR,
+  "#string" : T_STRING,
 }.newTable
 
 proc LookupIdent*(ident: string): string =

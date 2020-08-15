@@ -1,7 +1,11 @@
-#include <iostream>
+#include<iostream>
 #include "ka2calc.h"
 
 int main() {
-  int expr = k_add(1)(k_mul(3)(5));
-  std::cout << expr << std::endl;
+auto tasuyo = [](int x) {
+return [x](int y) {
+return(k_add(x)(y));
+};
+};
+tasuyo(1)(4);
 }

@@ -1,0 +1,4 @@
+def #int tasuyo(#int x, #int y) do
+  return x + y
+end
+tasuyo(1, 4)

@@ -61,13 +61,12 @@ type
     charValue*:           char
     stringValue*:         string
     typeValue*:           string
-    let_name*:            Node
-    let_type*:            Node
+    let_ident*:           Node
     let_value*:           Node
     define_name*:         Node
+    define_ident*:        Node
     define_args*:         seq[Node]
     define_block*:        BlockStatement
-    define_type*:         Node
     condition*:           Node
     consequence*:         BlockStatement
     alternative*:         Node

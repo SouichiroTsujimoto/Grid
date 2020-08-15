@@ -29,7 +29,7 @@ proc newLexer*(input: string): Lexer =
   return l
 
 proc isLetter(ch: char): bool =
-  return ('a' <= ch and ch <= 'z') or ('A' <= ch and ch <= 'Z') or ch == '_'
+  return ('a' <= ch and ch <= 'z') or ('A' <= ch and ch <= 'Z') or ch == '_' or ch == '#'
 
 proc isDigit(ch: char): bool =
   return '0' <= ch and ch <= '9'
@@ -95,7 +95,7 @@ proc nextToken*(l: Lexer): Token =
       tok = Token(Type: EQ, Literal: literal)
     else:
       tok = newToken(ASSIGN, l.ch)
-  of '!':
+  of '!': 
     if l.peekChar() == '=':
       let ch = l.ch
       l.nextChar()
@@ -133,10 +133,10 @@ proc nextToken*(l: Lexer): Token =
   of '*' : tok = newToken(ASTERISC, l.ch)
   of '/' : tok = newToken(SLASH, l.ch)
   else:
-    if l.ch.isSingleQuote:
+    if l.ch.isSingleQuote():
       let lit = l.readChar()
       return Token(Type: CHAR, Literal: lit)
-    elif l.ch.isDoubleQuote:
+    elif l.ch.isDoubleQuote():
       let lit = l.readString()
       return Token(Type: STRING, Literal: lit)
     elif l.ch.isLetter():

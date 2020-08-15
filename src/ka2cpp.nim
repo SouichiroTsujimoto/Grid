@@ -40,43 +40,54 @@ proc makeCppCode*(node: Node): string =
   of nkStringLiteral:
     str.add("\"" & node.stringValue & "\"")
   of nkIntType:
-    str.add(node.typeValue)
+    str.add("int")
+    if node.identValue != "":
+      str.add(" ")
+      str.add(node.identValue)
   of nkFloatType:
-    str.add(node.typeValue)
+    str.add("double")
+    if node.identValue != "":
+      str.add(" ")
+      str.add(node.identValue)
   of nkCharType:
-    str.add(node.typeValue)
+    str.add("char")
+    if node.identValue != "":
+      str.add(" ")
+      str.add(node.identValue)
   of nkStringType:
-    str.add("std::" & node.typeValue)
+    str.add("std::string")
+    if node.identValue != "":
+      str.add(" ")
+      str.add(node.identValue)
   of nkNIl:
     str.add("NULL")
   
   # 名前
   of nkIdent:
-    str.add($node.identValue)
+    str.add(node.identValue)
   
   # 文
   of nkLetStatement:
-    str.add(node.let_type.makeCppCode())
-    str.add(" " & node.let_name.makeCppCode())
+    str.add(node.let_ident.makeCppCode())
     str.add(" =")
     str.add(" " & node.let_value.makeCppCode())
     str.add(";")
   of nkDefineStatement:
-    str.add(node.define_type.makeCppCode())
-    str.add(" " & node.define_name.makeCppCode())
-    str.add("(")
-    for i, arg in node.define_args:
-      str.add("auto ")
-      str.add(arg.makeCppCode())
+    str.add("auto ")
+    str.add(node.define_ident.identValue)
+    str.add(" = ")
+    var arg: string
+    for i, parameter in node.define_args:
+      str.add("[" & arg & "]")
+      str.add("(" & parameter.makeCppCode() & ")")
+      arg = parameter.identValue
+      str.add(" {\n")
       if i != node.define_args.len()-1:
-        str.add(", ")
-      else:
-        str.add(")")
-    str.add(" =")
-    str.add(" {\n")
+        str.add("return ")
     for statement in node.define_block.statements:
       str.add(statement.makeCppCode())
-    str.add("\n}")
+    for _ in node.define_args:
+      str.add("\n};")
   of nkReturnStatement:
     str.add(node.token.Literal)
     str.add("(" & node.return_expression.makeCppCode() & ")")
