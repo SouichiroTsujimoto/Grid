@@ -3,6 +3,7 @@ import strutils
 
 var cppCode = """
 #include<iostream>
+#include<stdio.h>
 #include "ka2calc.h"
 
 int main() {
@@ -14,9 +15,9 @@ when isMainModule:
   let program = makeAST(input)
   
   for tree in program:
-    cppCode.add(makeCppCode(tree))
+    cppCode.add(makeCppCode(tree, 0))
     cppCode.add("\n")
-  cppCode.add("}")
+  cppCode.add("\n}")
   
   let cppFileName = sourceName.split(".")[0] & ".cpp"
   writeCpp(cppFileName, cppCode)
@@ -29,5 +30,8 @@ when isMainModule:
   ・ 関数の返り値の型を指定できるようにする ✅
   ・ ファイル読み込み・ファイル書き出しできるようにする ✅
   ・ c++のコードに変換できるようにする (^ ^;)
+  ・ str.add(";")問題を解決させる
+  ・ ka23の関数名がc++の関数と競合しないようにする
+  ・ 簡単にc++の関数を呼び出せるようにする
   ・ 意味解析
 ]#

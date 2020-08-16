@@ -1,4 +1,5 @@
 import ka2token, ka2node
+import strutils
 
 proc conversionCppFunction(operator: string): string =
   case operator
@@ -25,119 +26,159 @@ proc conversionCppFunction(operator: string): string =
   else:
     return "k_hoge"
 
-proc makeCppCode*(node: Node): string =
-  var str: string = ""
+proc addSemicolon(code: var seq[string]) =
+  if code[code.len()-1] != ";":
+    code.add(";")
+
+proc addIndent(code: var string, indent: int) =
+  for i in 0..indent:
+    code.add("  ")
+
+proc makeCodeParts(node: Node): seq[string] =
+  var code: seq[string]
   case node.kind
   # リテラル
   of nkIntLiteral:
-    str.add($node.intValue)
+    code.add($node.intValue)
   of nkFloatLiteral:
-    str.add($node.floatValue)
+    code.add($node.floatValue)
   of nkBoolLiteral:
-    str.add($node.boolValue)
+    code.add($node.boolValue)
   of nkCharLiteral:
-    str.add("\'" & node.charValue & "\'")
+    code.add("\'" & node.charValue & "\'")
   of nkStringLiteral:
-    str.add("\"" & node.stringValue & "\"")
+    code.add("\"" & node.stringValue & "\"")
   of nkIntType:
-    str.add("int")
+    code.add("int")
     if node.identValue != "":
-      str.add(" ")
-      str.add(node.identValue)
+      code.add(node.identValue)
   of nkFloatType:
-    str.add("double")
+    code.add("double")
     if node.identValue != "":
-      str.add(" ")
-      str.add(node.identValue)
+      code.add(node.identValue)
   of nkCharType:
-    str.add("char")
+    code.add("char")
     if node.identValue != "":
-      str.add(" ")
-      str.add(node.identValue)
+      code.add(node.identValue)
   of nkStringType:
-    str.add("std::string")
+    code.add("std::string")
     if node.identValue != "":
-      str.add(" ")
-      str.add(node.identValue)
+      code.add(node.identValue)
   of nkNIl:
-    str.add("NULL")
+    code.add("NULL")
   
   # 名前
   of nkIdent:
-    str.add(node.identValue)
+    code.add(node.identValue)
   
-  # 文
+  # let文
   of nkLetStatement:
-    str.add(node.let_ident.makeCppCode())
-    str.add(" =")
-    str.add(" " & node.let_value.makeCppCode())
-    str.add(";")
+    code.add(node.let_ident.makeCodeParts())
+    code.add("=")
+    code.add(node.let_value.makeCodeParts())
+    code.addSemicolon()
+  # def文
   of nkDefineStatement:
-    str.add("auto ")
-    str.add(node.define_ident.identValue)
-    str.add(" = ")
+    code.add("auto")
+    code.add(node.define_ident.identValue)
+    code.add("=")
     var arg: string
     for i, parameter in node.define_args:
-      str.add("[" & arg & "]")
-      str.add("(" & parameter.makeCppCode() & ")")
+      code.add("[" & arg & "]")
+      code.add("(" & parameter.makeCodeParts() & ")")
       arg = parameter.identValue
-      str.add(" {\n")
+      code.add("{")
       if i != node.define_args.len()-1:
-        str.add("return ")
+        code.add("return")
     for statement in node.define_block.statements:
-      str.add(statement.makeCppCode())
+      code.add(statement.makeCodeParts())
     for _ in node.define_args:
-      str.add("\n};")
+      code.add("}")
+      code.add(";")
+  # return文
   of nkReturnStatement:
-    str.add(node.token.Literal)
-    str.add("(" & node.return_expression.makeCppCode() & ")")
-    str.add(";")
+    code.add(node.token.Literal)
+    code.add("(" & node.return_expression.makeCodeParts() & ")")
+    code.addSemicolon()
   
   # 中置
   of nkInfixExpression:
-    str.add(node.operator.conversionCppFunction())
+    code.add(node.operator.conversionCppFunction())
     if node.left != nil:
-      str.add("(" & node.left.makeCppCode() & ")")
+      code.add("(" & node.left.makeCodeParts() & ")")
     if node.right != nil:
-      str.add("(" & node.right.makeCppCode() & ")")
+      code.add("(" & node.right.makeCodeParts() & ")")
   
   # 前置
   of nkCallExpression:
-    str.add(node.function.makeCppCode())
+    code.add(node.function.makeCodeParts())
     for arg in node.args:
-      str.add("(" & arg.makeCppCode() & ")")
-    str.add(";")
+      code.add("(" & arg.makeCodeParts() & ")")
+    code.addSemicolon()
   
   # if文
   of nkIfExpression:
-    str.add("if")
-    str.add("(" & node.condition.makeCppCode() & ")")
-    str.add("{\n")
+    code.add("if")
+    code.add("(" & node.condition.makeCodeParts() & ")")
+    code.add("{")
     for statement in node.consequence.statements:
-      str.add(statement.makeCppCode())
-    str.add("\n}")
+      code.add(statement.makeCodeParts())
+    code.add("}")
     if node.alternative != nil:
-      str.add(node.alternative.makeCppCode())
+      code.add(node.alternative.makeCodeParts())
 
   # elif文
   of nkElifExpression:
-    str.add("elif")
-    str.add("(" & node.condition.makeCppCode() & ")")
-    str.add("{\n")
+    code.add("elif")
+    code.add("(" & node.condition.makeCodeParts() & ")")
+    code.add("{")
     for statement in node.consequence.statements:
-      str.add(statement.makeCppCode())
-    str.add("\n}")
+      code.add(statement.makeCodeParts())
+    code.add("}")
     if node.alternative != nil:
-      str.add(node.alternative.makeCppCode())
+      code.add(node.alternative.makeCodeParts())
 
   # else文
   of nkElseExpression:
-    str.add("else")
-    str.add("{\n")
+    code.add("else")
+    code.add("{")
     for statement in node.consequence.statements:
-      str.add(statement.makeCppCode())
-    str.add("\n}")
+      code.add(statement.makeCodeParts())
+    code.add("}")
   else:
-    return str
+    return code
   
-  return str
+  return code
+
+proc makeCppCode*(node: Node, indent: int): string =
+  var codeParts = makeCodeParts(node)
+  var outCode: seq[string]
+  var newLine: string
+  var braceCount: int = indent
+  newLine.addIndent(braceCount)
+
+  for i, part in codeParts:
+    # echo $i & "回目 : " & part
+    # echo braceCount
+    if part == "{":
+      braceCount = braceCount + 1
+      newLine.add(part)
+      outCode.add(newLine & "\n")
+      newLine = ""
+      newLine.addIndent(braceCount)
+    elif part == "}":
+      braceCount = braceCount - 1
+      newLine = ""
+      newLine.addIndent(braceCount)
+      newLine.add(part & " ")
+    elif part == ";":
+      newLine.add(part)
+      outCode.add(newLine & "\n")
+      newLine = ""
+      newLine.addIndent(braceCount)
+    else:
+      newLine.add(part & " ")
+    
+  outCode.add(newLine)
+  
+  return outCode.join()
