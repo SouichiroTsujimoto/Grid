@@ -30,6 +30,14 @@ proc addSemicolon(code: var seq[string]) =
   if code[code.len()-1] != ";":
     code.add(";")
 
+proc replaceSemicolon(code: seq[string], str: string): seq[string] =
+  var code = code
+  if code[code.len()-1] == ";":
+    code[code.len()-1] = str
+    return code
+  else:
+    return code & @[str]
+
 proc addIndent(code: var string, indent: int) =
   for i in 0..indent:
     code.add("  ")
@@ -118,33 +126,42 @@ proc makeCodeParts(node: Node): seq[string] =
   
   # if文
   of nkIfExpression:
-    code.add("if")
-    code.add("(" & node.condition.makeCodeParts() & ")")
-    code.add("{")
-    for statement in node.consequence.statements:
-      code.add(statement.makeCodeParts())
-    code.add("}")
+    code.add("(")
+    code.add(node.condition.makeCodeParts())
+    code.add("?")
+    for i, statement in node.consequence.statements:
+      if i == node.consequence.statements.len()-1:
+        code.add(statement.makeCodeParts().replaceSemicolon(""))
+      else:
+        code.add(statement.makeCodeParts().replaceSemicolon(","))
     if node.alternative != nil:
+      code.add(":")
       code.add(node.alternative.makeCodeParts())
+    code.add(")")
+    code.addSemicolon()
 
   # elif文
   of nkElifExpression:
-    code.add("elif")
-    code.add("(" & node.condition.makeCodeParts() & ")")
-    code.add("{")
-    for statement in node.consequence.statements:
-      code.add(statement.makeCodeParts())
-    code.add("}")
+    code.add("(")
+    code.add(node.condition.makeCodeParts())
+    code.add("?")
+    for i, statement in node.consequence.statements:
+      if i == node.consequence.statements.len()-1:
+        code.add(statement.makeCodeParts().replaceSemicolon(""))
+      else:
+        code.add(statement.makeCodeParts().replaceSemicolon(","))
+    code.addSemicolon()
     if node.alternative != nil:
       code.add(node.alternative.makeCodeParts())
+    code.add(")")
 
   # else文
   of nkElseExpression:
-    code.add("else")
-    code.add("{")
-    for statement in node.consequence.statements:
-      code.add(statement.makeCodeParts())
-    code.add("}")
+    for i, statement in node.consequence.statements:
+      if i == node.consequence.statements.len()-1:
+        code.add(statement.makeCodeParts().replaceSemicolon(""))
+      else:
+        code.add(statement.makeCodeParts().replaceSemicolon(","))
   else:
     return code
   
@@ -172,6 +189,18 @@ proc makeCppCode*(node: Node, indent: int): string =
       newLine.addIndent(braceCount)
       newLine.add(part & " ")
     elif part == ";":
+      newLine.add(part)
+      outCode.add(newLine & "\n")
+      newLine = ""
+      newLine.addIndent(braceCount)
+    elif part == "?":
+      braceCount = braceCount + 1
+      newLine.add(part)
+      outCode.add(newLine & "\n")
+      newLine = ""
+      newLine.addIndent(braceCount)
+    elif part == ":":
+      braceCount = braceCount - 1
       newLine.add(part)
       outCode.add(newLine & "\n")
       newLine = ""

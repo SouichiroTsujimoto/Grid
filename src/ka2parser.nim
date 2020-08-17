@@ -313,6 +313,8 @@ proc parseType(p: Parser): Node =
 proc parseExpression(p: Parser, precedence: Precedence): Node =
   var left: Node
   case p.curToken.Type
+  of IF         : left = p.parseIfExpression()
+  of RETURN     : left = p.parseReturnStatement()
   of IDENT      : left = p.parseIdent()
   of INT        : left = p.parseIntLiteral()
   of FLOAT      : left = p.parseFloatLiteral()
@@ -366,8 +368,6 @@ proc parseStatement(p: Parser): Node =
   case p.curToken.Type
   of LET:    return p.parseLetStatement()
   of DEFINE: return p.parseDefineStatement()
-  of IF:     return p.parseIfExpression()
-  of RETURN: return p.parseReturnStatement()
   else:      return p.parseExpressionStatement()
 
 # ASTを作る

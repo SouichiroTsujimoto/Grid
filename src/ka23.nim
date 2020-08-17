@@ -16,8 +16,8 @@ when isMainModule:
   
   for tree in program:
     cppCode.add(makeCppCode(tree, 0))
-    cppCode.add("\n")
-  cppCode.add("\n}")
+    echo cppCode
+  cppCode.add("}")
   
   let cppFileName = sourceName.split(".")[0] & ".cpp"
   writeCpp(cppFileName, cppCode)
@@ -29,9 +29,11 @@ when isMainModule:
   ・ elifを実装する  ✅
   ・ 関数の返り値の型を指定できるようにする ✅
   ・ ファイル読み込み・ファイル書き出しできるようにする ✅
-  ・ c++のコードに変換できるようにする (^ ^;)
-  ・ str.add(";")問題を解決させる
+  ・ c++のコードに変換できるようにする ✅
+  ・ str.add(";")問題を解決させる ✅
+  ・ if文を式にする
   ・ ka23の関数名がc++の関数と競合しないようにする
   ・ 簡単にc++の関数を呼び出せるようにする
   ・ 意味解析
+  ・ コメントを実装
 ]#

@@ -40,9 +40,11 @@ auto k_ne = [](int a) {
   return [a](int b) {return a != b;};
 };
 
-void k_puts(std::string a) {
+auto k_puts = [](std::string a) {
   std::cout << a << "\n";
-}
+  return true;
+};
+
 /*
 int main() {
   std::cout << ka2_mul (ka2_add (3) (2)) (4) << "\n";
