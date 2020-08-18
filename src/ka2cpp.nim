@@ -26,7 +26,7 @@ proc conversionCppFunction(operator: string): string =
   else:
     return "k_hoge"
 
-proc addSemicolon(code: var seq[string]) =
+proc addSemicolon*(code: var seq[string]) =
   if code[code.len()-1] != ";":
     code.add(";")
 
@@ -113,9 +113,13 @@ proc makeCodeParts(node: Node): seq[string] =
   of nkInfixExpression:
     code.add(node.operator.conversionCppFunction())
     if node.left != nil:
-      code.add("(" & node.left.makeCodeParts() & ")")
+      code.add("(")
+      code.add(node.left.makeCodeParts())
+      code.add(")")
     if node.right != nil:
-      code.add("(" & node.right.makeCodeParts() & ")")
+      code.add("(")
+      code.add(node.right.makeCodeParts())
+      code.add(")")
   
   # 前置
   of nkCallExpression:

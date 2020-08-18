@@ -93,11 +93,11 @@ proc parseInfixExpression(p: Parser, left: Node): Node =
   p.shiftToken()
   let right = p.parseExpression(cp)
   let node = Node(
-    kind:  nkInfixExpression,
-    token:      p.curToken,
-    operator:   operator,
-    left:       left,
-    right:      right,
+    kind: nkInfixExpression,
+    token: p.curToken,
+    operator: operator,
+    left: left,
+    right: right,
   )
   return node
 
@@ -301,6 +301,14 @@ proc parseIfExpression(p: Parser): Node =
     p.shiftToken()
     return node
 
+proc parseGroupedExpression(p: Parser): Node =
+  p.shiftToken()
+  let node = p.parseExpression(Lowest)
+  if p.peekToken.Type == RPAREN:
+    return node
+  else:
+    return nil
+
 proc parseType(p: Parser): Node =
   case p.curToken.Type
   of T_INT      : return p.parseIntType()
@@ -323,6 +331,7 @@ proc parseExpression(p: Parser, precedence: Precedence): Node =
   of TRUE       : left = p.parseBoolLiteral()
   of FALSE      : left = p.parseBoolLiteral()
   of NIL        : left = p.parseNilLiteral()
+  of LPAREN     : left = p.parseGroupedExpression()
   else:           left = nil
   
   while precedence < p.peekToken.tokenPrecedence() and p.peekToken.Type != EOF:
@@ -376,10 +385,12 @@ proc makeAST*(input: string): seq[Node] =
   var lex = newLexer(input)
   var p = lex.newParser()
   var tree = p.parseStatement()
-  program.add(tree)
+  if tree != nil:
+    program.add(tree)
   while p.peekToken.Type != EOF:
     p.shiftToken()
     tree = p.parseStatement()
-    program.add(tree)
+    if tree != nil:
+      program.add(tree)
 
   return program

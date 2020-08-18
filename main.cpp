@@ -3,6 +3,7 @@
 #include "ka2calc.h"
 
 int main() {
-  k_add ( 1 ) ( 3 ) 
-
+  int a = ( k_gt ( 10 ) ( 5 ) ?
+    10  ) ;
+    
 }
