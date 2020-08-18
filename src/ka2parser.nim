@@ -60,8 +60,6 @@ proc parseReturnStatement(p: Parser): Node =
   return node
 
 # 関数定義
-# 引数無しに対応させろ
-# 引数に型を付けさせろ
 # TODO
 proc parseDefineStatement(p: Parser): Node =
   var node = Node(
@@ -204,6 +202,14 @@ proc parseBoolLiteral(p: Parser): Node =
   )
   return node
 
+proc parseCppCode(p: Parser): Node =
+  let node = Node(
+    kind: nkCppCode,
+    token: p.curToken,
+    cppCodeValue: p.curToken.Literal
+  )
+  return node
+
 # nil値
 proc parseNilLiteral(p: Parser): Node =
   let node = Node(
@@ -324,6 +330,7 @@ proc parseExpression(p: Parser, precedence: Precedence): Node =
   of FLOAT      : left = p.parseFloatLiteral()
   of CHAR       : left = p.parseCharLiteral()
   of STRING     : left = p.parseStringLiteral()
+  of CPPCODE    : left = p.parseCppCode()
   of TRUE       : left = p.parseBoolLiteral()
   of FALSE      : left = p.parseBoolLiteral()
   of NIL        : left = p.parseNilLiteral()

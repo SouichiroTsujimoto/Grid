@@ -61,7 +61,7 @@ proc makeCodeParts(node: Node): seq[string] =
     if node.identValue != "":
       code.add(node.identValue)
   of nkFloatType:
-    code.add("double")
+    code.add("float")
     if node.identValue != "":
       code.add(node.identValue)
   of nkCharType:
@@ -72,6 +72,9 @@ proc makeCodeParts(node: Node): seq[string] =
     code.add("std::string")
     if node.identValue != "":
       code.add(node.identValue)
+  of nkCppCode:
+    code.add(node.cppCodeValue)
+    code.addSemicolon()
   of nkNIl:
     code.add("NULL")
   
@@ -85,24 +88,35 @@ proc makeCodeParts(node: Node): seq[string] =
     code.add("=")
     code.add(node.let_value.makeCodeParts())
     code.addSemicolon()
+
   # def文
   of nkDefineStatement:
     code.add("auto")
     code.add(node.define_ident.identValue)
     code.add("=")
-    var arg: string
-    for i, parameter in node.define_args:
-      code.add("[" & arg & "]")
-      code.add("(" & parameter.makeCodeParts() & ")")
-      arg = parameter.identValue
+    var arg: string = ""
+    if node.define_args == @[]:
+      code.add("[]")
+      code.add("()")
       code.add("{")
-      if i != node.define_args.len()-1:
-        code.add("return")
-    for statement in node.define_block.statements:
-      code.add(statement.makeCodeParts())
-    for _ in node.define_args:
+      for statement in node.define_block.statements:
+        code.add(statement.makeCodeParts())
       code.add("}")
-      code.add(";")
+      code.addSemicolon()
+    else:
+      for i, parameter in node.define_args:
+        code.add("[" & arg & "]")
+        code.add("(" & parameter.makeCodeParts() & ")")
+        arg = parameter.identValue
+        code.add("{")
+        if i != node.define_args.len()-1:
+          code.add("return")
+      for statement in node.define_block.statements:
+        code.add(statement.makeCodeParts())
+      for _ in node.define_args:
+        code.add("}")
+        code.addSemicolon()
+
   # return文
   of nkReturnStatement:
     code.add(node.token.Literal)

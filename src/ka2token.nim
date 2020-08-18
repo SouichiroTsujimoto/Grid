@@ -13,6 +13,7 @@ const
   FLOAT*        = "FLOAT"
   CHAR*         = "CHAR"
   STRING*       = "STRING"
+  CPPCODE*      = "CPPCODE"
   # 演算子
   ASSIGN*       = "="
   PLUS*         = "+"

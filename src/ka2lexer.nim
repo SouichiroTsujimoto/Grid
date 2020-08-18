@@ -78,6 +78,15 @@ proc readString(l: Lexer): string =
   l.nextChar()
   return str
 
+proc readCppCode(l: Lexer): string =
+  l.nextChar()
+  var cppCode: string
+  while l.ch != '}':
+    cppCode.add(l.ch)
+    l.nextChar()
+  l.nextChar()
+  return cppCode
+
 proc skipWhitespace(l: Lexer) =
   while (l.ch == ' ' or l.ch == '\t' or l.ch == '\n') and l.input.len() > l.position:
     l.nextChar()
@@ -133,7 +142,10 @@ proc nextToken*(l: Lexer): Token =
   of '*' : tok = newToken(ASTERISC, l.ch)
   of '/' : tok = newToken(SLASH, l.ch)
   else:
-    if l.ch.isSingleQuote():
+    if l.ch == '{':
+      let lit = l.readCppCode()
+      return Token(Type: CPPCODE, Literal: lit)
+    elif l.ch.isSingleQuote():
       let lit = l.readChar()
       return Token(Type: CHAR, Literal: lit)
     elif l.ch.isDoubleQuote():
