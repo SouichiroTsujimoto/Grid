@@ -1,1 +1,9 @@
-let #int a = if 10 > 5 do 10 end
+let #int  a = if 10 > 5 do
+            10 
+          elif 10 < 5 do
+            20
+          elif 10 == 5 do
+            100
+          else
+            30
+          end
