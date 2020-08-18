@@ -1,9 +1,5 @@
-let #int  a = if 10 > 5 do
-            10 
-          elif 10 < 5 do
-            20
-          elif 10 == 5 do
-            100
-          else
-            30
-          end
+def #string a() do
+  let #int h = 10
+  {int g = 20}
+  return h + g
+end
