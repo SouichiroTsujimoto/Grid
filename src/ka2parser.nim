@@ -271,7 +271,7 @@ proc parseIfExpression(p: Parser): Node =
   if p.peekToken.Type != DO:
     return Node(kind: nkNil)
   p.shiftToken()
-  node.consequence = p.parseBlockStatement(@[END, ELIF, ELSE])
+  node.consequence = p.parseBlockStatement(@[ELIF, ELSE])
 
   # elifがあった場合
   if p.peekToken.Type == ELIF:
@@ -294,10 +294,6 @@ proc parseIfExpression(p: Parser): Node =
       token: p.curToken,
       consequence: p.parseBlockStatement(@[END]),
     )
-    p.shiftToken()
-    return node
-  # endの場合
-  elif p.peekToken.Type == END:
     p.shiftToken()
     return node
 

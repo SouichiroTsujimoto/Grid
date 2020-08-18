@@ -138,9 +138,8 @@ proc makeCodeParts(node: Node): seq[string] =
         code.add(statement.makeCodeParts().replaceSemicolon(""))
       else:
         code.add(statement.makeCodeParts().replaceSemicolon(","))
-    if node.alternative != nil:
-      code.add(":")
-      code.add(node.alternative.makeCodeParts())
+    code.add(":")
+    code.add(node.alternative.makeCodeParts())
     code.add(")")
     code.addSemicolon()
 
@@ -154,9 +153,8 @@ proc makeCodeParts(node: Node): seq[string] =
         code.add(statement.makeCodeParts().replaceSemicolon(""))
       else:
         code.add(statement.makeCodeParts().replaceSemicolon(","))
-    code.addSemicolon()
-    if node.alternative != nil:
-      code.add(node.alternative.makeCodeParts())
+    code.add(":")
+    code.add(node.alternative.makeCodeParts())
     code.add(")")
 
   # else文
