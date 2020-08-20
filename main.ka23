@@ -1,5 +1,4 @@
 def #string a() do
-  let #int h = 10
-  {int g = 20}
-  return h + g
+  let #int h = (10 + 30) * 10
+  return h
 end

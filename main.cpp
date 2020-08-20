@@ -2,9 +2,8 @@
 
 int main() {
   auto a = [] () {
-    int h = 10 ;
-    int g = 20 ;
-    return ( k_add ( h ) ( g ) ) ;
+    int h = k_mul ( k_add ( 10 ) ( 30 ) ) ( 10 ) ;
+    return ( h ) ;
   } ;
   
 }
