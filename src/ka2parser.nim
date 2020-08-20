@@ -307,6 +307,7 @@ proc parseGroupedExpression(p: Parser): Node =
   p.shiftToken()
   let node = p.parseExpression(Lowest)
   if p.peekToken.Type == RPAREN:
+    p.shiftToken()
     return node
   else:
     return nil
