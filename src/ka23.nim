@@ -8,6 +8,7 @@ int main() {
 """
 
 when isMainModule:
+  echo "ファイル名を入力してください"
   let sourceName = readLine(stdin)
   let input = sourceName.readSource()
   let program = makeAST(input)
