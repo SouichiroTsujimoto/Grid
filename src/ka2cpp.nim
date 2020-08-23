@@ -120,7 +120,7 @@ proc makeCodeParts(node: Node): seq[string] =
   # return文
   of nkReturnStatement:
     code.add(node.token.Literal)
-    code.add("(" & node.return_expression.makeCodeParts() & ")")
+    code.add("(" & node.return_expression.makeCodeParts().replaceSemicolon("") & ")")
     code.addSemicolon()
   
   # 中置
@@ -142,7 +142,7 @@ proc makeCodeParts(node: Node): seq[string] =
       code.add("(" & arg.makeCodeParts() & ")")
     code.addSemicolon()
   
-  # if文
+  # if式
   of nkIfExpression:
     code.add("(")
     code.add(node.condition.makeCodeParts())
@@ -157,7 +157,7 @@ proc makeCodeParts(node: Node): seq[string] =
     code.add(")")
     code.addSemicolon()
 
-  # elif文
+  # elif式
   of nkElifExpression:
     code.add("(")
     code.add(node.condition.makeCodeParts())
@@ -171,7 +171,7 @@ proc makeCodeParts(node: Node): seq[string] =
     code.add(node.alternative.makeCodeParts())
     code.add(")")
 
-  # else文
+  # else式
   of nkElseExpression:
     for i, statement in node.consequence.statements:
       if i == node.consequence.statements.len()-1:

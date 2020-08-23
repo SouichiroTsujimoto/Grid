@@ -1,4 +1,11 @@
-def #string a() do
-  let #int h = (10 + 30) * 10
-  return h
+def #string FizzBuzz(#int x) do
+  return if x / 15 * 15 == x do
+    "FIZZBUZZ"
+  elif x / 5 * 5 == x do
+    "BUZZ"
+  elif x / 3 * 3 == x do 
+    "FIZZ"
+  else
+    "OTHER"
+  end
 end

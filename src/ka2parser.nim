@@ -282,15 +282,14 @@ proc parseIfExpression(p: Parser): Node =
   # elifがあった場合
   if p.peekToken.Type == ELIF:
     p.shiftToken()
-    let res = p.parseIfExpression
+    let res = p.parseIfExpression()
     node.alternative = Node(
       kind: nkElifExpression,
-      token: p.curToken,
+      token: res.token,
       condition: res.condition,
       consequence: res.consequence,
       alternative: res.alternative,
     )
-    p.shiftToken()
     return node
   # elseがあった場合
   elif p.peekToken.Type == ELSE:

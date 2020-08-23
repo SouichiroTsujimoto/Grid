@@ -2,7 +2,7 @@ import  ka2parser, ka2cpp, ka2rw
 import strutils
 
 var cppCode = """
-#include "ka2calc.h"
+#include "ka2lib.h"
 
 int main() {
 """
