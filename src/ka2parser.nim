@@ -140,8 +140,8 @@ proc parseNameProc(p: Parser, endToken: string): seq[Node] =
 proc parseCallExpression(p: Parser, left: Node): Node =
   var node = Node(
     kind: nkCallExpression,
-    token:     p.curToken,
-    function:  left,
+    token: p.curToken,
+    function: left,
   )
   p.shiftToken()
   node.args = p.parseExpressionList(RPAREN)
@@ -202,6 +202,7 @@ proc parseBoolLiteral(p: Parser): Node =
   )
   return node
 
+# 埋め込みC++コード
 proc parseCppCode(p: Parser): Node =
   let node = Node(
     kind: nkCppCode,
@@ -266,6 +267,18 @@ proc parseStringType(p: Parser): Node =
     node.identValue = p.curToken.Literal
   return node
 
+# bool型
+proc parseBoolType(p: Parser): Node =
+  let node = Node(
+    kind: nkBoolType,
+    token: p.curToken,
+    typeValue: p.curToken.Literal,
+  )
+  if p.peekToken.Type == IDENT:
+    p.shiftToken()
+    node.identValue = p.curToken.Literal
+  return node
+
 # if文
 proc parseIfExpression(p: Parser): Node =
   var node = Node(
@@ -317,6 +330,7 @@ proc parseType(p: Parser): Node =
   of T_FLOAT    : return p.parseFloatType()
   of T_CHAR     : return p.parseCharType()
   of T_STRING   : return p.parseStringType()
+  of T_BOOL     : return p.parseBoolType()
   else          : return nil
 
 # 式の処理

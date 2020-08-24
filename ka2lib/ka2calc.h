@@ -1,5 +1,3 @@
-#include<iostream>
-
 auto k_add = [](int a) {
   return [a](int b) { return a + b; };
 };
@@ -38,11 +36,6 @@ auto k_eq = [](int a) {
 
 auto k_ne = [](int a) {
   return [a](int b) {return a != b;};
-};
-
-auto k_puts = [](std::string a) {
-  std::cout << a << "\n";
-  return true;
 };
 
 /*

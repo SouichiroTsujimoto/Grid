@@ -1,5 +1,5 @@
-import ka2token, ka2node
-import strutils
+import ka2token, ka2node, ka2funcs
+import strutils, tables
 
 proc conversionCppFunction(operator: string): string =
   case operator
@@ -53,7 +53,7 @@ proc makeCodeParts(node: Node): seq[string] =
   of nkBoolLiteral:
     code.add($node.boolValue)
   of nkCharLiteral:
-    code.add("\'" & node.charValue & "\'")
+    code.add("\'" & $node.charValue & "\'")
   of nkStringLiteral:
     code.add("\"" & node.stringValue & "\"")
   of nkIntType:
@@ -72,6 +72,10 @@ proc makeCodeParts(node: Node): seq[string] =
     code.add("std::string")
     if node.identValue != "":
       code.add(node.identValue)
+  of nkBoolType:
+    code.add("bool")
+    if node.identValue != "":
+      code.add(node.identValue)
   of nkCppCode:
     code.add(node.cppCodeValue)
     code.addSemicolon()
@@ -80,7 +84,11 @@ proc makeCodeParts(node: Node): seq[string] =
   
   # 名前
   of nkIdent:
-    code.add(node.identValue)
+    # 仮
+    if names.hasKey(node.identValue):
+      code.add(names[node.identValue])
+    else:
+      code.add(node.identValue)
   
   # let文
   of nkLetStatement:

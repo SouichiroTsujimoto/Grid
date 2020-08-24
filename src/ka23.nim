@@ -1,8 +1,9 @@
-import  ka2parser, ka2cpp, ka2rw
-import strutils
+import  ka2parser, ka2cpp, ka2rw, ka2funcs
+import strutils, tables
 
 var cppCode = """
-#include "ka2lib.h"
+#include "ka2lib/ka2calc.h"
+#include "ka2lib/ka2IO.h"
 
 int main() {
 """
@@ -12,7 +13,7 @@ when isMainModule:
   let sourceName = readLine(stdin)
   let input = sourceName.readSource()
   let program = makeAST(input)
-  
+
   for tree in program:
     cppCode.add(makeCppCode(tree, 0))
   cppCode.add("\n}")
@@ -30,7 +31,8 @@ when isMainModule:
   ・ c++のコードに変換できるようにする ✅
   ・ str.add(";")問題を解決させる ✅
   ・ if文を式にする ✅
-  ・ 簡単にc++の関数を呼び出せるようにする
+  ・ 簡単にc++の関数を呼び出せるようにする ✅
+  ・ puts ✅(仮)
   ・ 意味解析
   ・ コメントを実装
   ・ 配列実装

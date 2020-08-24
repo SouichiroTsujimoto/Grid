@@ -52,6 +52,7 @@ const
   T_FLOAT*      = "T_FLOAT"
   T_CHAR*       = "T_CHAR"
   T_STRING*     = "T_STRING"
+  T_BOOL*       = "T_BOOL"
 
 let keywords = {
   "True"    : TRUE,
@@ -69,6 +70,7 @@ let keywords = {
   "#float"  : T_FLOAT,
   "#char"   : T_CHAR,
   "#string" : T_STRING,
+  "#bool"   : T_BOOL,
 }.newTable
 
 proc LookupIdent*(ident: string): string =

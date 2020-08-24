@@ -64,6 +64,7 @@ proc readChar(l: Lexer): string =
   if l.ch.isSingleQuote == false:
     let c = $l.ch
     l.nextChar()
+    l.nextChar()
     return c
   else:
     l.nextChar()
