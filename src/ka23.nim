@@ -1,4 +1,4 @@
-import  ka2parser, ka2cpp, ka2rw, ka2funcs
+import  ka2parser, ka2cpp, ka2rw
 import strutils, tables
 
 var cppCode = """
@@ -17,7 +17,7 @@ when isMainModule:
   for tree in program:
     cppCode.add(makeCppCode(tree, 0))
   cppCode.add("\n}")
-  
+
   let cppFileName = sourceName.split(".")[0] & ".cpp"
   writeCpp(cppFileName, cppCode)
 #[
@@ -30,10 +30,11 @@ when isMainModule:
   ・ ファイル読み込み・ファイル書き出しできるようにする ✅
   ・ c++のコードに変換できるようにする ✅
   ・ str.add(";")問題を解決させる ✅
-  ・ if文を式にする ✅
+  ・ if文を式にする ✅ 
   ・ 簡単にc++の関数を呼び出せるようにする ✅
   ・ puts ✅(仮)
   ・ 意味解析
+  ・ 変数をイミュータブルに
   ・ コメントを実装
   ・ 配列実装
   ・ ka23の関数名がc++の関数と競合しないようにする

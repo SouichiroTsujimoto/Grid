@@ -1,4 +1,4 @@
-import ../src/ka2parser, ../src/ka2cpp, ../src/ka2funcs
+import ../src/ka2parser, ../src/ka2cpp
 import unittest, strutils
 
 proc findStr(code: string, str: string): bool =
@@ -50,24 +50,45 @@ suite "let":
 suite "def":
   test "def #int a(#int b) do return b * 2 end":
     let program = makeAST("def #int a(#int b) do return b * 2 end")
-    check(makeCppCode(program[0], 0).findStr("auto a = [] ( int b ) {\n    return ( k_mul ( b ) ( 2 )  ) ;\n  } ;"))
+    check(makeCppCode(program[0], 0).findStr("auto a = [] ( int b ) {"))
+    check(makeCppCode(program[0], 0).findStr("return ( k_mul ( b ) ( 2 ) )"))
+    check(makeCppCode(program[0], 0).findStr("} ;"))
   test "def #int a(#int b, #int c) do return b / c end":
     let program = makeAST("def #int a(#int b, #int c) do return b / c end")
-    check(makeCppCode(program[0], 0).findStr("auto a = [] ( int b ) {\n    return [b] ( int c ) {\n      return ( k_div ( b ) ( c )  ) ;\n    } ;\n  } ;"))
+    check(makeCppCode(program[0], 0).findStr("auto a = [] ( int b ) {"))
+    check(makeCppCode(program[0], 0).findStr("return [b] ( int c ) {"))
+    check(makeCppCode(program[0], 0).findStr("return ( k_div ( b ) ( c ) ) ;"))
+    check(makeCppCode(program[0], 0).findStr("} ;"))
+    check(makeCppCode(program[0], 0).findStr("} ;"))
   test "def #bool a(#int b, #bool c) do let #bool d = b == 10 return c == d end":
     let program = makeAST("def #bool a(#int b, #bool c) do let #bool d = b == 10 return c == d end")
-    check(makeCppCode(program[0], 0).findStr("auto a = [] ( int b ) {\n    return [b] ( bool c ) {\n      bool d = k_eq ( b ) ( 10 ) ;\n      return ( k_eq ( c ) ( d )  ) ;\n    } ;\n  } ;"))
+    check(makeCppCode(program[0], 0).findStr("auto a = [] ( int b ) {"))
+    check(makeCppCode(program[0], 0).findStr("return [b] ( bool c ) {"))
+    check(makeCppCode(program[0], 0).findStr("bool d = k_eq ( b ) ( 10 ) ;"))
+    check(makeCppCode(program[0], 0).findStr("return ( k_eq ( c ) ( d ) ) ;"))
+    check(makeCppCode(program[0], 0).findStr("} ;"))
+    check(makeCppCode(program[0], 0).findStr("} ;"))
 
 suite "if":
   test "if 5 + 5 == 10 do \"5 + 5 = 10\" else \"?\" end":
     let program = makeAST("if 5 + 5 == 10 do \"5 + 5 = 10\" else \"?\" end")
-    check(makeCppCode(program[0], 0).findStr("( k_eq ( k_add ( 5 ) ( 5 ) ) ( 10 ) ?\n    \"5 + 5 = 10\"  :\n  \"?\"  ) ;"))
+    check(makeCppCode(program[0], 0).findStr("( k_eq ( k_add ( 5 ) ( 5 ) ) ( 10 ) ?"))
+    check(makeCppCode(program[0], 0).findStr("\"5 + 5 = 10\" :"))
+    check(makeCppCode(program[0], 0).findStr("\"?\" ) ;"))
   test "if True do \"1\" elif True do \"2\" else \"3\" end":
     let program = makeAST("if True do \"1\" elif True do \"2\" else \"3\" end")
-    check(makeCppCode(program[0], 0).findStr("( true ?\n    \"1\"  :\n  ( true ?\n    \"2\"  :\n  \"3\"  ) ) ;"))
+    check(makeCppCode(program[0], 0).findStr("( true ?"))
+    check(makeCppCode(program[0], 0).findStr("\"1\" :"))
+    check(makeCppCode(program[0], 0).findStr("( true ?"))
+    check(makeCppCode(program[0], 0).findStr("\"2\" :"))
+    check(makeCppCode(program[0], 0).findStr("\"3\" ) ) ;"))
   test "let #int = if 2 + 2 == 5 do 1984 elif 2 + 2 == 4 do 2020 else 0 end":
     let program = makeAST("let #int a = if 2 + 2 == 5 do 1984 elif 2 + 2 == 4 do 2020 else 0 end")
-    check(makeCppCode(program[0], 0).findStr("int a = ( k_eq ( k_add ( 2 ) ( 2 ) ) ( 5 ) ?\n    1984  :\n  ( k_eq ( k_add ( 2 ) ( 2 ) ) ( 4 ) ?\n    2020  :\n  0  ) ) ;"))
+    check(makeCppCode(program[0], 0).findStr("int a = ( k_eq ( k_add ( 2 ) ( 2 ) ) ( 5 ) ?"))
+    check(makeCppCode(program[0], 0).findStr("1984 :"))
+    check(makeCppCode(program[0], 0).findStr("( k_eq ( k_add ( 2 ) ( 2 ) ) ( 4 ) ?"))
+    check(makeCppCode(program[0], 0).findStr("2020 :"))
+    check(makeCppCode(program[0], 0).findStr("0 ) ) ;"))
 
 suite "puts":
   test "puts(\"Hello\")":

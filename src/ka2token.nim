@@ -13,6 +13,7 @@ const
   FLOAT*        = "FLOAT"
   CHAR*         = "CHAR"
   STRING*       = "STRING"
+  BOOL*         = "BOOL"
   CPPCODE*      = "CPPCODE"
   # 演算子
   ASSIGN*       = "="
@@ -32,6 +33,7 @@ const
   # デリミタ
   COMMA*        = ","
   COLON*        = ":"
+  SEMICOLON*    = ";"
   # 括弧
   LPAREN*       = "("
   RPAREN*       = ")"
@@ -53,6 +55,9 @@ const
   T_CHAR*       = "T_CHAR"
   T_STRING*     = "T_STRING"
   T_BOOL*       = "T_BOOL"
+  # その他
+  AUTO*         = "AUTO"
+  OTHER*        = "OTHER"
 
 let keywords = {
   "True"    : TRUE,

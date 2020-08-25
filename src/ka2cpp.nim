@@ -1,5 +1,11 @@
-import ka2token, ka2node, ka2funcs
-import strutils, tables
+import ka2token, ka2node, ka2token
+import strutils
+
+#------仮------
+type codeParts = tuple
+  Type: string
+  Code: string
+#--------------
 
 proc conversionCppFunction(operator: string): string =
   case operator
@@ -23,169 +29,180 @@ proc conversionCppFunction(operator: string): string =
     return "k_eq"
   of NE:
     return "k_ne"
+  #------仮------
+  of "puts":
+    return "k_puts"
   else:
-    return "k_hoge"
+    return "nil"
 
-proc addSemicolon*(code: var seq[string]) =
-  if code[code.len()-1] != ";":
-    code.add(";")
+proc addSemicolon*(parts: var seq[codeParts]) =
+  let tail = parts[parts.len()-1]
+  if tail.Type != SEMICOLON:
+    parts.add((SEMICOLON, ";"))
 
-proc replaceSemicolon(code: seq[string], str: string): seq[string] =
-  var code = code
-  if code[code.len()-1] == ";":
-    code[code.len()-1] = str
-    return code
+proc replaceSemicolon(parts: seq[codeParts], obj: codeParts): seq[codeParts] =
+  var tail = parts[0]
+  if tail.Type == SEMICOLON:
+    tail = obj
+    return parts[0..parts.len()-1] & tail
   else:
-    return code & @[str]
+    return parts
 
 proc addIndent(code: var string, indent: int) =
   for i in 0..indent:
     code.add("  ")
 
-proc makeCodeParts(node: Node): seq[string] =
-  var code: seq[string]
+proc makeCodeParts(node: Node): seq[codeParts] =
+  var code: seq[codeParts]
   case node.kind
   # リテラル
   of nkIntLiteral:
-    code.add($node.intValue)
+    code.add((node.token.Type, $node.intValue))
   of nkFloatLiteral:
-    code.add($node.floatValue)
+    code.add((node.token.Type, $node.floatValue))
   of nkBoolLiteral:
-    code.add($node.boolValue)
+    code.add((node.token.Type, $node.boolValue))
   of nkCharLiteral:
-    code.add("\'" & $node.charValue & "\'")
+    code.add((node.token.Type, "\'" & $node.charValue & "\'"))
   of nkStringLiteral:
-    code.add("\"" & node.stringValue & "\"")
+    code.add((node.token.Type, "\"" & node.stringValue & "\""))
   of nkIntType:
-    code.add("int")
+    code.add((node.token.Type, "int"))
     if node.identValue != "":
-      code.add(node.identValue)
+      code.add((INT, node.identValue))
   of nkFloatType:
-    code.add("float")
+    code.add((node.token.Type, "float"))
     if node.identValue != "":
-      code.add(node.identValue)
+      code.add((FLOAT, node.identValue))
   of nkCharType:
-    code.add("char")
+    code.add((node.token.Type, "char"))
     if node.identValue != "":
-      code.add(node.identValue)
+      code.add((CHAR, node.identValue))
   of nkStringType:
-    code.add("std::string")
+    code.add((node.token.Type, "std::string"))
     if node.identValue != "":
-      code.add(node.identValue)
+      code.add((STRING, node.identValue))
   of nkBoolType:
-    code.add("bool")
+    code.add((node.token.Type, "bool"))
     if node.identValue != "":
-      code.add(node.identValue)
+      code.add((BOOL, node.identValue))
   of nkCppCode:
-    code.add(node.cppCodeValue)
+    code.add((node.token.Type, node.cppCodeValue))
     code.addSemicolon()
   of nkNIl:
-    code.add("NULL")
+    code.add((node.token.Type, "NULL"))
   
   # 名前
   of nkIdent:
     # 仮
-    if names.hasKey(node.identValue):
-      code.add(names[node.identValue])
+    if node.identValue.conversionCppFunction() != "nil":
+      code.add((node.token.Type, node.identValue.conversionCppFunction()))
     else:
-      code.add(node.identValue)
+      code.add((node.token.Type, node.identValue))
   
   # let文
   of nkLetStatement:
     code.add(node.let_ident.makeCodeParts())
-    code.add("=")
+    code.add((ASSIGN, "="))
     code.add(node.let_value.makeCodeParts())
     code.addSemicolon()
 
   # def文
   of nkDefineStatement:
-    code.add("auto")
-    code.add(node.define_ident.identValue)
-    code.add("=")
+    code.add((AUTO, "auto"))
+    code.add((IDENT, node.define_ident.identValue))
+    code.add((ASSIGN, "="))
     var arg: string = ""
     if node.define_args == @[]:
-      code.add("[]")
-      code.add("()")
-      code.add("{")
+      code.add((OTHER, "[]"))
+      code.add((OTHER, "()"))
+      code.add((OTHER, "{"))
       for statement in node.define_block.statements:
         code.add(statement.makeCodeParts())
-      code.add("}")
+      code.add((OTHER, "}"))
       code.addSemicolon()
     else:
       for i, parameter in node.define_args:
-        code.add("[" & arg & "]")
-        code.add("(" & parameter.makeCodeParts() & ")")
+        code.add((OTHER, "[" & arg & "]"))
+        code.add((OTHER, "("))
+        code.add(parameter.makeCodeParts())
+        code.add((OTHER, ")"))
         arg = parameter.identValue
-        code.add("{")
+        code.add((OTHER, "{"))
         if i != node.define_args.len()-1:
-          code.add("return")
+          code.add((RETURN, "return"))
       for statement in node.define_block.statements:
         code.add(statement.makeCodeParts())
       for _ in node.define_args:
-        code.add("}")
+        code.add((OTHER, "}"))
         code.addSemicolon()
 
   # return文
   of nkReturnStatement:
-    code.add(node.token.Literal)
-    code.add("(" & node.return_expression.makeCodeParts().replaceSemicolon("") & ")")
+    code.add((OTHER, node.token.Literal))
+    code.add((OTHER, "("))
+    let r = node.return_expression.makeCodeParts().replaceSemicolon((OTHER, ""))
+    code.add(r)
+    code.add((OTHER, ")"))
     code.addSemicolon()
   
   # 中置
   of nkInfixExpression:
-    code.add(node.operator.conversionCppFunction())
+    code.add((node.token.Type, node.operator.conversionCppFunction()))
     if node.left != nil:
-      code.add("(")
+      code.add((OTHER, "("))
       code.add(node.left.makeCodeParts())
-      code.add(")")
+      code.add((OTHER, ")"))
     if node.right != nil:
-      code.add("(")
+      code.add((OTHER, "("))
       code.add(node.right.makeCodeParts())
-      code.add(")")
+      code.add((OTHER, ")"))
   
   # 前置
   of nkCallExpression:
     code.add(node.function.makeCodeParts())
     for arg in node.args:
-      code.add("(" & arg.makeCodeParts() & ")")
+      code.add((OTHER, "("))
+      code.add(arg.makeCodeParts())
+      code.add((OTHER, ")"))
     code.addSemicolon()
   
   # if式
   of nkIfExpression:
-    code.add("(")
+    code.add((OTHER, "("))
     code.add(node.condition.makeCodeParts())
-    code.add("?")
+    code.add((OTHER, "?"))
     for i, statement in node.consequence.statements:
       if i == node.consequence.statements.len()-1:
-        code.add(statement.makeCodeParts().replaceSemicolon(""))
+        code.add(statement.makeCodeParts().replaceSemicolon((OTHER, "")))
       else:
-        code.add(statement.makeCodeParts().replaceSemicolon(","))
-    code.add(":")
+        code.add(statement.makeCodeParts().replaceSemicolon((OTHER, ",")))
+    code.add((OTHER, ":"))
     code.add(node.alternative.makeCodeParts())
-    code.add(")")
+    code.add((OTHER, ")"))
     code.addSemicolon()
 
   # elif式
   of nkElifExpression:
-    code.add("(")
+    code.add((OTHER, "("))
     code.add(node.condition.makeCodeParts())
-    code.add("?")
+    code.add((OTHER, "?"))
     for i, statement in node.consequence.statements:
       if i == node.consequence.statements.len()-1:
-        code.add(statement.makeCodeParts().replaceSemicolon(""))
+        code.add(statement.makeCodeParts().replaceSemicolon((OTHER, "")))
       else:
-        code.add(statement.makeCodeParts().replaceSemicolon(","))
-    code.add(":")
+        code.add(statement.makeCodeParts().replaceSemicolon((OTHER, ",")))
+    code.add((OTHER, ":"))
     code.add(node.alternative.makeCodeParts())
-    code.add(")")
+    code.add((OTHER, ")"))
 
   # else式
   of nkElseExpression:
     for i, statement in node.consequence.statements:
       if i == node.consequence.statements.len()-1:
-        code.add(statement.makeCodeParts().replaceSemicolon(""))
+        code.add(statement.makeCodeParts().replaceSemicolon((OTHER, "")))
       else:
-        code.add(statement.makeCodeParts().replaceSemicolon(","))
+        code.add(statement.makeCodeParts().replaceSemicolon((OTHER, ",")))
   else:
     return code
   
@@ -201,36 +218,36 @@ proc makeCppCode*(node: Node, indent: int): string =
   for i, part in codeParts:
     # echo $i & "回目 : " & part
     # echo braceCount
-    if part == "{":
+    if part.Type != STRING and part.Code == "{":
       braceCount = braceCount + 1
-      newLine.add(part)
+      newLine.add(part.Code)
       outCode.add(newLine & "\n")
       newLine = ""
       newLine.addIndent(braceCount)
-    elif part == "}":
+    elif part.Type != STRING and part.Code == "}":
       braceCount = braceCount - 1
       newLine = ""
       newLine.addIndent(braceCount)
-      newLine.add(part & " ")
-    elif part == ";":
-      newLine.add(part)
+      newLine.add(part.Code & " ")
+    elif part.Type != STRING and part.Code == ";":
+      newLine.add(part.Code)
       outCode.add(newLine & "\n")
       newLine = ""
       newLine.addIndent(braceCount)
-    elif part == "?":
+    elif part.Type != STRING and part.Code == "?":
       braceCount = braceCount + 1
-      newLine.add(part)
+      newLine.add(part.Code)
       outCode.add(newLine & "\n")
       newLine = ""
       newLine.addIndent(braceCount)
-    elif part == ":":
+    elif part.Type != STRING and part.Code == ":":
       braceCount = braceCount - 1
-      newLine.add(part)
+      newLine.add(part.Code)
       outCode.add(newLine & "\n")
       newLine = ""
       newLine.addIndent(braceCount)
     else:
-      newLine.add(part & " ")
+      newLine.add(part.Code & " ")
     
   outCode.add(newLine)
   

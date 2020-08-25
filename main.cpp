@@ -2,6 +2,6 @@
 #include "ka2lib/ka2IO.h"
 
 int main() {
-  k_puts ( "Hello" ) ;
+  k_puts ( "HELLO" ) ;
   
 }
