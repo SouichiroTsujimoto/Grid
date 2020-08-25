@@ -1,1 +1,3 @@
-puts("HELLO")
+def #int a(#int a, #int b) do
+  return 10
+end

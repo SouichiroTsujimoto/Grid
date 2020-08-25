@@ -27,22 +27,22 @@ suite "operator":
 suite "let":
   test "let #int a = 10":
     let program = makeAST("let #int a = 10")
-    check(makeCppCode(program[0], 0).findStr("int a = 10 ;"))
+    check(makeCppCode(program[0], 0).findStr("const int a = 10 ;"))
   test "let #int a = 10 + 10":
     let program = makeAST("let #int a = 10 + 10")
-    check(makeCppCode(program[0], 0).findStr("int a = k_add ( 10 ) ( 10 ) ;"))
+    check(makeCppCode(program[0], 0).findStr("const int a = k_add ( 10 ) ( 10 ) ;"))
   test "let #float a = 1.5":
     let program = makeAST("let #float a = 1.5")
-    check(makeCppCode(program[0], 0).findStr("float a = 1.5 ;"))
+    check(makeCppCode(program[0], 0).findStr("const float a = 1.5 ;"))
   test "let #char a = \'A\'":
     let program = makeAST("let #char a = \'A\'")
-    check(makeCppCode(program[0], 0).findStr("char a = \'A\' ;"))
+    check(makeCppCode(program[0], 0).findStr("const char a = \'A\' ;"))
   test "let #string a = \"Hello\"":
     let program = makeAST("let #string a = \"Hello\"")
-    check(makeCppCode(program[0], 0).findStr("std::string a = \"Hello\" ;"))
+    check(makeCppCode(program[0], 0).findStr("const std::string a = \"Hello\" ;"))
   test "let #bool a = True":
     let program = makeAST("let #bool a = True")
-    check(makeCppCode(program[0], 0).findStr("bool a = true ;"))
+    check(makeCppCode(program[0], 0).findStr("const bool a = true ;"))
   test "let #bool a = 1 >= 10":
     let program = makeAST("let #bool a = 1 >= 10")
     check(makeCppCode(program[0], 0).findStr("bool a = k_ge ( 1 ) ( 10 ) ;"))
@@ -82,9 +82,9 @@ suite "if":
     check(makeCppCode(program[0], 0).findStr("( true ?"))
     check(makeCppCode(program[0], 0).findStr("\"2\" :"))
     check(makeCppCode(program[0], 0).findStr("\"3\" ) ) ;"))
-  test "let #int = if 2 + 2 == 5 do 1984 elif 2 + 2 == 4 do 2020 else 0 end":
+  test "let #int a = if 2 + 2 == 5 do 1984 elif 2 + 2 == 4 do 2020 else 0 end":
     let program = makeAST("let #int a = if 2 + 2 == 5 do 1984 elif 2 + 2 == 4 do 2020 else 0 end")
-    check(makeCppCode(program[0], 0).findStr("int a = ( k_eq ( k_add ( 2 ) ( 2 ) ) ( 5 ) ?"))
+    check(makeCppCode(program[0], 0).findStr("const int a = ( k_eq ( k_add ( 2 ) ( 2 ) ) ( 5 ) ?"))
     check(makeCppCode(program[0], 0).findStr("1984 :"))
     check(makeCppCode(program[0], 0).findStr("( k_eq ( k_add ( 2 ) ( 2 ) ) ( 4 ) ?"))
     check(makeCppCode(program[0], 0).findStr("2020 :"))

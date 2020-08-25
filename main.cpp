@@ -2,6 +2,10 @@
 #include "ka2lib/ka2IO.h"
 
 int main() {
-  k_puts ( "HELLO" ) ;
+  auto a = [] ( int a ) {
+    return [a] ( int b ) {
+      return ( 10 ) ;
+    } ;
+  } ;
   
 }
