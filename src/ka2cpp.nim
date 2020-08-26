@@ -1,39 +1,41 @@
 import ka2token, ka2node, ka2token
-import strutils
+import strutils, tables
 
 #------仮------
 type codeParts = tuple
   Type: string
   Code: string
+
+var identTable = initTable[string, string]()
 #--------------
 
-proc conversionCppFunction(operator: string): string =
+proc conversionCppFunction(operator: string): (string, string) =
   case operator
   of PLUS:
-    return "k_add"
+    return (INT, "k_add")
   of MINUS:
-    return "k_sub"
+    return (INT, "k_sub")
   of ASTERISC:
-    return "k_mul"
+    return (INT, "k_mul")
   of SLASH:
-    return "k_div"
+    return (INT, "k_div")
   of LT:
-    return "k_lt"
+    return (BOOL, "k_lt")
   of GT:
-    return "k_gt"
+    return (BOOL, "k_gt")
   of LE:
-    return "k_le"
+    return (BOOL, "k_le")
   of GE:
-    return "k_ge"
+    return (BOOL, "k_ge")
   of EQ:
-    return "k_eq"
+    return (BOOL, "k_eq")
   of NE:
-    return "k_ne"
+    return (BOOL, "k_ne")
   #------仮------
   of "puts":
-    return "k_puts"
+    return (NIL, "k_puts")
   else:
-    return "nil"
+    return (NIL, "nil")
 
 proc addSemicolon*(parts: var seq[codeParts]) =
   let tail = parts[parts.len()-1]
@@ -41,10 +43,9 @@ proc addSemicolon*(parts: var seq[codeParts]) =
     parts.add((SEMICOLON, ";"))
 
 proc replaceSemicolon(parts: seq[codeParts], obj: codeParts): seq[codeParts] =
-  var tail = parts[0]
+  let tail = parts[parts.len()-1]
   if tail.Type == SEMICOLON:
-    tail = obj
-    return parts[0..parts.len()-1] & tail
+    return parts[0..parts.len()-2] & obj
   else:
     return parts
 
@@ -112,6 +113,13 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
       codeType = T_BOOL
     else:
       echo "エラー！！！"
+  of nkFunctionType:
+    if node.identValue != "":
+      code.add((T_FUNCTION, "auto"))
+      code.add((FUNCTION, node.identValue))
+      codeType = T_FUNCTION
+    else:
+      echo "エラー！！！"
   of nkCppCode:
     if node.cppCodeValue != "":
       code.add((CPPCODE, node.cppCodeValue))
@@ -123,10 +131,13 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
   # 名前
   of nkIdent:
     # 仮
-    if node.identValue.conversionCppFunction() != "nil":
-      code.add((node.token.Type, node.identValue.conversionCppFunction()))
+    let ic = node.identValue.conversionCppFunction()
+    if ic[1] != "nil":
+      code.add((node.token.Type, ic[1]))
+      codeType = ic[0]
     else:
       code.add((node.token.Type, node.identValue))
+      codeType = IDENT
   
   # let文
   of nkLetStatement:
@@ -145,7 +156,7 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
   of nkDefineStatement:
     code.add((AUTO, "auto"))
     let di = node.define_ident.makeCodeParts()
-    code.add((IDENT, di[0][1][1]))
+    code.add(di[0][1])
     code.add((ASSIGN, "="))
     var arg: string = ""
     if node.define_args == @[]:
@@ -195,22 +206,39 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
   
   # 中置
   of nkInfixExpression:
-    code.add((node.token.Type, node.operator.conversionCppFunction()))
+    let oc = node.operator.conversionCppFunction()
+    code.add((node.token.Type, oc[1]))
+    var lt, rt: string
     if node.left != nil:
+      let l = node.left.makeCodeParts()
       code.add((OTHER, "("))
-      code.add(node.left.makeCodeParts()[0])
+      code.add(l[0])
       code.add((OTHER, ")"))
+      lt = l[1]
     if node.right != nil:
+      let r = node.right.makeCodeParts()
       code.add((OTHER, "("))
-      code.add(node.right.makeCodeParts()[0])
+      code.add(r[0])
       code.add((OTHER, ")"))
-  
+      rt = r[1]
+    if lt == "" and rt == "":
+      codeType = FUNCTION
+    elif lt == "":
+      codeType = FUNCTION
+    elif rt == "":
+      codeType = FUNCTION
+    elif lt == rt:
+      codeType = oc[0]
+    else:
+      echo "エラー！！！"
+
   # 前置
   of nkCallExpression:
     code.add(node.function.makeCodeParts()[0])
     for arg in node.args:
       code.add((OTHER, "("))
-      code.add(arg.makeCodeParts()[0])
+      let a = arg.makeCodeParts()[0]
+      code.add(a.replaceSemicolon((OTHER, "")))
       code.add((OTHER, ")"))
     code.addSemicolon()
   

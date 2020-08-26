@@ -55,27 +55,30 @@ const
   T_CHAR*       = "T_CHAR"
   T_STRING*     = "T_STRING"
   T_BOOL*       = "T_BOOL"
+  T_FUNCTION*   = "T_FUNCTION"
   # その他
   AUTO*         = "AUTO"
+  FUNCTION*     = "FUNCTION"
   OTHER*        = "OTHER"
 
 let keywords = {
-  "True"    : TRUE,
-  "False"   : FALSE,
-  "Nil"     : NIL,
-  "let"     : LET,
-  "def"     : DEFINE,
-  "return"  : RETURN,
-  "if"      : IF,
-  "elif"    : ELIF,
-  "else"    : ELSE,
-  "do"      : DO,
-  "end"     : END,
-  "#int"    : T_INT,
-  "#float"  : T_FLOAT,
-  "#char"   : T_CHAR,
-  "#string" : T_STRING,
-  "#bool"   : T_BOOL,
+  "True"      : TRUE,
+  "False"     : FALSE,
+  "Nil"       : NIL,
+  "let"       : LET,
+  "def"       : DEFINE,
+  "return"    : RETURN,
+  "if"        : IF,
+  "elif"      : ELIF,
+  "else"      : ELSE,
+  "do"        : DO,
+  "end"       : END,
+  "#int"      : T_INT,
+  "#float"    : T_FLOAT,
+  "#char"     : T_CHAR,
+  "#string"   : T_STRING,
+  "#bool"     : T_BOOL,
+  "#function" : T_FUNCTION, 
 }.newTable
 
 proc LookupIdent*(ident: string): string =

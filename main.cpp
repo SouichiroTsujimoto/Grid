@@ -2,10 +2,7 @@
 #include "ka2lib/ka2IO.h"
 
 int main() {
-  auto a = [] ( int a ) {
-    return [a] ( int b ) {
-      return ( 10 ) ;
-    } ;
+  auto a = [] ( int b ) {
   } ;
   
 }

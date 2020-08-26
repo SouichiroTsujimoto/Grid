@@ -60,7 +60,6 @@ proc parseReturnStatement(p: Parser): Node =
   return node
 
 # 関数定義
-# TODO
 proc parseDefineStatement(p: Parser): Node =
   var node = Node(
     kind: nkDefineStatement,
@@ -100,7 +99,6 @@ proc parseInfixExpression(p: Parser, left: Node): Node =
   return node
 
 # 引数の処理
-# TODO
 proc parseExpressionList(p: Parser, endToken: string): seq[Node] =
   var list = newSeq[Node]()
   if p.peekToken.Type == endToken:
@@ -143,7 +141,6 @@ proc parseCallExpression(p: Parser, left: Node): Node =
     token: p.curToken,
     function: left,
   )
-  p.shiftToken()
   node.args = p.parseExpressionList(RPAREN)
   return node
   # TODO
@@ -219,6 +216,8 @@ proc parseNilLiteral(p: Parser): Node =
   )
   return node
 
+#------後で修正する↓------
+
 # int型
 proc parseIntType(p: Parser): Node =
   var node = Node(
@@ -279,6 +278,20 @@ proc parseBoolType(p: Parser): Node =
     node.identValue = p.curToken.Literal
   return node
 
+# function型
+proc parseFunctionType(p: Parser): Node =
+  let node = Node(
+    kind: nkFunctionType,
+    token: p.curToken,
+    typeValue: p.curToken.Literal,
+  )
+  if p.peekToken.Type == IDENT:
+    p.shiftToken()
+    node.identValue = p.curToken.Literal
+  return node
+
+#------ここまで------
+
 # if文
 proc parseIfExpression(p: Parser): Node =
   var node = Node(
@@ -331,6 +344,7 @@ proc parseType(p: Parser): Node =
   of T_CHAR     : return p.parseCharType()
   of T_STRING   : return p.parseStringType()
   of T_BOOL     : return p.parseBoolType()
+  of T_FUNCTION : return p.parseFunctionType()
   else          : return nil
 
 # 式の処理
@@ -351,10 +365,11 @@ proc parseExpression(p: Parser, precedence: Precedence): Node =
   of LPAREN     : left = p.parseGroupedExpression()
   else:           left = nil
   
-  while precedence < p.peekToken.tokenPrecedence() and p.peekToken.Type != EOF:
-    case p.peekToken.Type
-    of PLUS, MINUS, ASTERISC, SLASH, LT, GT, LE, GE, EQ, NE:
+  while precedence < p.peekToken.tokenPrecedence() and p.peekToken.Type != EOF or left == nil:
+    if left != nil:
       p.shiftToken()
+    case p.curToken.Type
+    of PLUS, MINUS, ASTERISC, SLASH, LT, GT, LE, GE, EQ, NE:
       left = p.parseInfixExpression(left)
     of LPAREN:
       left = p.parseCallExpression(left)
