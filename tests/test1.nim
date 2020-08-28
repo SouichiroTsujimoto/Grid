@@ -20,9 +20,6 @@ suite "operator":
   test "\"Hello\" == \"Hello\"":
     let program = makeAST("\"Hello\" == \"Hello\"")
     check(makeCppCode(program[0], 0).findStr("k_eq ( \"Hello\" ) ( \"Hello\" )"))
-  test "(\'1\' == 1) != True":
-    let program = makeAST("(\'1\' == 1) != True")
-    check(makeCppCode(program[0], 0).findStr("k_ne ( k_eq ( '1' ) ( 1 ) ) ( true ) "))
 
 suite "let":
   test "let #int a = 10":

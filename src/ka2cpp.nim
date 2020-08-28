@@ -93,6 +93,7 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
       codeType = INT
     else:
       echo "エラー！！！"
+      quit()
   of nkFloatType:
     if node.identValue != "":
       code.add((T_FLOAT, "float"))
@@ -100,6 +101,7 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
       codeType = FLOAT
     else:
       echo "エラー！！！"
+      quit()
   of nkCharType:
     if node.identValue != "":
       code.add((T_CHAR, "char"))
@@ -107,6 +109,7 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
       codeType = CHAR
     else:
       echo "エラー！！！"
+      quit()
   of nkStringType:
     if node.identValue != "":
       code.add((T_STRING, "std::string"))
@@ -114,6 +117,7 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
       codeType = STRING
     else:
       echo "エラー！！！"
+      quit()
   of nkBoolType:
     if node.identValue != "":
       code.add((T_BOOL, "bool"))
@@ -121,6 +125,7 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
       codeType = BOOL
     else:
       echo "エラー！！！"
+      quit()
   of nkFunctionType:
     if node.identValue != "":
       code.add((T_FUNCTION, "auto"))
@@ -128,6 +133,7 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
       codeType = FUNCTION
     else:
       echo "エラー！！！"
+      quit()
   of nkCppCode:
     if node.cppCodeValue != "":
       code.add((CPPCODE, node.cppCodeValue))
@@ -135,6 +141,7 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
       codeType = CPPCODE
     else:
       echo "エラー！！！"
+      quit()
   
   # 名前
   of nkIdent:
@@ -167,6 +174,7 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
         for ident in sc:
           if ident == li[0][1][1]:
             echo "エラー！！！"
+            quit()
       code.add(li[0])
       code.add((OTHER, "="))
       code.add(lv[0])
@@ -178,6 +186,7 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
       #
     else:
       echo "エラー！！！"
+      quit()
 
   # def文
   of nkDefineStatement:
@@ -187,6 +196,7 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
       for ident in sc:
         if ident == di[0][1][1]:
           echo "エラー！！！"
+          quit()
     code.add(di[0][1])
     identTable[di[0][1][1]] = FUNCTION & "->" & di[1]
     addScopeTable(di[0][1][1])
@@ -208,6 +218,7 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
             code.add(st[0])
           else:
             echo "エラー！！！"
+            quit()
         else:
           code.add(statement.makeCodeParts()[0])
       code.add((OTHER, "}"))
@@ -235,6 +246,7 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
             code.add(st[0])
           else:
             echo "エラー！！！"
+            quit()
         else:
           code.add(statement.makeCodeParts()[0])
       for _ in node.define_args:
@@ -259,6 +271,7 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
       codeType = r[1]
     else:
       echo "エラー！！！"
+      quit()
   
   # 中置
   of nkInfixExpression:
@@ -287,6 +300,7 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
       codeType = oc[0]
     else:
       echo "エラー！！！"
+      quit()
 
   # 前置
   of nkCallExpression:

@@ -1,5 +1,0 @@
-def #int x(#int y) do
-  let #int a = 10
-  let #int b = 100
-  return a * b + y
-end
