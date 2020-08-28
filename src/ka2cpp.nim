@@ -7,6 +7,8 @@ type codeParts = tuple
   Code: string
 
 var identTable = initTable[string, string]()
+var scopeTable: seq[seq[string]]
+var count = 0
 #--------------
 
 proc conversionCppFunction(operator: string): (string, string) =
@@ -53,6 +55,12 @@ proc addIndent(code: var string, indent: int) =
   for i in 0..indent:
     code.add("  ")
 
+proc addScopeTable(str: string) =
+  if scopeTable.len()-1 == count:
+    scopeTable[count].add(str)
+  elif scopeTable.len()-1 < count:
+    scopeTable.add(@[str])
+
 proc makeCodeParts(node: Node): (seq[codeParts], string) =
   var code: seq[codeParts]
   var codeType: string
@@ -82,42 +90,42 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
     if node.identValue != "":
       code.add((T_INT, "int"))
       code.add((INT, node.identValue))
-      codeType = T_INT
+      codeType = INT
     else:
       echo "エラー！！！"
   of nkFloatType:
     if node.identValue != "":
       code.add((T_FLOAT, "float"))
       code.add((FLOAT, node.identValue))
-      codeType = T_FLOAT
+      codeType = FLOAT
     else:
       echo "エラー！！！"
   of nkCharType:
     if node.identValue != "":
       code.add((T_CHAR, "char"))
       code.add((CHAR, node.identValue))
-      codeType = T_CHAR
+      codeType = CHAR
     else:
       echo "エラー！！！"
   of nkStringType:
     if node.identValue != "":
       code.add((T_STRING, "std::string"))
       code.add((STRING, node.identValue))
-      codeType = T_STRING
+      codeType = STRING
     else:
       echo "エラー！！！"
   of nkBoolType:
     if node.identValue != "":
       code.add((T_BOOL, "bool"))
       code.add((BOOL, node.identValue))
-      codeType = T_BOOL
+      codeType = BOOL
     else:
       echo "エラー！！！"
   of nkFunctionType:
     if node.identValue != "":
       code.add((T_FUNCTION, "auto"))
       code.add((FUNCTION, node.identValue))
-      codeType = T_FUNCTION
+      codeType = FUNCTION
     else:
       echo "エラー！！！"
   of nkCppCode:
@@ -130,25 +138,44 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
   
   # 名前
   of nkIdent:
-    # 仮
-    let ic = node.identValue.conversionCppFunction()
-    if ic[1] != "nil":
-      code.add((node.token.Type, ic[1]))
-      codeType = ic[0]
-    else:
-      code.add((node.token.Type, node.identValue))
-      codeType = IDENT
+    var im = false
+    for s in scopeTable[0..count]:
+      for ident in s:
+        if ident == node.identValue:
+          code.add((IDENT, node.identValue))
+          codeType = identTable[ident]
+          im = true
+          break
+      if im:
+        break
+    if im == false:
+      let ic = node.identValue.conversionCppFunction()
+      if ic[1] != "nil":
+        code.add((IDENT, ic[1]))
+        codeType = ic[0]
+      else:
+        code.add((IDENT, node.identValue))
+        codeType = IDENT
   
   # let文
   of nkLetStatement:
     code.add((OTHER, "const"))
     let li = node.let_ident.makeCodeParts()
     let lv = node.let_value.makeCodeParts()
-    if li[1] == "T_" & lv[1]:
+    if li[1] == lv[1]:
+      for sc in scopeTable:
+        for ident in sc:
+          if ident == li[0][1][1]:
+            echo "エラー！！！"
       code.add(li[0])
       code.add((OTHER, "="))
       code.add(lv[0])
       code.addSemicolon()
+      identTable[li[0][1][1]] = li[1]
+      addScopeTable(li[0][1][1])
+      # 後で消す
+      echo scopeTable
+      #
     else:
       echo "エラー！！！"
 
@@ -156,7 +183,18 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
   of nkDefineStatement:
     code.add((AUTO, "auto"))
     let di = node.define_ident.makeCodeParts()
+    for sc in scopeTable:
+      for ident in sc:
+        if ident == di[0][1][1]:
+          echo "エラー！！！"
     code.add(di[0][1])
+    identTable[di[0][1][1]] = FUNCTION & "->" & di[1]
+    addScopeTable(di[0][1][1])
+    let oc = count
+    count += 1
+    # 後で消す
+    echo scopeTable
+    #
     code.add((ASSIGN, "="))
     var arg: string = ""
     if node.define_args == @[]:
@@ -164,23 +202,36 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
       code.add((OTHER, "()"))
       code.add((OTHER, "{"))
       for statement in node.define_block.statements:
-        code.add(statement.makeCodeParts()[0])
+        if statement.kind == nkReturnStatement:
+          let st = statement.makeCodeParts()
+          if st[1] == di[1]:
+            code.add(st[0])
+          else:
+            echo "エラー！！！"
+        else:
+          code.add(statement.makeCodeParts()[0])
       code.add((OTHER, "}"))
       code.addSemicolon()
     else:
       for i, parameter in node.define_args:
+        let pr = parameter.makeCodeParts()
         code.add((OTHER, "[" & arg & "]"))
         code.add((OTHER, "("))
-        code.add(parameter.makeCodeParts()[0])
+        code.add(pr[0])
         code.add((OTHER, ")"))
         arg = parameter.identValue
+        identTable[arg] = pr[1]
+        addScopeTable(arg)
+        # 後で消す
+        echo scopeTable
+        #
         code.add((OTHER, "{"))
         if i != node.define_args.len()-1:
           code.add((RETURN, "return"))
       for statement in node.define_block.statements:
         if statement.kind == nkReturnStatement:
           let st = statement.makeCodeParts()
-          if "T_" & st[1] == di[1]:
+          if st[1] == di[1]:
             code.add(st[0])
           else:
             echo "エラー！！！"
@@ -189,6 +240,11 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
       for _ in node.define_args:
         code.add((OTHER, "}"))
         code.addSemicolon()
+    count -= 1
+    scopeTable.setLen(oc + 1)
+    # 後で消す
+    echo scopeTable
+    #
     codeType = DEFINE
 
   # return文
