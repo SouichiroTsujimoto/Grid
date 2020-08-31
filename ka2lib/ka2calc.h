@@ -38,6 +38,13 @@ auto k_ne = [](int a) {
   return [a](int b) {return a != b;};
 };
 
+auto k_assign = [](int *a) {
+  return [a](int b) {
+    *a = b;
+    return b;
+  };
+};
+
 /*
 int main() {
   std::cout << ka2_mul (ka2_add (3) (2)) (4) << "\n";

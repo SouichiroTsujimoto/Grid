@@ -1,1 +1,3 @@
-if True do "1" elif True do "2" else "3" end
+mut #int a = 30
+mut #int b = 20
+a := 10

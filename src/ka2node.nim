@@ -16,9 +16,10 @@ type NodeKind* = enum
   nkCharType
   nkStringType
   nkFunctionType
-  nkPrefixExpression
   nkInfixExpression
+  nkAssignExpression
   nkLetStatement
+  nkMutStatement
   nkDefineStatement
   nkReturnStatement
   nkRetrunExpression
@@ -34,16 +35,17 @@ type Precedence* = enum
   Lg
   Sum
   Product
-  Prefix
+  Assign
   Call
 
 proc tokenPrecedence*(tok: Token): Precedence =
   case tok.Type
   of LPAREN:          return Call
+  of CEQUAL:          return Assign
   of SLASH, ASTERISC: return Product
   of PLUS, MINUS:     return Sum
   of LT, GT, LE, GE:  return Lg
-  of EQ, NE:          return Equals
+  of EE, NE:          return Equals
   else:               return Lowest
 
 type 

@@ -31,7 +31,7 @@ proc shiftToken(p: Parser) =
   p.curToken = p.peekToken
   p.peekToken = p.lexer.nextToken()
 
-# 変数定義
+# let文
 proc parseLetStatement(p: Parser): Node =
   var node = Node(
     kind: nkLetStatement,
@@ -40,7 +40,25 @@ proc parseLetStatement(p: Parser): Node =
   p.shiftToken()
   node.let_ident = p.parseType()
 
-  if p.peekToken.Type != ASSIGN:
+  if p.peekToken.Type != EQUAL:
+    return node
+  
+  p.shiftToken()
+  p.shiftToken()
+  node.let_value = p.parseExpression(Lowest)
+
+  return node
+
+# mut文
+proc parseMutStatement(p: Parser): Node =
+  var node = Node(
+    kind: nkMutStatement,
+    token: p.curToken,
+  )
+  p.shiftToken()
+  node.let_ident = p.parseType()
+
+  if p.peekToken.Type != EQUAL:
     return node
   
   p.shiftToken()
@@ -59,7 +77,7 @@ proc parseReturnStatement(p: Parser): Node =
   node.return_expression = p.parseExpression(Lowest)
   return node
 
-# 関数定義
+# def文
 proc parseDefineStatement(p: Parser): Node =
   var node = Node(
     kind: nkDefineStatement,
@@ -91,6 +109,20 @@ proc parseInfixExpression(p: Parser, left: Node): Node =
   let right = p.parseExpression(cp)
   let node = Node(
     kind: nkInfixExpression,
+    token: p.curToken,
+    operator: operator,
+    left: left,
+    right: right,
+  )
+  return node
+
+proc parseAssignExpression(p: Parser, left: Node): Node =
+  let operator = p.curToken.Type
+  let cp = p.curToken.tokenPrecedence()
+  p.shiftToken()
+  let right = p.parseExpression(cp)
+  let node = Node(
+    kind: nkAssignExpression,
     token: p.curToken,
     operator: operator,
     left: left,
@@ -143,7 +175,6 @@ proc parseCallExpression(p: Parser, left: Node): Node =
   )
   node.args = p.parseExpressionList(RPAREN)
   return node
-  # TODO
 
 # 名前
 proc parseIdent(p: Parser): Node =
@@ -369,8 +400,10 @@ proc parseExpression(p: Parser, precedence: Precedence): Node =
     if left != nil:
       p.shiftToken()
     case p.curToken.Type
-    of PLUS, MINUS, ASTERISC, SLASH, LT, GT, LE, GE, EQ, NE:
+    of PLUS, MINUS, ASTERISC, SLASH, LT, GT, LE, GE, EE, NE:
       left = p.parseInfixExpression(left)
+    of CEQUAL:
+      left = p.parseAssignExpression(left)
     of LPAREN:
       left = p.parseCallExpression(left)
     else:
@@ -408,6 +441,7 @@ proc parseBlockStatement(p: Parser, endTokenTypes: seq[string]): BlockStatement 
 proc parseStatement(p: Parser): Node =
   case p.curToken.Type
   of LET:    return p.parseLetStatement()
+  of MUT:    return p.parseMutStatement()
   of DEFINE: return p.parseDefineStatement()
   else:      return p.parseExpressionStatement()
 

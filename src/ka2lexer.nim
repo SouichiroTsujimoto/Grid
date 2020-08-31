@@ -102,9 +102,9 @@ proc nextToken*(l: Lexer): Token =
       let ch = l.ch
       l.nextChar()
       let literal = $ch & $l.ch
-      tok = Token(Type: EQ, Literal: literal)
+      tok = Token(Type: EE, Literal: literal)
     else:
-      tok = newToken(ASSIGN, l.ch)
+      tok = newToken(EQUAL, l.ch)
   of '!': 
     if l.peekChar() == '=':
       let ch = l.ch
@@ -135,6 +135,12 @@ proc nextToken*(l: Lexer): Token =
       l.nextChar()
       let literal = $ch & $l.ch
       tok = Token(Type: PIPE, Literal: literal)
+  of ':':
+    if l.peekChar() == '=':
+      let ch = l.ch
+      l.nextChar()
+      let literal = $ch & $l.ch
+      tok = Token(Type: CEQUAL, Literal: literal)
   of '(' : tok = newToken(LPAREN, l.ch)
   of ')' : tok = newToken(RPAREN, l.ch)
   of ',' : tok = newToken(COMMA, l.ch)

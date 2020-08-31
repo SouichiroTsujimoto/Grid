@@ -2,10 +2,8 @@
 #include "ka2lib/ka2IO.h"
 
 int main() {
-  ( true ?
-    "1" :
-  ( true ?
-    "2" :
-  "3" ) ) ;
+  int a = 30 ;
+    int b = 20 ;
+    a = b  = 10 ;
   
 }

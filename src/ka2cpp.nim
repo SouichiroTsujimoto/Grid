@@ -1,15 +1,16 @@
 import ka2token, ka2node, ka2token
 import strutils, tables
 
-#------仮------
+#------↓仮↓------
+
 type codeParts = tuple
   Type: string
   Code: string
 
 var identTable = initTable[string, string]()
 var scopeTable: seq[seq[string]]
+var mutTable: seq[string]
 var count = 0
-#--------------
 
 proc initTables*() =
   identTable = initTable[string, string]()
@@ -34,15 +35,16 @@ proc conversionCppFunction(operator: string): (string, string) =
     return (BOOL, "k_le")
   of GE:
     return (BOOL, "k_ge")
-  of EQ:
+  of EE:
     return (BOOL, "k_eq")
   of NE:
     return (BOOL, "k_ne")
-  #------仮------
   of "puts":
     return (NIL, "k_puts")
   else:
     return (NIL, "nil")
+
+#------↑仮↑------
 
 proc addSemicolon*(parts: var seq[codeParts]) =
   let tail = parts[parts.len()-1]
@@ -194,6 +196,32 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
     else:
       echo "エラー！！！(9)"
       quit()
+  
+  # mut文
+  # TODO
+  of nkMutStatement:
+    let li = node.let_ident.makeCodeParts()
+    let lv = node.let_value.makeCodeParts()
+    if li[1] == lv[1]:
+      if scopeTable.len() != 0:
+        for sc in scopeTable:
+          for ident in sc:
+            if ident == li[0][1][1]:
+              echo "エラー！！！(10)"
+              quit()
+      code.add(li[0])
+      code.add((OTHER, "="))
+      code.add(lv[0])
+      code.addSemicolon()
+      identTable[li[0][1][1]] = li[1]
+      addScopeTable(li[0][1][1])
+      mutTable.add(li[0][1][1])
+      # 後で消す
+      echo scopeTable
+      #
+    else:
+      echo "エラー！！！(11)"
+      quit()
 
   # def文
   of nkDefineStatement:
@@ -204,7 +232,7 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
       for sc in scopeTable:
         for ident in sc:
           if ident == di[0][1][1]:
-            echo "エラー！！！(10)"
+            echo "エラー！！！(12)"
             quit()
     code.add(di[0][1])
     identTable[di[0][1][1]] = FUNCTION & "->" & di[1]
@@ -214,7 +242,7 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
     # 後で消す
     echo scopeTable
     #
-    code.add((ASSIGN, "="))
+    code.add((EQUAL, "="))
     var arg: string = ""
     if node.define_args == @[]:
       code.add((OTHER, "[]"))
@@ -226,7 +254,7 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
           if st[1] == di[1]:
             code.add(st[0])
           else:
-            echo "エラー！！！(11)"
+            echo "エラー！！！(13)"
             quit()
         else:
           code.add(statement.makeCodeParts()[0])
@@ -254,7 +282,7 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
           if st[1] == di[1]:
             code.add(st[0])
           else:
-            echo "エラー！！！(12)"
+            echo "エラー！！！(14)"
             quit()
         else:
           code.add(statement.makeCodeParts()[0])
@@ -279,7 +307,7 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
       code.addSemicolon()
       codeType = r[1]
     else:
-      echo "エラー！！！(13)"
+      echo "エラー！！！(15)"
       quit()
   
   # 中置
@@ -308,7 +336,38 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
     elif lt == rt:
       codeType = oc[0]
     else:
-      echo "エラー！！！(14)"
+      echo "エラー！！！(16.0)"
+      quit()
+  
+  # 代入式
+  of nkAssignExpression:
+    var lt, rt: string
+    if node.left != nil:
+      let l = node.left.makeCodeParts()
+      code.add(l[0].replaceSemicolon((OTHER, "")))
+      lt = l[1]
+    else:
+      echo "エラー！！！(16.0.1)"
+      quit()
+    code.add((OTHER, "="))
+    if node.right != nil:
+      let r = node.right.makeCodeParts()
+      code.add(r[0])
+      rt = r[1]
+    else:
+      echo "エラー！！！(16.0.2)"
+      quit()
+    code.addSemicolon()
+    if lt == "" and rt == "":
+      codeType = FUNCTION
+    elif lt == "":
+      codeType = FUNCTION
+    elif rt == "":
+      codeType = FUNCTION
+    elif lt == rt:
+      codeType = lt
+    else:
+      echo "エラー！！！(16.1)"
       quit()
 
   # 前置
@@ -344,7 +403,7 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
       code.add((OTHER, ")"))
       code.addSemicolon()
     else:
-      echo "エラー！！！(15)"
+      echo "エラー！！！(17)"
       quit()
 
   # elif式
@@ -367,7 +426,7 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
       codeType = sr[1]
       code.add((OTHER, ")"))
     else:
-      echo "エラー！！！(15)"
+      echo "エラー！！！(18)"
       quit()
 
   # else式

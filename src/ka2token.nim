@@ -16,7 +16,8 @@ const
   BOOL*         = "BOOL"
   CPPCODE*      = "CPPCODE"
   # 演算子
-  ASSIGN*       = "="
+  EQUAL*        = "="
+  CEQUAL*       = ":="
   PLUS*         = "+"
   MINUS*        = "-"
   ASTERISC*     = "*"
@@ -26,7 +27,7 @@ const
   GT*           = ">"
   LE*           = "<="
   GE*           = ">="
-  EQ*           = "=="
+  EE*           = "=="
   NE*           = "!="
   NOT*          = "!"
   PIPE*         = "|>"
@@ -42,6 +43,7 @@ const
   FALSE*        = "FALSE"
   NIL*          = "NIL"
   LET*          = "LET"
+  MUT*          = "MUT"
   DEFINE*       = "DEFINE"
   RETURN*       = "RETURN"
   IF*           = "IF"
@@ -66,6 +68,7 @@ let keywords = {
   "False"     : FALSE,
   "Nil"       : NIL,
   "let"       : LET,
+  "mut"       : MUT,
   "def"       : DEFINE,
   "return"    : RETURN,
   "if"        : IF,
