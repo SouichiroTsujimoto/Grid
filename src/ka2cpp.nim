@@ -454,35 +454,35 @@ proc makeCppCode*(node: Node, indent: int): string =
 
   for i, part in codeParts[0]:
     # echo $i & "回目 : " & part
-    # echo braceCount
-    if part.Type != STRING and part.Code == "{":
+    if part.Type == SEMICOLON and part.Code == ";":
+      newLine.add(part.Code)
+      outCode.add(newLine & "\n")
+      newLine = ""
+    elif part.Type == OTHER and part.Code == "{":
       braceCount = braceCount + 1
       newLine.add(part.Code)
       outCode.add(newLine & "\n")
       newLine = ""
       newLine.addIndent(braceCount)
-    elif part.Type != STRING and part.Code == "}":
+    elif part.Type == OTHER and part.Code == "}":
       braceCount = braceCount - 1
       newLine = ""
       newLine.addIndent(braceCount)
       newLine.add(part.Code & " ")
-    elif part.Type != STRING and part.Code == ";":
-      newLine.add(part.Code)
-      outCode.add(newLine & "\n")
-      newLine = ""
-      newLine.addIndent(braceCount)
-    elif part.Type != STRING and part.Code == "?":
+    elif part.Type == OTHER and part.Code == "?":
       braceCount = braceCount + 1
       newLine.add(part.Code)
       outCode.add(newLine & "\n")
       newLine = ""
       newLine.addIndent(braceCount)
-    elif part.Type != STRING and part.Code == ":":
+    elif part.Type == OTHER and part.Code == ":":
       braceCount = braceCount - 1
       newLine.add(part.Code)
       outCode.add(newLine & "\n")
       newLine = ""
       newLine.addIndent(braceCount)
+    elif part.Type == OTHER and part.Code == "":
+      continue
     else:
       newLine.add(part.Code & " ")
     
