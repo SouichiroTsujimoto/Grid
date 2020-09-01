@@ -1,1 +1,1 @@
-def #int a(#int b) do return b * 2 end
+mut #int a = 10 mut #int b = 20 a := b := 20

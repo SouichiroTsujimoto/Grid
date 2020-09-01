@@ -2,8 +2,8 @@
 #include "ka2lib/ka2IO.h"
 
 int main() {
-  auto a = [] ( int b ) {
-    return ( k_mul ( b ) ( 2 ) ) ;
-  } ;
+  int a = 10 ;
+  int b = 20 ;
+  a = b = 20 ;
 
 }

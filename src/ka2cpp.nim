@@ -15,6 +15,7 @@ var count = 0
 proc initTables*() =
   identTable = initTable[string, string]()
   scopeTable.setLen(0)
+  mutTable.setLen(0)
   count = 0
 
 proc conversionCppFunction(operator: string): (string, string) =
@@ -343,7 +344,14 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
   of nkAssignExpression:
     var lt, rt: string
     if node.left != nil:
+      # 値を代入しようとしている変数のチェック
       let l = node.left.makeCodeParts()
+      var lmc: string = l[0][l[0].len()-1].Code
+      if lmc == ";":
+        lmc = l[0][l[0].len()-2].Code
+      if lmc notin mutTable:
+        echo "エラー！！！(16.0.0.1)"
+        quit()
       code.add(l[0].replaceSemicolon((OTHER, "")))
       lt = l[1]
     else:
@@ -358,13 +366,7 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
       echo "エラー！！！(16.0.2)"
       quit()
     code.addSemicolon()
-    if lt == "" and rt == "":
-      codeType = FUNCTION
-    elif lt == "":
-      codeType = FUNCTION
-    elif rt == "":
-      codeType = FUNCTION
-    elif lt == rt:
+    if lt == rt:
       codeType = lt
     else:
       echo "エラー！！！(16.1)"

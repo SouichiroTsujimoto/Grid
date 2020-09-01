@@ -104,6 +104,16 @@ suite ":=":
     check(res.findStr("int a = 10 ;"))
     check(res.findStr("int b = 20 ;"))
     check(res.findStr("a = b = 20 ;"))
+  test "mut #int a = 10 mut #int b = 20 mut #int c = 30 a := b := c := 20":
+    initTables()
+    let program = makeAST("mut #int a = 10 mut #int b = 20 mut #int c = 30 a := b := c := 20")
+    var res = ""
+    for tree in program:
+      res.add(makeCppCode(tree, 0))
+    check(res.findStr("int a = 10 ;"))
+    check(res.findStr("int b = 20 ;"))
+    check(res.findStr("int c = 30 ;"))
+    check(res.findStr("a = b = c = 20 ;"))
 
 suite "def":
   test "def #int a(#int b) do return b * 2 end":
