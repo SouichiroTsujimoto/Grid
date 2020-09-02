@@ -145,8 +145,13 @@ proc parseExpressionList(p: Parser, endToken: string): seq[Node] =
     p.shiftToken()
     list.add(p.parseExpression(Lowest))
 
-  p.shiftToken()
-  return list
+  if p.peekToken.Type == endToken:
+    p.shiftToken()
+    return list
+  else:
+    echo "エラー！！！"
+
+
 
 # 宣言の処理
 proc parseNameProc(p: Parser, endToken: string): seq[Node] =
@@ -172,8 +177,8 @@ proc parseCallExpression(p: Parser, left: Node): Node =
     kind: nkCallExpression,
     token: p.curToken,
     function: left,
+    args: p.parseExpressionList(RPAREN)
   )
-  node.args = p.parseExpressionList(RPAREN)
   return node
 
 # 名前
@@ -368,6 +373,17 @@ proc parseGroupedExpression(p: Parser): Node =
   else:
     return nil
 
+proc parseArrayLiteral(p: Parser): Node =
+  var node = Node(
+    kind: nkArrayLiteral,
+    token: p.curToken,
+    arrayValue: p.parseExpressionList(RBRACE)
+  )
+  if p.curToken.Type == RBRACE:
+    return node
+  else:
+    return nil
+
 proc parseType(p: Parser): Node =
   case p.curToken.Type
   of T_INT      : return p.parseIntType()
@@ -394,6 +410,7 @@ proc parseExpression(p: Parser, precedence: Precedence): Node =
   of FALSE      : left = p.parseBoolLiteral()
   of NIL        : left = p.parseNilLiteral()
   of LPAREN     : left = p.parseGroupedExpression()
+  of LBRACE     : left = p.parseArrayLiteral()
   else:           left = nil
   
   while precedence < p.peekToken.tokenPrecedence() and p.peekToken.Type != EOF or left == nil:

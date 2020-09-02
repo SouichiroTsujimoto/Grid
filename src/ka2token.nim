@@ -15,6 +15,8 @@ const
   STRING*       = "STRING"
   BOOL*         = "BOOL"
   CPPCODE*      = "CPPCODE"
+  ARRAY*        = "ARRAY"
+  ELEMENT*      = "ELEMENT"
   # 演算子
   EQUAL*        = "="
   CEQUAL*       = ":="
@@ -38,6 +40,9 @@ const
   # 括弧
   LPAREN*       = "("
   RPAREN*       = ")"
+  LBRACE*       = "{"
+  RBRACE*       = "}"
+  VARLEN*       = "!{"
   # キーワード
   TRUE*         = "TRUE"
   FALSE*        = "FALSE"

@@ -111,6 +111,11 @@ proc nextToken*(l: Lexer): Token =
       l.nextChar()
       let literal = $ch & $l.ch
       tok = Token(Type: NE, Literal: literal)
+    elif l.peekChar() == '{':
+      let ch = l.ch
+      l.nextChar()
+      let literal = $ch & $l.ch
+      tok = Token(Type: VARLEN, Literal: literal)
     else:
       tok = newToken(NOT, l.ch)
   of '<':
@@ -148,11 +153,10 @@ proc nextToken*(l: Lexer): Token =
   of '-' : tok = newToken(MINUS, l.ch)
   of '*' : tok = newToken(ASTERISC, l.ch)
   of '/' : tok = newToken(SLASH, l.ch)
+  of '{' : tok = newToken(LBRACE, l.ch)
+  of '}' : tok = newToken(RBRACE, l.ch)
   else:
-    if l.ch == '{':
-      let lit = l.readCppCode()
-      return Token(Type: CPPCODE, Literal: lit)
-    elif l.ch.isSingleQuote():
+    if l.ch.isSingleQuote():
       let lit = l.readChar()
       return Token(Type: CHAR, Literal: lit)
     elif l.ch.isDoubleQuote():

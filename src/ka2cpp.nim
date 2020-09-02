@@ -91,6 +91,29 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
   of nkStringLiteral:
     code.add((STRING, "\"" & node.stringValue & "\""))
     codeType = STRING
+  of nkCppCode:
+    if node.cppCodeValue != "":
+      code.add((CPPCODE, node.cppCodeValue))
+      code.addSemicolon()
+      codeType = CPPCODE
+    else:
+      echo "エラー！！！(0)"
+      quit()
+  of nkArrayLiteral:
+    if node.arrayValue != @[]:
+      code.add((LBRACE, "{"))
+      for i, arv in node.arrayValue:
+        let elem = arv.makeCodeParts()
+        # TODO 要素のチェック
+        code.add((ELEMENT, elem[0][0][1]))
+        if i != node.arrayValue.len()-1:
+          code.add((COMMA, ","))
+      code.add((RBRACE, "}"))
+      code.addSemicolon()
+      codeType = ARRAY
+    else:
+      echo "エラー！！！(0.1)"
+      quit()
   of nkNIl:
     code.add((NIL, "NULL"))
     codeType = NIL
@@ -141,14 +164,6 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
       codeType = FUNCTION
     else:
       echo "エラー！！！(6)"
-      quit()
-  of nkCppCode:
-    if node.cppCodeValue != "":
-      code.add((CPPCODE, node.cppCodeValue))
-      code.addSemicolon()
-      codeType = CPPCODE
-    else:
-      echo "エラー！！！(7)"
       quit()
   
   # 名前

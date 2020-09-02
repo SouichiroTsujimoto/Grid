@@ -10,6 +10,7 @@ type NodeKind* = enum
   nkCharLiteral
   nkStringLiteral
   nkCppCode
+  nkArrayLiteral
   nkIntType
   nkFloatType
   nkBoolType
@@ -65,6 +66,7 @@ type
     charValue*:           char
     stringValue*:         string
     cppCodeValue*:        string
+    arrayValue*:          seq[Node]
     typeValue*:           string
     let_ident*:           Node
     let_value*:           Node
