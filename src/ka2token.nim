@@ -62,6 +62,7 @@ const
   T_CHAR*       = "T_CHAR"
   T_STRING*     = "T_STRING"
   T_BOOL*       = "T_BOOL"
+  T_ARRAY*      = "T_ARRAY"
   T_FUNCTION*   = "T_FUNCTION"
   # その他
   AUTO*         = "AUTO"
@@ -86,6 +87,7 @@ let keywords = {
   "#char"     : T_CHAR,
   "#string"   : T_STRING,
   "#bool"     : T_BOOL,
+  "#array"    : T_ARRAY,
   "#function" : T_FUNCTION, 
 }.newTable
 

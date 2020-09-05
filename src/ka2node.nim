@@ -16,6 +16,7 @@ type NodeKind* = enum
   nkBoolType
   nkCharType
   nkStringType
+  nkArrayType
   nkFunctionType
   nkInfixExpression
   nkAssignExpression

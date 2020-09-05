@@ -18,6 +18,27 @@ proc initTables*() =
   mutTable.setLen(0)
   count = 0
 
+proc conversionCppType(Type: string): (string, string) =
+  let ts = Type.split("->")
+  for t in ts:
+    case t
+    of T_INT:
+      return (T_INT, "int")
+    of T_FLOAT:
+      return (T_FLOAT, "float")
+    of T_CHAR:
+      return (T_CHAR, "char")
+    of T_STRING:
+      return (T_STRING, "std::string")
+    of T_BOOL:
+      return (T_BOOL, "bool")
+    of T_ARRAY:
+      return (T_ARRAY, "std::vector<" & ts[1..ts.len()-1].join("->").conversionCppType()[1] & ">")
+    of T_FUNCTION:
+      return (T_FUNCTION, "auto")
+    else:
+      return (NIL, "NULL")
+
 proc conversionCppFunction(operator: string): (string, string) =
   case operator
   of PLUS:
@@ -43,7 +64,7 @@ proc conversionCppFunction(operator: string): (string, string) =
   of "puts":
     return (NIL, "k_puts")
   else:
-    return (NIL, "nil")
+    return (NIL, "NULL")
 
 #------↑仮↑------
 
@@ -105,11 +126,10 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
       for i, arv in node.arrayValue:
         let elem = arv.makeCodeParts()
         # TODO 要素のチェック
-        code.add((ELEMENT, elem[0][0][1]))
+        code.add(elem[0])
         if i != node.arrayValue.len()-1:
           code.add((COMMA, ","))
       code.add((RBRACE, "}"))
-      code.addSemicolon()
       codeType = ARRAY
     else:
       echo "エラー！！！(0.1)"
@@ -119,7 +139,7 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
     codeType = NIL
   of nkIntType:
     if node.identValue != "":
-      code.add((T_INT, "int"))
+      code.add(node.typeValue.conversionCppType())
       code.add((INT, node.identValue))
       codeType = INT
     else:
@@ -127,7 +147,7 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
       quit()
   of nkFloatType:
     if node.identValue != "":
-      code.add((T_FLOAT, "float"))
+      code.add(node.typeValue.conversionCppType())
       code.add((FLOAT, node.identValue))
       codeType = FLOAT
     else:
@@ -135,7 +155,7 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
       quit()
   of nkCharType:
     if node.identValue != "":
-      code.add((T_CHAR, "char"))
+      code.add(node.typeValue.conversionCppType())
       code.add((CHAR, node.identValue))
       codeType = CHAR
     else:
@@ -143,7 +163,7 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
       quit()
   of nkStringType:
     if node.identValue != "":
-      code.add((T_STRING, "std::string"))
+      code.add(node.typeValue.conversionCppType())
       code.add((STRING, node.identValue))
       codeType = STRING
     else:
@@ -151,11 +171,19 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
       quit()
   of nkBoolType:
     if node.identValue != "":
-      code.add((T_BOOL, "bool"))
+      code.add(node.typeValue.conversionCppType())
       code.add((BOOL, node.identValue))
       codeType = BOOL
     else:
       echo "エラー！！！(5)"
+      quit()
+  of nkArrayType:
+    if node.identValue != "":
+      code.add(node.typeValue.conversionCppType())
+      code.add((node.typeValue, node.identValue))
+      codeType = ARRAY
+    else:
+      echo "エラー！！！(5.1)"
       quit()
   of nkFunctionType:
     if node.identValue != "":

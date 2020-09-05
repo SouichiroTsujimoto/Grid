@@ -130,7 +130,7 @@ proc parseAssignExpression(p: Parser, left: Node): Node =
   )
   return node
 
-# 引数の処理
+# 引数の処理など
 proc parseExpressionList(p: Parser, endToken: string): seq[Node] =
   var list = newSeq[Node]()
   if p.peekToken.Type == endToken:
@@ -150,8 +150,6 @@ proc parseExpressionList(p: Parser, endToken: string): seq[Node] =
     return list
   else:
     echo "エラー！！！"
-
-
 
 # 宣言の処理
 proc parseNameProc(p: Parser, endToken: string): seq[Node] =
@@ -177,7 +175,7 @@ proc parseCallExpression(p: Parser, left: Node): Node =
     kind: nkCallExpression,
     token: p.curToken,
     function: left,
-    args: p.parseExpressionList(RPAREN)
+    args: p.parseExpressionList(RPAREN),
   )
   return node
 
@@ -231,16 +229,28 @@ proc parseBoolLiteral(p: Parser): Node =
   let node = Node(
     kind: nkBoolLiteral,
     token: p.curToken,
-    boolValue: p.curToken.Literal.parseBool()
+    boolValue: p.curToken.Literal.parseBool(),
   )
   return node
+
+# 配列
+proc parseArrayLiteral(p: Parser): Node =
+  var node = Node(
+    kind: nkArrayLiteral,
+    token: p.curToken,
+    arrayValue: p.parseExpressionList(RBRACE),
+  )
+  if p.curToken.Type == RBRACE:
+    return node
+  else:
+    return nil
 
 # 埋め込みC++コード
 proc parseCppCode(p: Parser): Node =
   let node = Node(
     kind: nkCppCode,
     token: p.curToken,
-    cppCodeValue: p.curToken.Literal
+    cppCodeValue: p.curToken.Literal,
   )
   return node
 
@@ -259,7 +269,7 @@ proc parseIntType(p: Parser): Node =
   var node = Node(
     kind: nkIntType,
     token: p.curToken,
-    typeValue: p.curToken.Literal,
+    typeValue: p.curToken.Type,
   )
   if p.peekToken.Type == IDENT:
     p.shiftToken()
@@ -271,7 +281,7 @@ proc parseFloatType(p: Parser): Node =
   let node = Node(
     kind: nkFloatType,
     token: p.curToken,
-    typeValue: p.curToken.Literal,
+    typeValue: p.curToken.Type,
   )
   if p.peekToken.Type == IDENT:
     p.shiftToken()
@@ -283,7 +293,7 @@ proc parseCharType(p: Parser): Node =
   let node = Node(
     kind: nkCharType,
     token: p.curToken,
-    typeValue: p.curToken.Literal,
+    typeValue: p.curToken.Type,
   )
   if p.peekToken.Type == IDENT:
     p.shiftToken()
@@ -295,7 +305,7 @@ proc parseStringType(p: Parser): Node =
   let node = Node(
     kind: nkStringType,
     token: p.curToken,
-    typeValue: p.curToken.Literal,
+    typeValue: p.curToken.Type,
   )
   if p.peekToken.Type == IDENT:
     p.shiftToken()
@@ -307,11 +317,28 @@ proc parseBoolType(p: Parser): Node =
   let node = Node(
     kind: nkBoolType,
     token: p.curToken,
-    typeValue: p.curToken.Literal,
+    typeValue: p.curToken.Type,
   )
   if p.peekToken.Type == IDENT:
     p.shiftToken()
     node.identValue = p.curToken.Literal
+  return node
+
+# array型
+proc parseArrayType(p: Parser): Node =
+  let node = Node(
+    kind: nkArrayType,
+    token: p.curToken,
+    typeValue: p.curToken.Type,
+  )
+  if p.peekToken.Type == IDENT:
+    p.shiftToken()
+    node.identValue = p.curToken.Literal
+  else:
+    p.shiftToken()
+    let ppa = p.parseType()
+    node.identValue = ppa.identValue
+    node.typeValue = node.typeValue & "->" & ppa.typeValue
   return node
 
 # function型
@@ -364,22 +391,12 @@ proc parseIfExpression(p: Parser): Node =
     p.shiftToken()
     return node
 
+# 括弧
 proc parseGroupedExpression(p: Parser): Node =
   p.shiftToken()
   let node = p.parseExpression(Lowest)
   if p.peekToken.Type == RPAREN:
     p.shiftToken()
-    return node
-  else:
-    return nil
-
-proc parseArrayLiteral(p: Parser): Node =
-  var node = Node(
-    kind: nkArrayLiteral,
-    token: p.curToken,
-    arrayValue: p.parseExpressionList(RBRACE)
-  )
-  if p.curToken.Type == RBRACE:
     return node
   else:
     return nil
@@ -391,6 +408,7 @@ proc parseType(p: Parser): Node =
   of T_CHAR     : return p.parseCharType()
   of T_STRING   : return p.parseStringType()
   of T_BOOL     : return p.parseBoolType()
+  of T_ARRAY    : return p.parseArrayType()
   of T_FUNCTION : return p.parseFunctionType()
   else          : return nil
 

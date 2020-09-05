@@ -2,6 +2,7 @@ import  ka2parser, ka2cpp, ka2rw
 import strutils
 
 var cppCode = """
+#include <vector>
 #include "ka2lib/ka2calc.h"
 #include "ka2lib/ka2IO.h"
 
