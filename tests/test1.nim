@@ -174,4 +174,27 @@ suite "puts":
   test "puts(\"Hello\")":
     initTables()
     let program = makeAST("puts(\"Hello\")")
-    check(makeCppCode(program[0], 0).findStr("k_puts ( \"Hello\" ) ;"))
+    let res = makeCppCode(program[0], 0)
+    check(res.findStr("k_puts ( \"Hello\" ) ;"))
+
+suite "array":
+  test "let #array #string a = {\"Hello\", \"World\"}":
+    initTables()
+    let program = makeAST("let #array #string a = {\"Hello\", \"World\"}")
+    let res = makeCppCode(program[0], 0)
+    check(res.findStr("const std::vector<std::string> a = { \"Hello\" , \"World\" } ;"))
+  test "let #array #array #int a = {{1, 2}, {1}}":
+    initTables()
+    let program = makeAST("let #array #array #int a = {{1, 2}, {1}}")
+    let res = makeCppCode(program[0], 0)
+    check(res.findStr("const std::vector<std::vector<int>> a = { { 1 , 2 } , { 1 } } ;"))
+  test "mut #array #array #int a = {{2, 5, 6}, {4, 5}}":
+    initTables()
+    let program = makeAST("mut #array #array #int a = {{2, 5, 6}, {4, 5}}")
+    let res = makeCppCode(program[0], 0)
+    check(res.findStr("std::vector<std::vector<int>> a = { { 2 , 5 , 6 } , { 4 , 5 } } ;"))
+  test "mut #array #array #array #int a = {{{2}, {5, 6}}, {{4, 1}, {5}}}":
+    initTables()
+    let program = makeAST("mut #array #array #array #int a = {{{2}, {5, 6}}, {{4, 1}, {5}}}")
+    let res = makeCppCode(program[0], 0)
+    check(res.findStr("std::vector<std::vector<std::vector<int>>> a = { { { 2 } , { 5 , 6 } } , { { 4 , 1 } , { 5 } } } ;"))
