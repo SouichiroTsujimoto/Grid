@@ -123,17 +123,24 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
   of nkArrayLiteral:
     if node.arrayValue != @[]:
       code.add((LBRACE, "{"))
+      var eltype: string
       for i, arv in node.arrayValue:
         let elem = arv.makeCodeParts()
-        # TODO 要素のチェック
-        code.add(elem[0])
-        if i != node.arrayValue.len()-1:
+        if i == 0:
+          eltype = elem[1]
+          code.add(elem[0])
+        elif elem[1] == eltype:
           code.add((COMMA, ","))
+          code.add(elem[0])
+        else:
+          echo "エラー！！！(0.0.1)"
+          quit()
+      code.add((RBRACE, "}"))
+      codeType = ARRAY & "->" & eltype
+    else:
+      code.add((LBRACE, "{"))
       code.add((RBRACE, "}"))
       codeType = ARRAY
-    else:
-      echo "エラー！！！(0.1)"
-      quit()
   of nkNIl:
     code.add((NIL, "NULL"))
     codeType = NIL
@@ -181,7 +188,11 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
     if node.identValue != "":
       code.add(node.typeValue.conversionCppType())
       code.add((node.typeValue, node.identValue))
-      codeType = ARRAY
+      let types = node.typeValue.split("->")
+      for i, tv in types:
+        if i != 0:
+          codeType.add("->")
+        codeType.add(tv[2..tv.len()-1])
     else:
       echo "エラー！！！(5.1)"
       quit()
