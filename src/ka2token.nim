@@ -65,6 +65,7 @@ const
   T_ARRAY*      = "T_ARRAY"
   T_FUNCTION*   = "T_FUNCTION"
   # その他
+  MAP*          = "MAP"
   AUTO*         = "AUTO"
   FUNCTION*     = "FUNCTION"
   OTHER*        = "OTHER"
@@ -82,6 +83,7 @@ let keywords = {
   "else"      : ELSE,
   "do"        : DO,
   "end"       : END,
+  "map"       : MAP,
   "#int"      : T_INT,
   "#float"    : T_FLOAT,
   "#char"     : T_CHAR,

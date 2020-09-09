@@ -25,6 +25,7 @@ type NodeKind* = enum
   nkDefineStatement
   nkReturnStatement
   nkRetrunExpression
+  nkMapFunction
   nkExpressionStatement
   nkCallExpression
   nkIfExpression

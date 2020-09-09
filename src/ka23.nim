@@ -2,7 +2,9 @@ import  ka2parser, ka2cpp, ka2rw
 import strutils
 
 var cppCode = """
+#include <iostream>
 #include <vector>
+#include <algorithm>
 #include "ka2lib/ka2calc.h"
 #include "ka2lib/ka2IO.h"
 
@@ -35,7 +37,8 @@ when isMainModule:
     ・ Array型を作る ✅
     ・ 可変長の配列も作る ✅
     ・ 型のチェック ✅
-  ・ for文とかmap関数的なのを作る
+  ・ for式
+  ・ map関数
   ・ 構文エラーを検出できるようにする
   ・ 演算子、代入式をINT以外の型にも対応させる
   ・ エラーメッセージをちゃんと作る

@@ -204,7 +204,7 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
     else:
       echo "エラー！！！(6)"
       quit()
-  
+
   # 名前
   of nkIdent:
     var im = false
@@ -226,12 +226,18 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
       else:
         code.add((IDENT, node.identValue))
         codeType = IDENT
+
+  # 仮
+  of nkMapFunction:
+    code.add((FUNCTION, "k_map"))
+    codeType = ARRAY & "->" & INT
   
   # let文
   of nkLetStatement:
     code.add((OTHER, "const"))
     let li = node.let_ident.makeCodeParts()
     let lv = node.let_value.makeCodeParts()
+    # echo li[1] & "___" & lv[1]
     if li[1] == lv[1]:
       if scopeTable.len() != 0:
         for sc in scopeTable:
@@ -429,13 +435,25 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
   # 前置
   # TODO 
   of nkCallExpression:
-    code.add(node.function.makeCodeParts()[0])
-    for arg in node.args:
+    let fn = node.function.makeCodeParts()
+    code.add(fn[0])
+    codeType = fn[1]
+    if node.function.kind == nkMapFunction:
       code.add((OTHER, "("))
-      let a = arg.makeCodeParts()[0]
-      code.add(a.replaceSemicolon((OTHER, "")))
+      for i, arg in node.args:
+        if i != 0:
+          code.add((OTHER, ","))
+        let a = arg.makeCodeParts()[0]
+        code.add(a.replaceSemicolon((OTHER, "")))
       code.add((OTHER, ")"))
-    code.addSemicolon()
+      code.addSemicolon()
+    else:
+      for arg in node.args:
+        code.add((OTHER, "("))
+        let a = arg.makeCodeParts()[0]
+        code.add(a.replaceSemicolon((OTHER, "")))
+        code.add((OTHER, ")"))
+      code.addSemicolon()
   
   # if式
   # TODO

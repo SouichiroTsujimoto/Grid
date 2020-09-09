@@ -1,3 +1,11 @@
+#define k_map(a, b)({ \
+  std::vector<int> _result = a;\
+  std::transform(a.begin(), a.end(), _result.begin(), [](decltype(a[0]) i) {\
+    return b(i);\
+  });\
+  _result; \
+  })
+
 auto k_add = [](int a) {
   return [a](int b) { return a + b; };
 };
@@ -44,9 +52,3 @@ auto k_assign = [](int *a) {
     return b;
   };
 };
-
-/*
-int main() {
-  std::cout << ka2_mul (ka2_add (3) (2)) (4) << "\n";
-}
-*/

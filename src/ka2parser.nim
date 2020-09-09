@@ -116,6 +116,7 @@ proc parseInfixExpression(p: Parser, left: Node): Node =
   )
   return node
 
+# 代入式
 proc parseAssignExpression(p: Parser, left: Node): Node =
   let operator = p.curToken.Type
   let cp = p.curToken.tokenPrecedence()
@@ -149,7 +150,7 @@ proc parseExpressionList(p: Parser, endToken: string): seq[Node] =
     p.shiftToken()
     return list
   else:
-    echo "エラー！！！"
+    echo "エラー！！！(p0)"
 
 # 宣言の処理
 proc parseNameProc(p: Parser, endToken: string): seq[Node] =
@@ -183,6 +184,15 @@ proc parseCallExpression(p: Parser, left: Node): Node =
 proc parseIdent(p: Parser): Node =
   let node = Node(
     kind: nkIdent,
+    token: p.curToken,
+    identValue: p.curToken.Literal,
+  )
+  return node
+
+# map関数
+proc parseMapFunction(p: Parser): Node =
+  let node = Node(
+    kind: nkMapFunction,
     token: p.curToken,
     identValue: p.curToken.Literal,
   )
@@ -419,6 +429,7 @@ proc parseExpression(p: Parser, precedence: Precedence): Node =
   of IF         : left = p.parseIfExpression()
   of RETURN     : left = p.parseReturnStatement()
   of IDENT      : left = p.parseIdent()
+  of MAP        : left = p.parseMapFunction()
   of INT        : left = p.parseIntLiteral()
   of FLOAT      : left = p.parseFloatLiteral()
   of CHAR       : left = p.parseCharLiteral()

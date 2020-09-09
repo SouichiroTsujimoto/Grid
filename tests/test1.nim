@@ -198,3 +198,28 @@ suite "array":
     let program = makeAST("mut #array #array #array #int a = {{{2}, {5, 6}}, {{4, 1}, {5}}}")
     let res = makeCppCode(program[0], 0)
     check(res.findStr("std::vector<std::vector<std::vector<int>>> a = { { { 2 } , { 5 , 6 } } , { { 4 , 1 } , { 5 } } } ;"))
+
+suite "map":
+  test "map({1}, + 1)":
+    initTables()
+    let program = makeAST("map({1}, + 1)")
+    var res = ""
+    for tree in program:
+      res.add(makeCppCode(tree, 0))
+    check(res.findStr("k_map ( { 1 } , k_add ( 1 ) ) ;"))
+  test "let #array #int b = map({1, 2, 3}, + 1)":
+    initTables()
+    let program = makeAST("let #array #int b = map({1, 2, 3}, + 1)")
+    var res = ""
+    for tree in program:
+      res.add(makeCppCode(tree, 0))
+    check(res.findStr("const std::vector<int> b = k_map ( { 1 , 2 , 3 } , k_add ( 1 ) ) ;"))
+  test "let #array #int a = {1, 2, 3} let #array #int b = map(a, + 1)":
+    initTables()
+    let program = makeAST("let #array #int a = {1, 2, 3} let #array #int b = map(a, + 1)")
+    var res = ""
+    for tree in program:
+      res.add(makeCppCode(tree, 0))
+    check(res.findStr("const std::vector<int> a = { 1 , 2 , 3 } ;"))
+    check(res.findStr("const std::vector<int> b = k_map ( a , k_add ( 1 ) ) ;"))
+  
