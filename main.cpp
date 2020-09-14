@@ -5,6 +5,9 @@
 #include "ka2lib/ka2IO.h"
 
 int main() {
-  k_map ( { 1 } , k_add ( 1 ) ) ;
+  int x = 0 ;
+  for ( int a : { 1 , 2 , 3 } ) {
+    x = k_add ( x ) ( a ) ;
+  } 
 
 }

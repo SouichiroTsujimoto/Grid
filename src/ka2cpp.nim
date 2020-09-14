@@ -14,8 +14,8 @@ var count = 0
 
 proc initTables*() =
   identTable = initTable[string, string]()
-  scopeTable.setLen(0)
-  mutTable.setLen(0)
+  scopeTable = @[@[""]]
+  mutTable = @[""]
   count = 0
 
 proc conversionCppType(Type: string): (string, string) =
@@ -88,6 +88,7 @@ proc addScopeTable(str: string) =
   if scopeTable.len()-1 == count:
     scopeTable[count].add(str)
   elif scopeTable.len()-1 < count:
+    scopeTable.setLen(count)
     scopeTable.add(@[str])
 
 proc makeCodeParts(node: Node): (seq[codeParts], string) =
@@ -209,7 +210,12 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
   of nkIdent:
     var im = false
     if scopeTable.len() != 0:
-      for s in scopeTable[0..count]:
+      var indmax = 0
+      if count > scopeTable.len()-1:
+        indmax = scopeTable.len()-1
+      else:
+        indmax = count
+      for s in scopeTable[0..indmax]:
         for ident in s:
           if ident == node.identValue:
             code.add((IDENT, node.identValue))
@@ -400,6 +406,30 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
       echo "エラー！！！(16.0)"
       quit()
   
+  # Generator
+  of nkGenerator:
+    # TODO: 型のチェック
+    if node.left != nil:
+      let l = node.left.makeCodeParts()
+      code.add(l[0])
+      count += 1
+      identTable[l[0][1][1]] = l[1]
+      addScopeTable(l[0][1][1])
+      # 後で消す
+      echo scopeTable
+      #
+      codeType = l[1]
+    else:
+      echo "エラー！！！(15.1)"
+      quit()
+    code.add((COLON, ":"))
+    if node.right != nil:
+      let r = node.right.makeCodeParts()
+      code.add(r[0])
+    else:
+      echo "エラー！！！(15.2)"
+      quit()
+
   # 代入式
   of nkAssignExpression:
     var lt, rt: string
@@ -514,6 +544,28 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
         sr = statement.makeCodeParts()
         code.add(sr[0].replaceSemicolon((OTHER, ",")))
     codeType = sr[1]
+  
+  # for文
+  # TODO
+  of nkForStatement:
+    let oc = count
+    code.add((OTHER, "for"))
+    code.add((OTHER, "("))
+    code.add(node.generator.makeCodeParts()[0])
+    code.add((OTHER, ")"))
+    code.add((OTHER, "{"))
+    var sr: (seq[codeParts], string)
+    for i, statement in node.consequence.statements:
+      sr = statement.makeCodeParts()
+      code.add(sr[0])
+    code.add((OTHER, "}"))
+    code.add((OTHER, "\n"))
+    count -= 1
+    scopeTable.setLen(oc + 1)
+    codeType = sr[1]
+    # 後で消す
+    echo scopeTable
+    #
   else:
     return (code, codeType)
   
@@ -539,6 +591,7 @@ proc makeCppCode*(node: Node, indent: int): string =
       newLine = ""
       newLine.addIndent(braceCount)
     elif part.Type == OTHER and part.Code == "}":
+      outCode.add(newLine)
       braceCount = braceCount - 1
       newLine = ""
       newLine.addIndent(braceCount)
@@ -555,6 +608,8 @@ proc makeCppCode*(node: Node, indent: int): string =
       outCode.add(newLine & "\n")
       newLine = ""
       newLine.addIndent(braceCount)
+    elif part.Type == OTHER and part.Code == "\n":
+      newLine.add(part.Code)
     elif part.Type == OTHER and part.Code == "":
       continue
     else:

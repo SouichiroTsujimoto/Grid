@@ -1,1 +1,4 @@
-map({1}, + 1)
+mut #int x = 0
+for #int a <- {1, 2, 3} do
+  x := x + a
+end

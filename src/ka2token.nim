@@ -24,6 +24,7 @@ const
   MINUS*        = "-"
   ASTERISC*     = "*"
   SLASH*        = "/"
+  ARROW*        = "<-"
   # 比較演算子
   LT*           = "<"
   GT*           = ">"
@@ -42,7 +43,7 @@ const
   RPAREN*       = ")"
   LBRACE*       = "{"
   RBRACE*       = "}"
-  VARLEN*       = "!{"
+  RBANDSC*      = "};"
   # キーワード
   TRUE*         = "TRUE"
   FALSE*        = "FALSE"
@@ -66,6 +67,7 @@ const
   T_FUNCTION*   = "T_FUNCTION"
   # その他
   MAP*          = "MAP"
+  FOR*          = "FOR"
   AUTO*         = "AUTO"
   FUNCTION*     = "FUNCTION"
   OTHER*        = "OTHER"
@@ -84,13 +86,14 @@ let keywords = {
   "do"        : DO,
   "end"       : END,
   "map"       : MAP,
+  "for"       : FOR,
   "#int"      : T_INT,
   "#float"    : T_FLOAT,
   "#char"     : T_CHAR,
   "#string"   : T_STRING,
   "#bool"     : T_BOOL,
   "#array"    : T_ARRAY,
-  "#function" : T_FUNCTION, 
+  "#function" : T_FUNCTION,
 }.newTable
 
 proc LookupIdent*(ident: string): string =

@@ -116,6 +116,21 @@ proc parseInfixExpression(p: Parser, left: Node): Node =
   )
   return node
 
+# Generator
+proc parseGenerator(p: Parser, left: Node): Node =
+  let operator = p.curToken.Type
+  let cp = p.curToken.tokenPrecedence()
+  p.shiftToken()
+  let right = p.parseExpression(cp)
+  let node = Node(
+    kind: nkGenerator,
+    token: p.curToken,
+    operator: operator,
+    left: left,
+    right: right,
+  )
+  return node
+
 # 代入式
 proc parseAssignExpression(p: Parser, left: Node): Node =
   let operator = p.curToken.Type
@@ -365,7 +380,7 @@ proc parseFunctionType(p: Parser): Node =
 
 #------ここまで------
 
-# if文
+# if式
 proc parseIfExpression(p: Parser): Node =
   var node = Node(
     kind: nkIfExpression,
@@ -400,6 +415,21 @@ proc parseIfExpression(p: Parser): Node =
     )
     p.shiftToken()
     return node
+
+# for文
+proc parseForStatement(p: Parser): Node =
+  var node = Node(
+    kind: nkForStatement,
+    token: p.curToken,
+  )
+  p.shiftToken()
+  node.generator = p.parseExpression(Lowest)
+  if p.peekToken.Type != DO:
+    return Node(kind: nkNil)
+  p.shiftToken()
+  node.consequence = p.parseBlockStatement(@[END])
+  p.shiftToken()
+  return node
 
 # 括弧
 proc parseGroupedExpression(p: Parser): Node =
@@ -440,7 +470,7 @@ proc parseExpression(p: Parser, precedence: Precedence): Node =
   of NIL        : left = p.parseNilLiteral()
   of LPAREN     : left = p.parseGroupedExpression()
   of LBRACE     : left = p.parseArrayLiteral()
-  else:           left = nil
+  else          : left = p.parseType()
   
   while precedence < p.peekToken.tokenPrecedence() and p.peekToken.Type != EOF or left == nil:
     if left != nil:
@@ -448,6 +478,8 @@ proc parseExpression(p: Parser, precedence: Precedence): Node =
     case p.curToken.Type
     of PLUS, MINUS, ASTERISC, SLASH, LT, GT, LE, GE, EE, NE:
       left = p.parseInfixExpression(left)
+    of ARROW:
+      left = p.parseGenerator(left)
     of CEQUAL:
       left = p.parseAssignExpression(left)
     of LPAREN:
@@ -489,6 +521,7 @@ proc parseStatement(p: Parser): Node =
   of LET:    return p.parseLetStatement()
   of MUT:    return p.parseMutStatement()
   of DEFINE: return p.parseDefineStatement()
+  of FOR:    return p.parseForStatement()
   else:      return p.parseExpressionStatement()
 
 # ASTを作る

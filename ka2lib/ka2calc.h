@@ -4,7 +4,7 @@
     return b(i);\
   });\
   _result; \
-  })
+  });
 
 auto k_add = [](int a) {
   return [a](int b) { return a + b; };
@@ -51,4 +51,5 @@ auto k_assign = [](int *a) {
     *a = b;
     return b;
   };
+
 };

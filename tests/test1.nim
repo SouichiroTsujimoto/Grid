@@ -223,3 +223,36 @@ suite "map":
     check(res.findStr("const std::vector<int> a = { 1 , 2 , 3 } ;"))
     check(res.findStr("const std::vector<int> b = k_map ( a , k_add ( 1 ) ) ;"))
   
+suite "for":
+  test "for #string a <- {\"a\", \"b\", \"c\"} do puts(a) end":
+    initTables()
+    let program = makeAST("for #string a <- {\"a\", \"b\", \"c\"} do puts(a) end")
+    var res = ""
+    for tree in program:
+      res.add(makeCppCode(tree, 0))
+    check(res.findStr("for ( std::string a : { \"a\" , \"b\" , \"c\" } ) {"))
+    check(res.findStr("k_puts ( a ) ;"))
+    check(res.findStr("}"))
+  test "for #string a <- {\"a\", \"b\", \"c\"} do for #string b <- {\"a\", \"b\", \"c\"} do for #string c <- {\"a\", \"b\", \"c\"} do puts(c) end end end":
+    initTables()
+    let program = makeAST("for #string a <- {\"a\", \"b\", \"c\"} do for #string b <- {\"a\", \"b\", \"c\"} do for #string c <- {\"a\", \"b\", \"c\"} do puts(c) end end end")
+    var res = ""
+    for tree in program:
+      res.add(makeCppCode(tree, 0))
+    check(res.findStr("for ( std::string a : { \"a\" , \"b\" , \"c\" } ) {"))
+    check(res.findStr("for ( std::string b : { \"a\" , \"b\" , \"c\" } ) {"))
+    check(res.findStr("for ( std::string c : { \"a\" , \"b\" , \"c\" } ) {"))
+    check(res.findStr("k_puts ( c ) ;"))
+    check(res.findStr("}"))
+    check(res.findStr("}"))
+    check(res.findStr("}"))
+  test "mut #int x = 0 for #int a <- {1, 2, 3} do x := x + a end":
+    initTables()
+    let program = makeAST("mut #int x = 0 for #int a <- {1, 2, 3} do x := x + a end")
+    var res = ""
+    for tree in program:
+      res.add(makeCppCode(tree, 0))
+    check(res.findStr("int x = 0 ;"))
+    check(res.findStr("for ( int a : { 1 , 2 , 3 } ) {"))
+    check(res.findStr("x = k_add ( x ) ( a ) ;"))
+    check(res.findStr("}"))

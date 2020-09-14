@@ -111,11 +111,6 @@ proc nextToken*(l: Lexer): Token =
       l.nextChar()
       let literal = $ch & $l.ch
       tok = Token(Type: NE, Literal: literal)
-    elif l.peekChar() == '{':
-      let ch = l.ch
-      l.nextChar()
-      let literal = $ch & $l.ch
-      tok = Token(Type: VARLEN, Literal: literal)
     else:
       tok = newToken(NOT, l.ch)
   of '<':
@@ -124,6 +119,11 @@ proc nextToken*(l: Lexer): Token =
       l.nextChar()
       let literal = $ch & $l.ch
       tok = Token(Type: LE, Literal: literal)
+    elif l.peekChar() == '-':
+      let ch = l.ch
+      l.nextChar()
+      let literal = $ch & $l.ch
+      tok = Token(Type: ARROW, Literal: literal)
     else:
       tok = newToken(LT, l.ch)
   of '>':
@@ -146,6 +146,8 @@ proc nextToken*(l: Lexer): Token =
       l.nextChar()
       let literal = $ch & $l.ch
       tok = Token(Type: CEQUAL, Literal: literal)
+    else:
+      tok = newToken(COLON, l.ch)
   of '(' : tok = newToken(LPAREN, l.ch)
   of ')' : tok = newToken(RPAREN, l.ch)
   of ',' : tok = newToken(COMMA, l.ch)

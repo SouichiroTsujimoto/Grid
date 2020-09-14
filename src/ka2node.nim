@@ -19,6 +19,7 @@ type NodeKind* = enum
   nkArrayType
   nkFunctionType
   nkInfixExpression
+  nkGenerator
   nkAssignExpression
   nkLetStatement
   nkMutStatement
@@ -26,6 +27,7 @@ type NodeKind* = enum
   nkReturnStatement
   nkRetrunExpression
   nkMapFunction
+  nkForStatement
   nkExpressionStatement
   nkCallExpression
   nkIfExpression
@@ -34,21 +36,23 @@ type NodeKind* = enum
 
 type Precedence* = enum
   Lowest = 0
+  Assign
   Equals
   Lg
   Sum
   Product
-  Assign
+  Generator
   Call
 
 proc tokenPrecedence*(tok: Token): Precedence =
   case tok.Type
-  of LPAREN:          return Call
   of CEQUAL:          return Assign
-  of SLASH, ASTERISC: return Product
-  of PLUS, MINUS:     return Sum
   of LT, GT, LE, GE:  return Lg
   of EE, NE:          return Equals
+  of PLUS, MINUS:     return Sum
+  of SLASH, ASTERISC: return Product
+  of ARROW:           return Generator
+  of LPAREN:          return Call
   else:               return Lowest
 
 type 
@@ -79,6 +83,7 @@ type
     condition*:           Node
     consequence*:         BlockStatement
     alternative*:         Node
+    generator*:           Node
     return_expression*:   Node
   # ブロック文クラス
   BlockStatement* = ref object of RootObj
