@@ -42,13 +42,13 @@ proc conversionCppType(Type: string): (string, string) =
 proc conversionCppFunction(operator: string): (string, string) =
   case operator
   of PLUS:
-    return (INT, "k_add")
+    return (INT & "|" & FLOAT, "k_add")
   of MINUS:
-    return (INT, "k_sub")
+    return (INT & "|" & FLOAT, "k_sub")
   of ASTERISC:
-    return (INT, "k_mul")
+    return (INT & "|" & FLOAT, "k_mul")
   of SLASH:
-    return (INT, "k_div")
+    return (INT & "|" & FLOAT, "k_div")
   of LT:
     return (BOOL, "k_lt")
   of GT:
@@ -91,6 +91,33 @@ proc addScopeTable(str: string) =
     scopeTable.setLen(count)
     scopeTable.add(@[str])
 
+proc typeMatch(type1: string, type2: string): (bool, string) =
+  var typeList1: seq[seq[string]]
+  var typeList2: seq[seq[string]]
+
+  for t1s in type1.split("->"):
+    typeList1.add(@[t1s.split("|")])
+  for t2s in type2.split("->"):
+    typeList2.add(@[t2s.split("|")])
+  
+  var typeFlow: string
+  var typeCandidacies: seq[string]
+
+  for i, t1ss in typeList1:
+    for t2ss in typeList2[i]:
+      for t1sss in t1ss:
+        if t1sss == t2ss:
+          typeCandidacies.add(t1sss)
+    if typeCandidacies != @[]:
+      if i != 0:
+        typeFlow.add("->")
+      typeFlow.add(typeCandidacies.join("|"))
+      typeCandidacies = @[]
+    else:
+      return (false, "")
+
+  return (true, typeFlow)
+
 proc makeCodeParts(node: Node): (seq[codeParts], string) =
   var code: seq[codeParts]
   var codeType: string
@@ -130,7 +157,7 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
         if i == 0:
           eltype = elem[1]
           code.add(elem[0])
-        elif elem[1] == eltype:
+        elif typeMatch(elem[1], eltype)[0]:
           code.add((COMMA, ","))
           code.add(elem[0])
         else:
@@ -244,7 +271,7 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
     let li = node.let_ident.makeCodeParts()
     let lv = node.let_value.makeCodeParts()
     # echo li[1] & "___" & lv[1]
-    if li[1] == lv[1]:
+    if typeMatch(li[1], lv[1])[0]:
       if scopeTable.len() != 0:
         for sc in scopeTable:
           for ident in sc:
@@ -269,7 +296,7 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
   of nkMutStatement:
     let li = node.let_ident.makeCodeParts()
     let lv = node.let_value.makeCodeParts()
-    if li[1] == lv[1]:
+    if typeMatch(li[1], lv[1])[0]:
       if scopeTable.len() != 0:
         for sc in scopeTable:
           for ident in sc:
@@ -318,7 +345,7 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
       for statement in node.define_block.statements:
         if statement.kind == nkReturnStatement:
           let st = statement.makeCodeParts()
-          if st[1] == di[1]:
+          if typeMatch(st[1], di[1])[0]:
             code.add(st[0])
           else:
             echo "エラー！！！(13)"
@@ -346,7 +373,7 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
       for statement in node.define_block.statements:
         if statement.kind == nkReturnStatement:
           let st = statement.makeCodeParts()
-          if st[1] == di[1]:
+          if typeMatch(st[1], di[1])[0]:
             code.add(st[0])
           else:
             echo "エラー！！！(14)"
@@ -400,7 +427,7 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
       codeType = FUNCTION
     elif rt == "":
       codeType = FUNCTION
-    elif lt == rt:
+    elif typeMatch(lt, rt)[0]:
       codeType = oc[0]
     else:
       echo "エラー！！！(16.0)"
@@ -456,7 +483,7 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
       echo "エラー！！！(16.0.2)"
       quit()
     code.addSemicolon()
-    if lt == rt:
+    if typeMatch(lt, rt)[0]:
       codeType = lt
     else:
       echo "エラー！！！(16.1)"
@@ -500,7 +527,7 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
         sr = statement.makeCodeParts()
         code.add(sr[0].replaceSemicolon((OTHER, ",")))
     let ar = node.alternative.makeCodeParts()
-    if ar[1] == sr[1]:
+    if typeMatch(ar[1], sr[1])[0]:
       code.add((OTHER, ":"))
       code.add(ar[0])
       codeType = sr[1]
@@ -524,7 +551,7 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
         sr = statement.makeCodeParts()
         code.add(sr[0].replaceSemicolon((OTHER, ",")))
     let ar = node.alternative.makeCodeParts()
-    if ar[1] == sr[1]:
+    if typeMatch(ar[1], sr[1])[0]:
       code.add((OTHER, ":"))
       code.add(ar[0])
       codeType = sr[1]
@@ -576,38 +603,42 @@ proc makeCppCode*(node: Node, indent: int): string =
   var outCode: seq[string]
   var newLine: string
   var braceCount: int = indent
-  newLine.addIndent(braceCount)
 
   for i, part in codeParts[0]:
     # echo $i & "回目 : " & part
     if part.Type == SEMICOLON and part.Code == ";":
       newLine.add(part.Code)
-      outCode.add(newLine & "\n")
+      var ind = ""
+      ind.addIndent(braceCount)
+      outCode.add(ind & newLine & "\n")
       newLine = ""
     elif part.Type == OTHER and part.Code == "{":
-      braceCount = braceCount + 1
       newLine.add(part.Code)
-      outCode.add(newLine & "\n")
+      var ind = ""
+      ind.addIndent(braceCount)
+      outCode.add(ind & newLine & "\n")
+      braceCount = braceCount + 1
       newLine = ""
-      newLine.addIndent(braceCount)
     elif part.Type == OTHER and part.Code == "}":
-      outCode.add(newLine)
+      if newLine.split(" ").join("") != "":
+        outCode.add(newLine)
       braceCount = braceCount - 1
       newLine = ""
       newLine.addIndent(braceCount)
       newLine.add(part.Code & " ")
     elif part.Type == OTHER and part.Code == "?":
+      newLine.add(part.Code)
+      var ind = ""
+      ind.addIndent(braceCount)
+      outCode.add(ind & newLine & "\n")
       braceCount = braceCount + 1
-      newLine.add(part.Code)
-      outCode.add(newLine & "\n")
       newLine = ""
-      newLine.addIndent(braceCount)
     elif part.Type == OTHER and part.Code == ":":
-      braceCount = braceCount - 1
-      newLine.add(part.Code)
-      outCode.add(newLine & "\n")
+      var ind = ""
+      ind.addIndent(braceCount)
+      outCode.add(ind & newLine & "\n")
       newLine = ""
-      newLine.addIndent(braceCount)
+      newLine.add(part.Code & " ")
     elif part.Type == OTHER and part.Code == "\n":
       newLine.add(part.Code)
     elif part.Type == OTHER and part.Code == "":

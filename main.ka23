@@ -1,4 +1,5 @@
-mut #int x = 0
-for #int a <- {1, 2, 3} do
-  x := x + a
+if 5 + 5 == 10 do
+  "5 + 5 = 10"
+else
+  "?" 
 end
