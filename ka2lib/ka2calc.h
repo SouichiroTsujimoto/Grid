@@ -6,50 +6,49 @@
   _result; \
   });
 
-auto k_add = [](int a) {
-  return [a](int b) { return a + b; };
+auto k_add = [](auto a) {
+  return [a](auto b) { return a + b; };
 };
 
-auto k_sub = [](int a) {
-  return [a](int b) {return a - b;};
+auto k_sub = [](auto a) {
+  return [a](auto b) {return a - b;};
 };
 
-auto k_mul = [](int a) {
-  return [a](int b) {return a * b;};
+auto k_mul = [](auto a) {
+  return [a](auto b) {return a * b;};
 };
 
-auto k_div = [](int a) {
-  return [a](int b) {return a / b;};
+auto k_div = [](auto a) {
+  return [a](auto b) {return a / b;};
 };
 
-auto k_lt = [](int a) {
-  return [a](int b) {return a < b;};
+auto k_lt = [](auto a) {
+  return [a](auto b) {return a < b;};
 };
 
-auto k_gt = [](int a) {
-  return [a](int b) {return a > b;};
+auto k_gt = [](auto a) {
+  return [a](auto b) {return a > b;};
 };
 
-auto k_le = [](int a) {
-  return [a](int b) {return a <= b;};
+auto k_le = [](auto a) {
+  return [a](auto b) {return a <= b;};
 };
 
-auto k_ge = [](int a) {
-  return [a](int b) {return a >= b;};
+auto k_ge = [](auto a) {
+  return [a](auto b) {return a >= b;};
 };
 
-auto k_eq = [](int a) {
-  return [a](int b) {return a == b;};
+auto k_eq = [](auto a) {
+  return [a](auto b) {return a == b;};
 };
 
-auto k_ne = [](int a) {
-  return [a](int b) {return a != b;};
+auto k_ne = [](auto a) {
+  return [a](auto b) {return a != b;};
 };
 
-auto k_assign = [](int *a) {
-  return [a](int b) {
+auto k_assign = [](auto *a) {
+  return [a](auto b) {
     *a = b;
     return b;
   };
-
 };

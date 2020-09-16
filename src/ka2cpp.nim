@@ -39,8 +39,8 @@ proc conversionCppType(Type: string): (string, string) =
     else:
       return (NIL, "NULL")
 
-proc conversionCppFunction(operator: string): (string, string) =
-  case operator
+proc conversionCppFunction(fn: string): (string, string) =
+  case fn
   of PLUS:
     return (INT & "|" & FLOAT, "k_add")
   of MINUS:
@@ -65,8 +65,6 @@ proc conversionCppFunction(operator: string): (string, string) =
     return (NIL, "k_puts")
   else:
     return (NIL, "NULL")
-
-#------↑仮↑------
 
 proc addSemicolon*(parts: var seq[codeParts]) =
   let tail = parts[parts.len()-1]
