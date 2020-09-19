@@ -7,10 +7,11 @@ type codeParts = tuple
   Type: string
   Code: string
 
-var identTable = initTable[string, string]()
-var scopeTable: seq[seq[string]]
-var mutTable: seq[string]
-var count = 0
+var
+  identTable = initTable[string, string]()
+  scopeTable: seq[seq[string]]
+  mutTable: seq[string]
+  count = 0
 
 proc initTables*() =
   identTable = initTable[string, string]()
@@ -42,31 +43,37 @@ proc conversionCppType(Type: string): (string, string) =
 proc conversionCppFunction(fn: string): (string, string) =
   case fn
   of PLUS:
-    return (INT & "|" & FLOAT, "k_add")
+    return (INT & "|" & FLOAT & "=>" & INT & "|" & FLOAT, "k_add")
   of MINUS:
-    return (INT & "|" & FLOAT, "k_sub")
+    return (INT & "|" & FLOAT & "=>" & INT & "|" & FLOAT, "k_sub")
   of ASTERISC:
-    return (INT & "|" & FLOAT, "k_mul")
+    return (INT & "|" & FLOAT & "=>" & INT & "|" & FLOAT, "k_mul")
   of SLASH:
-    return (INT & "|" & FLOAT, "k_div")
+    return (INT & "|" & FLOAT & "=>" & INT & "|" & FLOAT, "k_div")
   of LT:
-    return (BOOL, "k_lt")
+    return (INT & "|" & FLOAT & "|" & CHAR & "|" & STRING & "|" & BOOL & "=>" & BOOL, "k_lt")
   of GT:
-    return (BOOL, "k_gt")
+    return (INT & "|" & FLOAT & "|" & CHAR & "|" & STRING & "|" & BOOL & "=>" & BOOL, "k_gt")
   of LE:
-    return (BOOL, "k_le")
+    return (INT & "|" & FLOAT & "|" & CHAR & "|" & STRING & "|" & BOOL & "=>" & BOOL, "k_le")
   of GE:
-    return (BOOL, "k_ge")
+    return (INT & "|" & FLOAT & "|" & CHAR & "|" & STRING & "|" & BOOL & "=>" & BOOL, "k_ge")
   of EE:
-    return (BOOL, "k_eq")
+    return (INT & "|" & FLOAT & "|" & CHAR & "|" & STRING & "|" & BOOL & "=>" & BOOL, "k_eq")
   of NE:
-    return (BOOL, "k_ne")
+    return (INT & "|" & FLOAT & "|" & CHAR & "|" & STRING & "|" & BOOL & "=>" & BOOL, "k_ne")
   of "puts":
-    return (NIL, "k_puts")
+    return (INT & "|" & FLOAT & "|" & CHAR & "|" & STRING & "|" & BOOL & "=>" & NIL, "k_puts")
   else:
     return (NIL, "NULL")
 
-proc addSemicolon*(parts: var seq[codeParts]) =
+proc removeT(Type: string): string =
+  if Type[0] == 'T' and Type[1] == '_':
+    return Type[2..Type.len()-1]
+  else:
+    return Type
+
+proc addSemicolon(parts: var seq[codeParts]) =
   let tail = parts[parts.len()-1]
   if tail.Type != SEMICOLON:
     parts.add((SEMICOLON, ";"))
@@ -90,17 +97,16 @@ proc addScopeTable(str: string) =
     scopeTable.add(@[str])
 
 proc typeMatch(type1: string, type2: string): (bool, string) =
-  var typeList1: seq[seq[string]]
-  var typeList2: seq[seq[string]]
-
+  var
+    typeList1: seq[seq[string]]
+    typeList2: seq[seq[string]]
   for t1s in type1.split("->"):
     typeList1.add(@[t1s.split("|")])
   for t2s in type2.split("->"):
     typeList2.add(@[t2s.split("|")])
-  
-  var typeFlow: string
-  var typeCandidacies: seq[string]
-
+  var
+    typeFlow: string
+    typeCandidacies: seq[string]
   for i, t1ss in typeList1:
     for t2ss in typeList2[i]:
       for t1sss in t1ss:
@@ -116,9 +122,19 @@ proc typeMatch(type1: string, type2: string): (bool, string) =
 
   return (true, typeFlow)
 
+proc funcTypesMatch(funcType: string, argsType: seq[string]): (bool, string, string) =
+  var fnTs = funcType.split("=>")
+  let res = typeMatch(fnTs[0], argsType.join("->"))
+  
+  if fnTs.len() == 1 or res[0] == false:
+    return (false, "", "")
+  
+  return (res[0], res[1], fnTs[1])
+
 proc makeCodeParts(node: Node): (seq[codeParts], string) =
-  var code: seq[codeParts]
-  var codeType: string
+  var
+    code: seq[codeParts]
+    codeType: string
   
   case node.kind
   # リテラル
@@ -251,7 +267,7 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
           break
     if im == false:
       let ic = node.identValue.conversionCppFunction()
-      if ic[1] != "nil":
+      if ic[0] != NIL:
         code.add((IDENT, ic[1]))
         codeType = ic[0]
       else:
@@ -327,15 +343,20 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
             echo "エラー！！！(12)"
             quit()
     code.add(di[0][1])
-    identTable[di[0][1][1]] = FUNCTION & "->" & di[1]
+    code.add((EQUAL, "="))
+    if node.define_args == @[]:
+      identTable[di[0][1][1]] = NIL & "=>" & di[1]
+    else:
+      var argsType: seq[string]
+      for parameter in node.define_args:
+        argsType.add(parameter.token.Type.removeT())
+      identTable[di[0][1][1]] = argsType.join("->") & "=>" & di[1]
     addScopeTable(di[0][1][1])
     let oc = count
     count += 1
     # 後で消す
     echo scopeTable
     #
-    code.add((EQUAL, "="))
-    var arg: string = ""
     if node.define_args == @[]:
       code.add((OTHER, "[]"))
       code.add((OTHER, "()"))
@@ -353,6 +374,7 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
       code.add((OTHER, "}"))
       code.addSemicolon()
     else:
+      var arg: string = ""
       for i, parameter in node.define_args:
         let pr = parameter.makeCodeParts()
         code.add((OTHER, "[" & arg & "]"))
@@ -419,14 +441,15 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
       code.add(r[0])
       code.add((OTHER, ")"))
       rt = r[1]
+    let om = funcTypesMatch(oc[0], @[lt, rt])
     if lt == "" and rt == "":
       codeType = FUNCTION
     elif lt == "":
       codeType = FUNCTION
     elif rt == "":
       codeType = FUNCTION
-    elif typeMatch(lt, rt)[0]:
-      codeType = oc[0]
+    elif om[0]:
+      codeType = om[2]
     else:
       echo "エラー！！！(16.0)"
       quit()
@@ -492,7 +515,7 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
   of nkCallExpression:
     let fn = node.function.makeCodeParts()
     code.add(fn[0])
-    codeType = fn[1]
+    var argsType: seq[string]
     if node.function.kind == nkMapFunction:
       code.add((OTHER, "("))
       for i, arg in node.args:
@@ -505,10 +528,16 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
     else:
       for arg in node.args:
         code.add((OTHER, "("))
-        let a = arg.makeCodeParts()[0]
-        code.add(a.replaceSemicolon((OTHER, "")))
+        let a = arg.makeCodeParts()
+        code.add(a[0].replaceSemicolon((OTHER, "")))
+        argsType.add(a[1])
         code.add((OTHER, ")"))
       code.addSemicolon()
+    let fm = funcTypesMatch(fn[1], argsType)
+    if fm[0] == false:
+      echo "エラー！！！(16.2)"
+      quit()
+    codeType = fm[2]
   
   # if式
   # TODO

@@ -1,3 +1,1 @@
-auto k_puts = [](std::string a) {
-  std::cout << a << std::endl;
-};
+#define k_puts(a) std::cout << a << std::endl;

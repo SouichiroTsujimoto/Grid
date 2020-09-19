@@ -5,6 +5,7 @@
 #include "ka2lib/ka2IO.h"
 
 int main() {
-  const bool d = k_eq ( 1.3 ) ( 4.4 ) ;
+  const int g = k_mul ( 30 ) ( 30 ) ;
+  k_puts ( g ) ;
 
 }
