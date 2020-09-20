@@ -5,7 +5,6 @@
 #include "ka2lib/ka2IO.h"
 
 int main() {
-  const int g = k_mul ( 30 ) ( 30 ) ;
-  k_puts ( g ) ;
+  const std::vector<int> b = k_map ( {1, 2, 3} , k_add ( 1 ), 1) ;
 
 }

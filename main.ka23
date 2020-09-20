@@ -1,2 +1,1 @@
-let #int g = 30 * 30
-puts(g)
+let #array #int b = map({1, 2, 3}, + 1)

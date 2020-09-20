@@ -24,7 +24,7 @@ suite "operator":
   test "\"Hello\" == \"Hello\"":
     initTables()
     let program = makeAST("\"Hello\" == \"Hello\"")
-    check(makeCppCode(program[0], 0).findStr("k_eq ( \"Hello\" ) ( \"Hello\" )"))
+    check(makeCppCode(program[0], 0).findStr("k_ee ( \"Hello\" ) ( \"Hello\" )"))
 
 suite "let":
   test "let #int a = 10":
@@ -138,8 +138,8 @@ suite "def":
     let res = makeCppCode(program[0], 0)
     check(res.findStr("auto a = [] ( int b ) {"))
     check(res.findStr("return [b] ( bool c ) {"))
-    check(res.findStr("bool d = k_eq ( b ) ( 10 ) ;"))
-    check(res.findStr("return ( k_eq ( c ) ( d ) ) ;"))
+    check(res.findStr("bool d = k_ee ( b ) ( 10 ) ;"))
+    check(res.findStr("return ( k_ee ( c ) ( d ) ) ;"))
     check(res.findStr("} ;"))
     check(res.findStr("} ;"))
 
@@ -148,7 +148,7 @@ suite "if":
     initTables()
     let program = makeAST("if 5 + 5 == 10 do \"5 + 5 = 10\" else \"?\" end")
     let res = makeCppCode(program[0], 0)
-    check(res.findStr("( k_eq ( k_add ( 5 ) ( 5 ) ) ( 10 ) ?"))
+    check(res.findStr("( k_ee ( k_add ( 5 ) ( 5 ) ) ( 10 ) ?"))
     check(res.findStr("\"5 + 5 = 10\""))
     check(res.findStr(": \"?\" ) ;"))
   test "if True do \"1\" elif True do \"2\" else \"3\" end":
@@ -164,9 +164,9 @@ suite "if":
     initTables()
     let program = makeAST("let #int a = if 2 + 2 == 5 do 1984 elif 2 + 2 == 4 do 2020 else 0 end")
     let res = makeCppCode(program[0], 0)
-    check(res.findStr("const int a = ( k_eq ( k_add ( 2 ) ( 2 ) ) ( 5 ) ?"))
+    check(res.findStr("const int a = ( k_ee ( k_add ( 2 ) ( 2 ) ) ( 5 ) ?"))
     check(res.findStr("1984"))
-    check(res.findStr(": ( k_eq ( k_add ( 2 ) ( 2 ) ) ( 4 ) ?"))
+    check(res.findStr(": ( k_ee ( k_add ( 2 ) ( 2 ) ) ( 4 ) ?"))
     check(res.findStr("2020"))
     check(res.findStr(": 0 ) ) ;"))
 
@@ -176,6 +176,29 @@ suite "puts":
     let program = makeAST("puts(\"Hello\")")
     let res = makeCppCode(program[0], 0)
     check(res.findStr("k_puts ( \"Hello\" ) ;"))
+  test "puts(2005)":
+    initTables()
+    let program = makeAST("puts(2005)")
+    let res = makeCppCode(program[0], 0)
+    check(res.findStr("k_puts ( 2005 ) ;"))
+  test "puts(True)":
+    initTables()
+    let program = makeAST("puts(True)")
+    let res = makeCppCode(program[0], 0)
+    check(res.findStr("k_puts ( true ) ;"))
+  test "puts(\'Q\')":
+    initTables()
+    let program = makeAST("puts(\'Q\')")
+    let res = makeCppCode(program[0], 0)
+    check(res.findStr("k_puts ( \'Q\' ) ;"))
+  test "let #char ch = \'Q\' puts(ch)":
+    initTables()
+    let program = makeAST("let #char ch = \'Q\' puts(ch)")
+    var res = ""
+    for tree in program:
+      res.add(makeCppCode(tree, 0))
+    check(res.findStr("const char ch = \'Q\'"))
+    check(res.findStr("k_puts ( ch ) ;"))
 
 suite "array":
   test "let #array #string a = {\"Hello\", \"World\"}":
