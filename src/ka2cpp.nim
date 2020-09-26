@@ -597,9 +597,11 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
   # Generator
   of nkGenerator:
     # TODO: 型のチェック
+    var lt: string
     if node.left != nil:
       let l = node.left.makeCodeParts()
       code.add(l[0])
+      lt = l[1]
       count += 1
       identTable[l[0][1][1]] = l[1]
       addScopeTable(l[0][1][1])
@@ -613,7 +615,11 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
     code.add((COLON, ":"))
     if node.right != nil:
       let r = node.right.makeCodeParts()
-      code.add(r[0])
+      if lt == r[1].split("ARRAY->")[1]:
+        code.add(r[0])
+      else:
+        echo "エラー！！！(15.1.1)"
+        quit()
     else:
       echo "エラー！！！(15.2)"
       quit()

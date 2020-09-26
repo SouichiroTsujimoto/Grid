@@ -1,1 +1,3 @@
-let #array #int array = map({1, 2, 3}, + 1)
+for #int x <- {True, False, True} do
+  puts(x)
+end
