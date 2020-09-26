@@ -1,1 +1,1 @@
-let #array #int b = map({1, 2, 3}, + 1)
+let #array #int array = map({1, 2, 3}, + 1)

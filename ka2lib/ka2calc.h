@@ -1,17 +1,10 @@
-// #define k_map(a, b, c)({ \
-//   std::vector<c> _result;\
-//   _result.reserve(a.size());\
-//   std::transform(begin(a), end(a), std::back_inserter(_result), b);\
-//   _result;\
-//   })
+#define k_map(a, b, c)({ \
+  std::vector<c> _result;\
+  _result.reserve(a.size());\
+  std::transform(std::begin(a), std::end(a), std::back_inserter(_result), b);\
+  _result;\
+})
 
-template<typename T, typename Y, typename R>
-std::vector<T> k_map(std::vector<Y> a, R b, T c) {
-  std::vector<T> _result;
-  _result.reserve(a.size());
-  std::transform(begin(a), end(a), std::back_inserter(_result), b);
-  return _result;
-};
 
 auto k_add = [](auto a) {
   return [a](auto b) { return a + b; };

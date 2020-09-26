@@ -28,6 +28,9 @@ proc newLexer*(input: string): Lexer =
   l.nextChar()
   return l
 
+proc isStringHead(ch: char): bool =
+  return ('a' <= ch and ch <= 'z') or ('A' <= ch and ch <= 'Z') or ch == '#'
+
 proc isLetter(ch: char): bool =
   return ('a' <= ch and ch <= 'z') or ('A' <= ch and ch <= 'Z') or ch == '_' or ch == '#'
 
@@ -164,7 +167,7 @@ proc nextToken*(l: Lexer): Token =
     elif l.ch.isDoubleQuote():
       let lit = l.readString()
       return Token(Type: STRING, Literal: lit)
-    elif l.ch.isLetter():
+    elif l.ch.isStringHead():
       let lit = l.readIdent()
       let typ = LookupIdent(lit)
       return Token(Type: typ, Literal: lit)
@@ -174,6 +177,9 @@ proc nextToken*(l: Lexer): Token =
         return Token(Type: FLOAT, Literal: lit)
       else:
         return Token(Type: INT, Literal: lit)
+    elif l.ch.isLetter():
+      echo "命名エラー:\"_\"から始まっています"
+      quit()
     else:
       if l.input.len()-1 <= l.position:
         tok = newToken(EOF, l.ch)
