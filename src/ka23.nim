@@ -12,8 +12,9 @@ int main() {
 """
 
 when isMainModule:
-  echo "ファイル名を入力してください"
-  let sourceName = readLine(stdin)
+  # echo "ファイル名を入力してください"
+  # let sourceName = readLine(stdin)
+  let sourceName = "main.ka23"
   let input = sourceName.readSource()
   let program = makeAST(input)
 
@@ -42,13 +43,13 @@ when isMainModule:
   ・ 演算子、代入式をINT以外の型にも対応させる ✅
   ・ 関数の引数の型のチェック ✅
   ・ generatorの型のチェック ✅
-  ・ 組み込み関数とユーザー定義関数が競合しないようにする
-  ・ 構文エラーを検出できるようにする
+  ・ 組み込み関数とユーザー定義関数が競合しないようにする ✅
+  ・ パイプライン関数
+  ・ case式
+  ・ コメントを実装
+  ・ 構文エラーを検出できるようにする 
   ・ エラーメッセージをちゃんと作る
   ・ てきとうすぎる変数名、関数名をどうにかする
   ・ 「仮」「後で修正」「後で変更する」とかいろいろ書いてるところを修正していく
-  ・ コメントを実装
   ・ ka23の関数名がc++の関数と競合しないようにする
-  ・ case式
-  ・ パイプライン関数
 ]#

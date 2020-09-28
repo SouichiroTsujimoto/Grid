@@ -53,6 +53,7 @@ const
   DEFINE*       = "DEFINE"
   RETURN*       = "RETURN"
   IF*           = "IF"
+  IFEX*         = "IFEX"
   ELIF*         = "ELIF"
   ELSE*         = "ELSE"
   DO*           = "DO"
@@ -80,7 +81,7 @@ let keywords = {
   "mut"       : MUT,
   "def"       : DEFINE,
   "return"    : RETURN,
-  "if"        : IF,
+  "ifex"      : IFEX,
   "elif"      : ELIF,
   "else"      : ELSE,
   "do"        : DO,

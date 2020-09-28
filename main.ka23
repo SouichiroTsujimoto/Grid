@@ -1,3 +1,2 @@
-for #int x <- {True, False, True} do
-  puts(x)
-end
+let #int a = ifex True : 1 : 0
+puts(a)

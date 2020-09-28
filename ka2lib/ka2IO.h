@@ -1,1 +1,1 @@
-#define k_puts(a) std::cout << a << std::endl;
+#define _k_puts(a) std::cout << a << std::endl;

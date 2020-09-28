@@ -165,7 +165,7 @@ proc parseExpressionList(p: Parser, endToken: string): seq[Node] =
     p.shiftToken()
     return list
   else:
-    echo "エラー！！！(p0)"
+    echo "構文エラー！！！(0)"
 
 # 宣言の処理
 proc parseNameProc(p: Parser, endToken: string): seq[Node] =
@@ -380,41 +380,71 @@ proc parseFunctionType(p: Parser): Node =
 
 #------ここまで------
 
+# # if式
+# proc parseIfExpression(p: Parser): Node =
+#   var node = Node(
+#     kind: nkIfExpression,
+#     token: p.curToken,
+#   )
+#   p.shiftToken()
+#   node.condition = p.parseExpression(Lowest)
+#   if p.peekToken.Type != DO:
+#     return Node(kind: nkNil)
+#   p.shiftToken()
+#   node.consequence = p.parseBlockStatement(@[ELIF, ELSE])
+
+#   # elifがあった場合
+#   if p.peekToken.Type == ELIF:
+#     p.shiftToken()
+#     let res = p.parseIfExpression()
+#     node.alternative = Node(
+#       kind: nkElifExpression,
+#       token: res.token,
+#       condition: res.condition,
+#       consequence: res.consequence,
+#       alternative: res.alternative,
+#     )
+#     return node
+#   # elseがあった場合
+#   elif p.peekToken.Type == ELSE:
+#     p.shiftToken()
+#     node.alternative = Node(
+#       kind: nkElseExpression,
+#       token: p.curToken,
+#       consequence: p.parseBlockStatement(@[END]),
+#     )
+#     p.shiftToken()
+#     return node
+
 # if式
 proc parseIfExpression(p: Parser): Node =
   var node = Node(
     kind: nkIfExpression,
     token: p.curToken,
   )
+  let cp1 = p.curToken.tokenPrecedence()
   p.shiftToken()
-  node.condition = p.parseExpression(Lowest)
-  if p.peekToken.Type != DO:
-    return Node(kind: nkNil)
+  node.condition = p.parseExpression(cp1)
+  if p.peekToken.Type != COLON:
+    echo "構文エラー！！！(p0.1)"
+    quit()
   p.shiftToken()
-  node.consequence = p.parseBlockStatement(@[ELIF, ELSE])
-
-  # elifがあった場合
-  if p.peekToken.Type == ELIF:
+  let cp2 = p.curToken.tokenPrecedence()
+  p.shiftToken()
+  node.consequence_expression = p.parseExpression(cp2)
+  if p.peekToken.Type == COLON:
     p.shiftToken()
-    let res = p.parseIfExpression()
-    node.alternative = Node(
-      kind: nkElifExpression,
-      token: res.token,
-      condition: res.condition,
-      consequence: res.consequence,
-      alternative: res.alternative,
-    )
-    return node
-  # elseがあった場合
-  elif p.peekToken.Type == ELSE:
+    let cp3 = p.curToken.tokenPrecedence()
     p.shiftToken()
     node.alternative = Node(
       kind: nkElseExpression,
       token: p.curToken,
-      consequence: p.parseBlockStatement(@[END]),
+      consequence_expression: p.parseExpression(cp3),
     )
-    p.shiftToken()
     return node
+  else:
+    echo "構文エラー！！！(p1)"
+    quit()
 
 # for文
 proc parseForStatement(p: Parser): Node =
@@ -456,7 +486,7 @@ proc parseType(p: Parser): Node =
 proc parseExpression(p: Parser, precedence: Precedence): Node =
   var left: Node
   case p.curToken.Type
-  of IF         : left = p.parseIfExpression()
+  of IFEX       : left = p.parseIfExpression()
   of RETURN     : left = p.parseReturnStatement()
   of IDENT      : left = p.parseIdent()
   of MAP        : left = p.parseMapFunction()

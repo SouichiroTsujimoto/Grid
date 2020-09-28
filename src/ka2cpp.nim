@@ -107,11 +107,11 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
         let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
         echo fmr2
         echo "↑__これはfmr2__↑"
-        return (fmr2[0], fmr2[1], "k_add")
+        return (fmr2[0], fmr2[1], "_k_add")
       else:
-        return (true, number_t & "=>" & number_t, "k_add")
+        return (true, number_t & "=>" & number_t, "_k_add")
     else:
-      return (true, number_t & "=>" & number_t & "=>" & number_t, "k_add")
+      return (true, number_t & "=>" & number_t & "=>" & number_t, "_k_add")
   of MINUS:
     let fmr1 = funcTypesMatch(number_t & "=>" & number_t & "=>" & number_t, argsTypeC[0])
     if fmr1[0]:
@@ -119,11 +119,11 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
         let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
         echo fmr2
         echo "↑__これはfmr2__↑"
-        return (fmr2[0], fmr2[1], "k_sub")
+        return (fmr2[0], fmr2[1], "_k_sub")
       else:
-        return (true, number_t & "=>" & number_t, "k_sub")
+        return (true, number_t & "=>" & number_t, "_k_sub")
     else:
-      return (true, number_t & "=>" & number_t & "=>" & number_t, "k_sub")
+      return (true, number_t & "=>" & number_t & "=>" & number_t, "_k_sub")
   of ASTERISC:
     let fmr1 = funcTypesMatch(number_t & "=>" & number_t & "=>" & number_t, argsTypeC[0])
     if fmr1[0]:
@@ -131,11 +131,11 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
         let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
         echo fmr2
         echo "↑__これはfmr2__↑"
-        return (fmr2[0], fmr2[1], "k_mul")
+        return (fmr2[0], fmr2[1], "_k_mul")
       else:
-        return (true, number_t & "=>" & number_t, "k_mul")
+        return (true, number_t & "=>" & number_t, "_k_mul")
     else:
-      return (true, number_t & "=>" & number_t & "=>" & number_t, "k_mul")
+      return (true, number_t & "=>" & number_t & "=>" & number_t, "_k_mul")
   of SLASH:
     let fmr1 = funcTypesMatch(number_t & "=>" & number_t & "=>" & number_t, argsTypeC[0])
     if fmr1[0]:
@@ -143,11 +143,11 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
         let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
         echo fmr2
         echo "↑__これはfmr2__↑"
-        return (fmr2[0], fmr2[1], "k_div")
+        return (fmr2[0], fmr2[1], "_k_div")
       else:
-        return (true, number_t & "=>" & number_t, "k_div")
+        return (true, number_t & "=>" & number_t, "_k_div")
     else:
-      return (true, number_t & "=>" & number_t & "=>" & number_t, "k_div")
+      return (true, number_t & "=>" & number_t & "=>" & number_t, "_k_div")
   of LT:
     let fmr1 = funcTypesMatch(anything_t & "=>" & anything_t & "=>" & BOOL, argsTypeC[0])
     if fmr1[0]:
@@ -155,11 +155,11 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
         let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
         echo fmr2
         echo "↑__これはfmr2__↑"
-        return (fmr2[0], BOOL, "k_lt")
+        return (fmr2[0], BOOL, "_k_lt")
       else:
-        return (true, anything_t & "=>" & BOOL, "k_lt")
+        return (true, anything_t & "=>" & BOOL, "_k_lt")
     else:
-      return (true, anything_t & "=>" & anything_t & "=>" & BOOL, "k_lt")
+      return (true, anything_t & "=>" & anything_t & "=>" & BOOL, "_k_lt")
   of GT:
     let fmr1 = funcTypesMatch(anything_t & "=>" & anything_t & "=>" & BOOL, argsTypeC[0])
     if fmr1[0]:
@@ -167,11 +167,11 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
         let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
         echo fmr2
         echo "↑__これはfmr2__↑"
-        return (fmr2[0], BOOL, "k_gt")
+        return (fmr2[0], BOOL, "_k_gt")
       else:
-        return (true, anything_t & "=>" & BOOL, "k_gt")
+        return (true, anything_t & "=>" & BOOL, "_k_gt")
     else:
-      return (true, anything_t & "=>" & anything_t & "=>" & BOOL, "k_gt")
+      return (true, anything_t & "=>" & anything_t & "=>" & BOOL, "_k_gt")
   of LE:
     let fmr1 = funcTypesMatch(anything_t & "=>" & anything_t & "=>" & BOOL, argsTypeC[0])
     if fmr1[0]:
@@ -179,11 +179,11 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
         let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
         echo fmr2
         echo "↑__これはfmr2__↑"
-        return (fmr2[0], BOOL, "k_le")
+        return (fmr2[0], BOOL, "_k_le")
       else:
-        return (true, anything_t & "=>" & BOOL, "k_le")
+        return (true, anything_t & "=>" & BOOL, "_k_le")
     else:
-      return (true, anything_t & "=>" & anything_t & "=>" & BOOL, "k_le")
+      return (true, anything_t & "=>" & anything_t & "=>" & BOOL, "_k_le")
   of GE:
     let fmr1 = funcTypesMatch(anything_t & "=>" & anything_t & "=>" & BOOL, argsTypeC[0])
     if fmr1[0]:
@@ -191,11 +191,11 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
         let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
         echo fmr2
         echo "↑__これはfmr2__↑"
-        return (fmr2[0], BOOL, "k_ge")
+        return (fmr2[0], BOOL, "_k_ge")
       else:
-        return (true, anything_t & "=>" & BOOL, "k_ge")
+        return (true, anything_t & "=>" & BOOL, "_k_ge")
     else:
-      return (true, anything_t & "=>" & anything_t & "=>" & BOOL, "k_ge")
+      return (true, anything_t & "=>" & anything_t & "=>" & BOOL, "_k_ge")
   of EE:
     let fmr1 = funcTypesMatch(anything_t & "=>" & anything_t & "=>" & BOOL, argsTypeC[0])
     if fmr1[0]:
@@ -203,11 +203,11 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
         let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
         echo fmr2
         echo "↑__これはfmr2__↑"
-        return (fmr2[0], BOOL, "k_ee")
+        return (fmr2[0], BOOL, "_k_ee")
       else:
-        return (true, anything_t & "=>" & BOOL, "k_ee")
+        return (true, anything_t & "=>" & BOOL, "_k_ee")
     else:
-      return (true, anything_t & "=>" & anything_t & "=>" & BOOL, "k_ee")
+      return (true, anything_t & "=>" & anything_t & "=>" & BOOL, "_k_ee")
   of NE:
     let fmr1 = funcTypesMatch(anything_t & "=>" & anything_t & "=>" & BOOL, argsTypeC[0])
     if fmr1[0]:
@@ -215,17 +215,17 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
         let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
         echo fmr2
         echo "↑__これはfmr2__↑"
-        return (fmr2[0], BOOL, "k_ne")
+        return (fmr2[0], BOOL, "_k_ne")
       else:
-        return (true, anything_t & "=>" & BOOL, "k_ne")
+        return (true, anything_t & "=>" & BOOL, "_k_ne")
     else:
-      return (true, anything_t & "=>" & anything_t & "=>" & BOOL, "k_ne")
+      return (true, anything_t & "=>" & anything_t & "=>" & BOOL, "_k_ne")
   of "puts":
     let fmr1 = funcTypesMatch(anything_t & "=>" & NIL, argsTypeC[0])
     if fmr1[0]:
-      return (fmr1[0], NIL, "k_puts")
+      return (fmr1[0], NIL, "_k_puts")
     else:
-      return (true, anything_t & "=>" & NIL, "k_puts")
+      return (true, anything_t & "=>" & NIL, "_k_puts")
   else:
     return (false, NIL, "NULL")
 
@@ -399,7 +399,7 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
 
   # 仮
   of nkMapFunction:
-    code.add((IDENT, "k_map"))
+    code.add((IDENT, "_k_map"))
     codeType = IDENT
   
   # let文
@@ -689,20 +689,74 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
         quit()
       codeType = fm[1]
   
-  # if式
+  # # if文
+  # # TODO
+  # of nkIfExpression:
+  #   code.add((OTHER, "("))
+  #   code.add(node.condition.makeCodeParts()[0])
+  #   code.add((OTHER, "?"))
+  #   var sr: (seq[codeParts], string)
+  #   for i, statement in node.consequence.statements:
+  #     if i == node.consequence.statements.len()-1:
+  #       sr = statement.makeCodeParts()
+  #       code.add(sr[0].replaceSemicolon((OTHER, "")))
+  #     else:
+  #       sr = statement.makeCodeParts()
+  #       code.add(sr[0].replaceSemicolon((OTHER, ",")))
+  #   let ar = node.alternative.makeCodeParts()
+  #   if typeMatch(ar[1], sr[1])[0]:
+  #     code.add((OTHER, ":"))
+  #     code.add(ar[0])
+  #     codeType = sr[1]
+  #     code.add((OTHER, ")"))
+  #     code.addSemicolon()
+  #   else:
+  #     echo "エラー！！！(17)"
+  #     quit()
+
+  # # elif式
+  # of nkElifExpression:
+  #   code.add((OTHER, "("))
+  #   code.add(node.condition.makeCodeParts()[0])
+  #   code.add((OTHER, "?"))
+  #   var sr: (seq[codeParts], string)
+  #   for i, statement in node.consequence.statements:
+  #     if i == node.consequence.statements.len()-1:
+  #       sr = statement.makeCodeParts()
+  #       code.add(sr[0].replaceSemicolon((OTHER, "")))
+  #     else:
+  #       sr = statement.makeCodeParts()
+  #       code.add(sr[0].replaceSemicolon((OTHER, ",")))
+  #   let ar = node.alternative.makeCodeParts()
+  #   if typeMatch(ar[1], sr[1])[0]:
+  #     code.add((OTHER, ":"))
+  #     code.add(ar[0])
+  #     codeType = sr[1]
+  #     code.add((OTHER, ")"))
+  #   else:
+  #     echo "エラー！！！(18)"
+  #     quit()
+
+  # # else式
+  # of nkElseExpression:
+  #   var sr: (seq[codeParts], string)
+  #   for i, statement in node.consequence.statements:
+  #     if i == node.consequence.statements.len()-1:
+  #       sr = statement.makeCodeParts()
+  #       code.add(sr[0].replaceSemicolon((OTHER, "")))
+  #     else:
+  #       sr = statement.makeCodeParts()
+  #       code.add(sr[0].replaceSemicolon((OTHER, ",")))
+  #   codeType = sr[1]
+  
+  # if文
   # TODO
   of nkIfExpression:
     code.add((OTHER, "("))
     code.add(node.condition.makeCodeParts()[0])
     code.add((OTHER, "?"))
-    var sr: (seq[codeParts], string)
-    for i, statement in node.consequence.statements:
-      if i == node.consequence.statements.len()-1:
-        sr = statement.makeCodeParts()
-        code.add(sr[0].replaceSemicolon((OTHER, "")))
-      else:
-        sr = statement.makeCodeParts()
-        code.add(sr[0].replaceSemicolon((OTHER, ",")))
+    var sr = node.consequence_expression.makeCodeParts()
+    code.add(sr[0].replaceSemicolon((OTHER, "")))
     let ar = node.alternative.makeCodeParts()
     if typeMatch(ar[1], sr[1])[0]:
       code.add((OTHER, ":"))
@@ -714,41 +768,12 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
       echo "エラー！！！(17)"
       quit()
 
-  # elif式
-  of nkElifExpression:
-    code.add((OTHER, "("))
-    code.add(node.condition.makeCodeParts()[0])
-    code.add((OTHER, "?"))
-    var sr: (seq[codeParts], string)
-    for i, statement in node.consequence.statements:
-      if i == node.consequence.statements.len()-1:
-        sr = statement.makeCodeParts()
-        code.add(sr[0].replaceSemicolon((OTHER, "")))
-      else:
-        sr = statement.makeCodeParts()
-        code.add(sr[0].replaceSemicolon((OTHER, ",")))
-    let ar = node.alternative.makeCodeParts()
-    if typeMatch(ar[1], sr[1])[0]:
-      code.add((OTHER, ":"))
-      code.add(ar[0])
-      codeType = sr[1]
-      code.add((OTHER, ")"))
-    else:
-      echo "エラー！！！(18)"
-      quit()
-
   # else式
   of nkElseExpression:
-    var sr: (seq[codeParts], string)
-    for i, statement in node.consequence.statements:
-      if i == node.consequence.statements.len()-1:
-        sr = statement.makeCodeParts()
-        code.add(sr[0].replaceSemicolon((OTHER, "")))
-      else:
-        sr = statement.makeCodeParts()
-        code.add(sr[0].replaceSemicolon((OTHER, ",")))
+    var sr = node.consequence_expression.makeCodeParts()
+    code.add(sr[0].replaceSemicolon((OTHER, "")))
     codeType = sr[1]
-  
+
   # for文
   # TODO
   of nkForStatement:
@@ -802,19 +827,6 @@ proc makeCppCode*(node: Node, indent: int): string =
       braceCount = braceCount - 1
       newLine = ""
       newLine.addIndent(braceCount)
-      newLine.add(part.Code & " ")
-    elif part.Type == OTHER and part.Code == "?":
-      newLine.add(part.Code)
-      var ind = ""
-      ind.addIndent(braceCount)
-      outCode.add(ind & newLine & "\n")
-      braceCount = braceCount + 1
-      newLine = ""
-    elif part.Type == OTHER and part.Code == ":":
-      var ind = ""
-      ind.addIndent(braceCount)
-      outCode.add(ind & newLine & "\n")
-      newLine = ""
       newLine.add(part.Code & " ")
     elif part.Type == OTHER and part.Code == "\n":
       newLine.add(part.Code)

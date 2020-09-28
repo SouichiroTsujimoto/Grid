@@ -5,8 +5,7 @@
 #include "ka2lib/ka2IO.h"
 
 int main() {
-  for ( int x : { 1 , 1 , 2 } ) {
-    k_puts ( x ) ;
-  } 
+  const int a = ( true ? 1 : 0 ) ;
+  _k_puts ( a ) ;
 
 }
