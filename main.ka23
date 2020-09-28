@@ -1,2 +1,2 @@
-let #int a = ifex True : 1 : 0
+let #int a = ifex 2 + 2 == 5 : 1984 : ifex 2 + 2 == 4 : 2020 : 0
 puts(a)

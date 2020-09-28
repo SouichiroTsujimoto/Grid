@@ -31,7 +31,7 @@ proc typeMatch(type1: string, type2: string): (bool, string) =
   for t2s in type2.split("->"):
     typeList2.add(@[t2s.split("|")])
 
-  echo $typeList1 & "________" & $typeList2
+  # echo $typeList1 & "________" & $typeList2
 
   var
     typeFlow: string
@@ -97,16 +97,12 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
   var argsTypeC = argsType
   # for _ in [argsTypeC.len()-1..2]:
   #   argsTypeC.add("")
-  echo argsTypeC
-  echo "↑__これはargsTypeC__↑"
   case fn
   of PLUS:
     let fmr1 = funcTypesMatch(number_t & "=>" & number_t & "=>" & number_t, argsTypeC[0])
     if fmr1[0]:
       if argsTypeC.len()-1 != 0:
         let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
-        echo fmr2
-        echo "↑__これはfmr2__↑"
         return (fmr2[0], fmr2[1], "_k_add")
       else:
         return (true, number_t & "=>" & number_t, "_k_add")
@@ -117,8 +113,6 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
     if fmr1[0]:
       if argsTypeC.len()-1 != 0:
         let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
-        echo fmr2
-        echo "↑__これはfmr2__↑"
         return (fmr2[0], fmr2[1], "_k_sub")
       else:
         return (true, number_t & "=>" & number_t, "_k_sub")
@@ -129,8 +123,6 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
     if fmr1[0]:
       if argsTypeC.len()-1 != 0:
         let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
-        echo fmr2
-        echo "↑__これはfmr2__↑"
         return (fmr2[0], fmr2[1], "_k_mul")
       else:
         return (true, number_t & "=>" & number_t, "_k_mul")
@@ -141,8 +133,6 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
     if fmr1[0]:
       if argsTypeC.len()-1 != 0:
         let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
-        echo fmr2
-        echo "↑__これはfmr2__↑"
         return (fmr2[0], fmr2[1], "_k_div")
       else:
         return (true, number_t & "=>" & number_t, "_k_div")
@@ -153,8 +143,6 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
     if fmr1[0]:
       if argsTypeC.len()-1 != 0:
         let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
-        echo fmr2
-        echo "↑__これはfmr2__↑"
         return (fmr2[0], BOOL, "_k_lt")
       else:
         return (true, anything_t & "=>" & BOOL, "_k_lt")
@@ -165,8 +153,6 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
     if fmr1[0]:
       if argsTypeC.len()-1 != 0:
         let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
-        echo fmr2
-        echo "↑__これはfmr2__↑"
         return (fmr2[0], BOOL, "_k_gt")
       else:
         return (true, anything_t & "=>" & BOOL, "_k_gt")
@@ -177,8 +163,6 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
     if fmr1[0]:
       if argsTypeC.len()-1 != 0:
         let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
-        echo fmr2
-        echo "↑__これはfmr2__↑"
         return (fmr2[0], BOOL, "_k_le")
       else:
         return (true, anything_t & "=>" & BOOL, "_k_le")
@@ -189,8 +173,6 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
     if fmr1[0]:
       if argsTypeC.len()-1 != 0:
         let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
-        echo fmr2
-        echo "↑__これはfmr2__↑"
         return (fmr2[0], BOOL, "_k_ge")
       else:
         return (true, anything_t & "=>" & BOOL, "_k_ge")
@@ -201,8 +183,6 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
     if fmr1[0]:
       if argsTypeC.len()-1 != 0:
         let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
-        echo fmr2
-        echo "↑__これはfmr2__↑"
         return (fmr2[0], BOOL, "_k_ee")
       else:
         return (true, anything_t & "=>" & BOOL, "_k_ee")
@@ -213,8 +193,6 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
     if fmr1[0]:
       if argsTypeC.len()-1 != 0:
         let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
-        echo fmr2
-        echo "↑__これはfmr2__↑"
         return (fmr2[0], BOOL, "_k_ne")
       else:
         return (true, anything_t & "=>" & BOOL, "_k_ne")
@@ -588,8 +566,6 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
       code.add(r[0])
       code.add((OTHER, ")"))
       codeType = oc[1]
-      echo oc[1]
-      echo "↑__codeType__↑"
     else:
       echo "エラー！！！(16.0)"
       quit()

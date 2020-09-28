@@ -143,32 +143,27 @@ suite "def":
     check(res.findStr("} ;"))
     check(res.findStr("} ;"))
 
-suite "if":
-  test "if 5 + 5 == 10 do \"5 + 5 = 10\" else \"?\" end":
+suite "ifex":
+  test "ifex 5 + 5 == 10 : \"5 + 5 = 10\" : \"?\"":
     initTables()
-    let program = makeAST("if 5 + 5 == 10 do \"5 + 5 = 10\" else \"?\" end")
+    let program = makeAST("ifex 5 + 5 == 10 : \"5 + 5 = 10\" : \"?\"")
     let res = makeCppCode(program[0], 0)
-    check(res.findStr("( _k_ee ( _k_add ( 5 ) ( 5 ) ) ( 10 ) ?"))
-    check(res.findStr("\"5 + 5 = 10\""))
-    check(res.findStr(": \"?\" ) ;"))
-  test "if True do \"1\" elif True do \"2\" else \"3\" end":
+    check(res.findStr("( _k_ee ( _k_add ( 5 ) ( 5 ) ) ( 10 ) ? \"5 + 5 = 10\" : \"?\" ) ;"))
+  test "ifex True : \"1\" : ifex True : \"2\" : \"3\"":
     initTables()
-    let program = makeAST("if True do \"1\" elif True do \"2\" else \"3\" end")
+    let program = makeAST("ifex True : \"1\" : ifex True : \"2\" : \"3\"")
     let res = makeCppCode(program[0], 0)
-    check(res.findStr("( true ?"))
-    check(res.findStr("\"1\""))
-    check(res.findStr(": ( true ?"))
-    check(res.findStr("\"2\""))
-    check(res.findStr(": \"3\" ) ) ;"))
-  test "let #int a = if 2 + 2 == 5 do 1984 elif 2 + 2 == 4 do 2020 else 0 end":
+    check(res.findStr("( true ? \"1\" : ( true ? \"2\" : \"3\" ) ) ;"))
+  test "ifex True : ifex False : \"1\" : \"4\" : ifex True : \"2\" : \"3\"":
     initTables()
-    let program = makeAST("let #int a = if 2 + 2 == 5 do 1984 elif 2 + 2 == 4 do 2020 else 0 end")
+    let program = makeAST("ifex True : ifex False : \"1\" : \"4\" : ifex True : \"2\" : \"3\"")
     let res = makeCppCode(program[0], 0)
-    check(res.findStr("const int a = ( _k_ee ( _k_add ( 2 ) ( 2 ) ) ( 5 ) ?"))
-    check(res.findStr("1984"))
-    check(res.findStr(": ( _k_ee ( _k_add ( 2 ) ( 2 ) ) ( 4 ) ?"))
-    check(res.findStr("2020"))
-    check(res.findStr(": 0 ) ) ;"))
+    check(res.findStr("( true ? ( false ? \"1\" : \"4\" ) : ( true ? \"2\" : \"3\" ) ) ;"))
+  test "let #int a = ifex 2 + 2 == 5 : 1984 : ifex 2 + 2 == 4 : 2020 : 0":
+    initTables()
+    let program = makeAST("let #int a = ifex 2 + 2 == 5 : 1984 : ifex 2 + 2 == 4 : 2020 : 0")
+    let res = makeCppCode(program[0], 0)
+    check(res.findStr("const int a = ( _k_ee ( _k_add ( 2 ) ( 2 ) ) ( 5 ) ? 1984 : ( _k_ee ( _k_add ( 2 ) ( 2 ) ) ( 4 ) ? 2020 : 0 ) ) ;"))
 
 suite "puts":
   test "puts(\"Hello\")":
