@@ -534,7 +534,6 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
       l = node.left.makeCodeParts()
     if node.right != nil:
       r = node.right.makeCodeParts()
-
     if l[1] == "" and r[1] == "":
       let oc = node.operator.conversionCppFunction(@[""])
       code.add((node.token.Type, oc[2]))
@@ -567,7 +566,7 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
       code.add((OTHER, ")"))
       codeType = oc[1]
     else:
-      echo "エラー！！！(16.0)"
+      echo "エラー！！！(15.1.1)"
       quit()
   
   # Generator
@@ -586,7 +585,7 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
       #
       codeType = l[1]
     else:
-      echo "エラー！！！(15.1)"
+      echo "エラー！！！(15.1.2)"
       quit()
     code.add((COLON, ":"))
     if node.right != nil:
@@ -594,7 +593,7 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
       if lt == r[1].split("ARRAY->")[1]:
         code.add(r[0])
       else:
-        echo "エラー！！！(15.1.1)"
+        echo "エラー！！！(15.1.3)"
         quit()
     else:
       echo "エラー！！！(15.2)"
@@ -665,65 +664,61 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
         quit()
       codeType = fm[1]
   
-  # # if文
-  # # TODO
-  # of nkIfExpression:
-  #   code.add((OTHER, "("))
-  #   code.add(node.condition.makeCodeParts()[0])
-  #   code.add((OTHER, "?"))
-  #   var sr: (seq[codeParts], string)
-  #   for i, statement in node.consequence.statements:
-  #     if i == node.consequence.statements.len()-1:
-  #       sr = statement.makeCodeParts()
-  #       code.add(sr[0].replaceSemicolon((OTHER, "")))
-  #     else:
-  #       sr = statement.makeCodeParts()
-  #       code.add(sr[0].replaceSemicolon((OTHER, ",")))
-  #   let ar = node.alternative.makeCodeParts()
-  #   if typeMatch(ar[1], sr[1])[0]:
-  #     code.add((OTHER, ":"))
-  #     code.add(ar[0])
-  #     codeType = sr[1]
-  #     code.add((OTHER, ")"))
-  #     code.addSemicolon()
-  #   else:
-  #     echo "エラー！！！(17)"
-  #     quit()
+  # if文
+  # TODO
+  of nkIfStatement:
+    code.add((OTHER, "if"))
+    code.add((OTHER, "("))
+    code.add(node.condition.makeCodeParts()[0])
+    code.add((OTHER, ")"))
+    code.add((OTHER, "{"))
+    var sr: (seq[codeParts], string)
+    for i, statement in node.consequence.statements:
+      if i == node.consequence.statements.len()-1:
+        sr = statement.makeCodeParts()
+        code.add(sr[0])
+      else:
+        sr = statement.makeCodeParts()
+        code.add(sr[0])
+    code.add((OTHER, "}"))
+    let ar = node.alternative.makeCodeParts()
+    code.add(ar[0])
+    codeType = sr[1]
 
-  # # elif式
-  # of nkElifExpression:
-  #   code.add((OTHER, "("))
-  #   code.add(node.condition.makeCodeParts()[0])
-  #   code.add((OTHER, "?"))
-  #   var sr: (seq[codeParts], string)
-  #   for i, statement in node.consequence.statements:
-  #     if i == node.consequence.statements.len()-1:
-  #       sr = statement.makeCodeParts()
-  #       code.add(sr[0].replaceSemicolon((OTHER, "")))
-  #     else:
-  #       sr = statement.makeCodeParts()
-  #       code.add(sr[0].replaceSemicolon((OTHER, ",")))
-  #   let ar = node.alternative.makeCodeParts()
-  #   if typeMatch(ar[1], sr[1])[0]:
-  #     code.add((OTHER, ":"))
-  #     code.add(ar[0])
-  #     codeType = sr[1]
-  #     code.add((OTHER, ")"))
-  #   else:
-  #     echo "エラー！！！(18)"
-  #     quit()
+  # elif文
+  of nkElifStatement:
+    code.add((OTHER, "elif"))
+    code.add((OTHER, "("))
+    code.add(node.condition.makeCodeParts()[0])
+    code.add((OTHER, ")"))
+    code.add((OTHER, "{"))
+    var sr: (seq[codeParts], string)
+    for i, statement in node.consequence.statements:
+      if i == node.consequence.statements.len()-1:
+        sr = statement.makeCodeParts()
+        code.add(sr[0])
+      else:
+        sr = statement.makeCodeParts()
+        code.add(sr[0])
+    code.add((OTHER, "}"))
+    let ar = node.alternative.makeCodeParts()
+    code.add(ar[0])
+    codeType = sr[1]
 
-  # # else式
-  # of nkElseExpression:
-  #   var sr: (seq[codeParts], string)
-  #   for i, statement in node.consequence.statements:
-  #     if i == node.consequence.statements.len()-1:
-  #       sr = statement.makeCodeParts()
-  #       code.add(sr[0].replaceSemicolon((OTHER, "")))
-  #     else:
-  #       sr = statement.makeCodeParts()
-  #       code.add(sr[0].replaceSemicolon((OTHER, ",")))
-  #   codeType = sr[1]
+  # else文
+  of nkElseStatement:
+    code.add((OTHER, "else"))
+    code.add((OTHER, "{"))
+    var sr: (seq[codeParts], string)
+    for i, statement in node.consequence.statements:
+      if i == node.consequence.statements.len()-1:
+        sr = statement.makeCodeParts()
+        code.add(sr[0])
+      else:
+        sr = statement.makeCodeParts()
+        code.add(sr[0])
+    code.add((OTHER, "}"))
+    codeType = sr[1]
   
   # if文
   # TODO
@@ -794,7 +789,10 @@ proc makeCppCode*(node: Node, indent: int): string =
       newLine.add(part.Code)
       var ind = ""
       ind.addIndent(braceCount)
-      outCode.add(ind & newLine & "\n")
+      if outCode.len() == 0:
+        outCode.add(ind & newLine & "\n")
+      else:
+        outCode.add("\n" & ind & newLine & "\n")
       braceCount = braceCount + 1
       newLine = ""
     elif part.Type == OTHER and part.Code == "}":
@@ -803,7 +801,9 @@ proc makeCppCode*(node: Node, indent: int): string =
       braceCount = braceCount - 1
       newLine = ""
       newLine.addIndent(braceCount)
-      newLine.add(part.Code & " ")
+      newLine.add(part.Code)
+      outCode.add(newLine)
+      newLine = ""
     elif part.Type == OTHER and part.Code == "\n":
       newLine.add(part.Code)
     elif part.Type == OTHER and part.Code == "":

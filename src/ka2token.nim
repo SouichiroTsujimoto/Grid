@@ -81,6 +81,7 @@ let keywords = {
   "mut"       : MUT,
   "def"       : DEFINE,
   "return"    : RETURN,
+  "if"        : IF,
   "ifex"      : IFEX,
   "elif"      : ELIF,
   "else"      : ELSE,

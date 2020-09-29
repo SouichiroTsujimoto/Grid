@@ -380,41 +380,40 @@ proc parseFunctionType(p: Parser): Node =
 
 #------ここまで------
 
-# # if式
-# proc parseIfExpression(p: Parser): Node =
-#   var node = Node(
-#     kind: nkIfExpression,
-#     token: p.curToken,
-#   )
-#   p.shiftToken()
-#   node.condition = p.parseExpression(Lowest)
-#   if p.peekToken.Type != DO:
-#     return Node(kind: nkNil)
-#   p.shiftToken()
-#   node.consequence = p.parseBlockStatement(@[ELIF, ELSE])
-
-#   # elifがあった場合
-#   if p.peekToken.Type == ELIF:
-#     p.shiftToken()
-#     let res = p.parseIfExpression()
-#     node.alternative = Node(
-#       kind: nkElifExpression,
-#       token: res.token,
-#       condition: res.condition,
-#       consequence: res.consequence,
-#       alternative: res.alternative,
-#     )
-#     return node
-#   # elseがあった場合
-#   elif p.peekToken.Type == ELSE:
-#     p.shiftToken()
-#     node.alternative = Node(
-#       kind: nkElseExpression,
-#       token: p.curToken,
-#       consequence: p.parseBlockStatement(@[END]),
-#     )
-#     p.shiftToken()
-#     return node
+# if文
+proc parseIfStatement(p: Parser): Node =
+  var node = Node(
+    kind: nkIfStatement,
+    token: p.curToken,
+  )
+  p.shiftToken()
+  node.condition = p.parseExpression(Lowest)
+  if p.peekToken.Type != DO:
+    return Node(kind: nkNil)
+  p.shiftToken()
+  node.consequence = p.parseBlockStatement(@[ELIF, ELSE])
+  # elifがあった場合
+  if p.peekToken.Type == ELIF:
+    p.shiftToken()
+    let res = p.parseIfStatement()
+    node.alternative = Node(
+      kind: nkElifStatement,
+      token: res.token,
+      condition: res.condition,
+      consequence: res.consequence,
+      alternative: res.alternative,
+    )
+    return node
+  # elseがあった場合
+  elif p.peekToken.Type == ELSE:
+    p.shiftToken()
+    node.alternative = Node(
+      kind: nkElseStatement,
+      token: p.curToken,
+      consequence: p.parseBlockStatement(@[END]),
+    )
+    p.shiftToken()
+    return node
 
 # if式
 proc parseIfExpression(p: Parser): Node =
@@ -486,6 +485,7 @@ proc parseType(p: Parser): Node =
 proc parseExpression(p: Parser, precedence: Precedence): Node =
   var left: Node
   case p.curToken.Type
+  of IF         : left = p.parseIfStatement()
   of IFEX       : left = p.parseIfExpression()
   of RETURN     : left = p.parseReturnStatement()
   of IDENT      : left = p.parseIdent()

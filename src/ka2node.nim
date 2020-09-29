@@ -31,8 +31,10 @@ type NodeKind* = enum
   nkExpressionStatement
   nkCallExpression
   nkIfExpression
-  nkElifExpression 
   nkElseExpression
+  nkIfStatement
+  nkElifStatement
+  nkElseStatement
 
 type Precedence* = enum
   Lowest = 0
