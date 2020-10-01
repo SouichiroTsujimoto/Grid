@@ -165,28 +165,29 @@ suite "if":
     check(res.findStr("if ( true ) {"))
     check(res.findStr("return ( \"1\" ) ;"))
     check(res.findStr("}"))
-    check(res.findStr("elif ( true ) {"))
+    check(res.findStr("else if ( true ) {"))
     check(res.findStr("return ( \"2\" ) ;"))
     check(res.findStr("}"))
     check(res.findStr("else {"))
     check(res.findStr("return ( \"3\" ) ;"))
     check(res.findStr("}"))
-  test "if 1 == 3 do return \"ok\" elif 4 != 5 do return True elif False do return \"違う\" else return \"else\" end":
+  test "if 1 == 3 do puts(\"ok\") elif 4 != 5 do puts(True) elif False do puts(\"違う\") else puts(\"else\") end":
     initTables()
-    let program = makeAST("if 1 == 3 do return \"ok\" elif 4 != 5 do return True elif False do return \"違う\" else return \"else\" end")
+    let program = makeAST("if 1 == 3 do puts(\"ok\") elif 4 != 5 do puts(True) elif False do puts(\"違う\") else puts(\"else\") end")
     var res = ""
     for tree in program:
       res.add(makeCppCode(tree, 0))
     check(res.findStr("if ( _k_ee ( 1 ) ( 3 ) ) {"))
-    check(res.findStr("return ( \"ok\" ) ;"))
+    check(res.findStr("k_puts ( \"ok\" ) ;"))
     check(res.findStr("}"))
-    check(res.findStr("elif ( _k_ne ( 4 ) ( 5 ) ) {"))
+    check(res.findStr("else if ( _k_ne ( 4 ) ( 5 ) ) {"))
+    check(res.findStr("k_puts ( true ) ;"))
     check(res.findStr("}"))
-    check(res.findStr("elif ( false ) {"))
-    check(res.findStr("return ( \"違う\" ) ;"))
+    check(res.findStr("else if ( false ) {"))
+    check(res.findStr("k_puts ( \"違う\" ) ;"))
     check(res.findStr("}"))
     check(res.findStr("else {"))
-    check(res.findStr("return ( \"else\" ) ;"))
+    check(res.findStr("k_puts ( \"else\" ) ;"))
     check(res.findStr("}"))
     
   test "let #int a = ifex 2 + 2 == 5 : 1984 : ifex 2 + 2 == 4 : 2020 : 0":

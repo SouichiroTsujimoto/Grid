@@ -26,8 +26,8 @@ when isMainModule:
   writeCpp(cppFileName, cppCode)
 #[
   TODO
-  ・ if文
-  ・ パイプライン関数
+  ・ if文 ✅
+  ・ パイプライン演算子 
   ・ case式
   ・ コメントを実装
   ・ 構文エラーを検出できるようにする 

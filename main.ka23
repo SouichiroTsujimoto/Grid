@@ -1,1 +1,1 @@
-if 1 == 3 do return "ok" elif 4 != 5 do return True elif False do return "違う" else return "else" end
+if 1 == 3 do puts("ok") elif 4 != 5 do puts(True) elif False do puts("違う") else puts("else") end

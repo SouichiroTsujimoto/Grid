@@ -372,8 +372,8 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
           break
     if im == false:
       let ic = node.identValue.conversionCppFunction(@[""])
-      code.add((IDENT, ic[2]))
-      codeType = IDENT
+      code.add((ic[1], ic[2]))
+      codeType = ic[1]
 
   # 仮
   of nkMapFunction:
@@ -542,15 +542,17 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
       let oc = node.operator.conversionCppFunction(@[r[1]])
       code.add((node.token.Type, oc[2]))
       code.add((OTHER, "("))
-      code.add(r[0])
+      code.add(r[0].replaceSemicolon((OTHER, "")))
       code.add((OTHER, ")"))
+      code.addSemicolon()
       codeType = oc[1]
     elif r[1] == "":
       let oc = node.operator.conversionCppFunction(@[l[1]])
       code.add((node.token.Type, oc[2]))
       code.add((OTHER, "("))
-      code.add(l[0])
+      code.add(l[0].replaceSemicolon((OTHER, "")))
       code.add((OTHER, ")"))
+      code.addSemicolon()
       codeType = oc[1]
     elif l[1] == r[1]:
       let oc = node.operator.conversionCppFunction(@[l[1], r[1]])
@@ -559,11 +561,12 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
         echo "エラー！！！(15.1)"
         quit()
       code.add((OTHER, "("))
-      code.add(l[0])
+      code.add(l[0].replaceSemicolon((OTHER, "")))
       code.add((OTHER, ")"))
       code.add((OTHER, "("))
-      code.add(r[0])
+      code.add(r[0].replaceSemicolon((OTHER, "")))
       code.add((OTHER, ")"))
+      code.addSemicolon()
       codeType = oc[1]
     else:
       echo "エラー！！！(15.1.1)"
@@ -597,6 +600,25 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
         quit()
     else:
       echo "エラー！！！(15.2)"
+      quit()
+
+  # パイプライン演算子
+  of nkPipeExpression:
+    let l = node.left.makeCodeParts()
+    let r = node.right.makeCodeParts()
+    let ftmr = funcTypesMatch(r[1], l[1])
+    if ftmr[0]:
+      var newRight: seq[codeParts]
+      newRight.add(r[0][0])
+      newRight.add((Type: "OTHER", Code: "("))
+      newRight.add(l[0].replaceSemicolon((OTHER, "")))
+      newRight.add((Type: "OTHER", Code: ")"))
+      newRight.add(r[0][1..r[0].len()-1])
+      newRight.addSemicolon()
+      code.add(newRight)
+      codeType = ftmr[2]
+    else:
+      echo "エラー！！！(15.3)"
       quit()
 
   # 代入式
@@ -637,6 +659,7 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
     let fn = node.function.makeCodeParts()
     code.add(fn[0])
     var argsType: seq[string]
+    # 後でいろいろ変更
     if node.function.kind == nkMapFunction:
       code.add((OTHER, "("))
       var at: string
@@ -669,7 +692,7 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
   of nkIfStatement:
     code.add((OTHER, "if"))
     code.add((OTHER, "("))
-    code.add(node.condition.makeCodeParts()[0])
+    code.add(node.condition.makeCodeParts()[0].replaceSemicolon((OTHER, "")))
     code.add((OTHER, ")"))
     code.add((OTHER, "{"))
     var sr: (seq[codeParts], string)
@@ -687,9 +710,9 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
 
   # elif文
   of nkElifStatement:
-    code.add((OTHER, "elif"))
+    code.add((OTHER, "else if"))
     code.add((OTHER, "("))
-    code.add(node.condition.makeCodeParts()[0])
+    code.add(node.condition.makeCodeParts()[0].replaceSemicolon((OTHER, "")))
     code.add((OTHER, ")"))
     code.add((OTHER, "{"))
     var sr: (seq[codeParts], string)
@@ -720,18 +743,18 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
     code.add((OTHER, "}"))
     codeType = sr[1]
   
-  # if文
+  # if式
   # TODO
   of nkIfExpression:
     code.add((OTHER, "("))
-    code.add(node.condition.makeCodeParts()[0])
+    code.add(node.condition.makeCodeParts()[0].replaceSemicolon((OTHER, "")))
     code.add((OTHER, "?"))
     var sr = node.consequence_expression.makeCodeParts()
     code.add(sr[0].replaceSemicolon((OTHER, "")))
     let ar = node.alternative.makeCodeParts()
     if typeMatch(ar[1], sr[1])[0]:
       code.add((OTHER, ":"))
-      code.add(ar[0])
+      code.add(ar[0].replaceSemicolon((OTHER, "")))
       codeType = sr[1]
       code.add((OTHER, ")"))
       code.addSemicolon()

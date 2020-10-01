@@ -8,15 +8,6 @@ type Parser = ref object of RootObj
   peekToken: Token
   errors: string
 
-# プロトタイプ宣言
-proc parseExpression(p: Parser, precedence: Precedence): Node
-proc parseStatement(p: Parser): Node
-proc parseBlockStatement(p: Parser, endTokenTypes: seq[string]): BlockStatement
-proc parseCallExpression(p: Parser, left: Node): Node
-proc parseExpressionList(p: Parser, endToken: string): seq[Node]
-proc parseType(p: Parser): Node
-proc parseNameProc(p: Parser, endToken: string): seq[Node]
-
 # パーサクラスのインスタンスを作る
 proc newParser(l: Lexer): Parser =
   let p = Parser(
@@ -25,6 +16,14 @@ proc newParser(l: Lexer): Parser =
     peekToken: l.nextToken(),
   )
   return p
+
+proc parseExpression(p: Parser, precedence: Precedence): Node
+proc parseStatement(p: Parser): Node
+proc parseBlockStatement(p: Parser, endTokenTypes: seq[string]): BlockStatement
+proc parseCallExpression(p: Parser, left: Node): Node
+proc parseExpressionList(p: Parser, endToken: string): seq[Node]
+proc parseType(p: Parser): Node
+proc parseNameProc(p: Parser, endToken: string): seq[Node]
 
 # curTokenとpeekTokenを一つ進める
 proc shiftToken(p: Parser) =
@@ -124,6 +123,21 @@ proc parseGenerator(p: Parser, left: Node): Node =
   let right = p.parseExpression(cp)
   let node = Node(
     kind: nkGenerator,
+    token: p.curToken,
+    operator: operator,
+    left: left,
+    right: right,
+  )
+  return node
+
+# パイプライン演算子
+proc parsePipeExpression(p: Parser, left: Node): Node =
+  let operator = p.curToken.Type
+  let cp = p.curToken.tokenPrecedence()
+  p.shiftToken()
+  let right = p.parseExpression(cp)
+  let node = Node(
+    kind: nkPipeExpression,
     token: p.curToken,
     operator: operator,
     left: left,
@@ -485,7 +499,6 @@ proc parseType(p: Parser): Node =
 proc parseExpression(p: Parser, precedence: Precedence): Node =
   var left: Node
   case p.curToken.Type
-  of IF         : left = p.parseIfStatement()
   of IFEX       : left = p.parseIfExpression()
   of RETURN     : left = p.parseReturnStatement()
   of IDENT      : left = p.parseIdent()
@@ -514,12 +527,14 @@ proc parseExpression(p: Parser, precedence: Precedence): Node =
       left = p.parseAssignExpression(left)
     of LPAREN:
       left = p.parseCallExpression(left)
+    of PIPE:
+      left = p.parsePipeExpression(left)
     else:
       return left
   
   return left
 
-# 式文の処理
+# 式文
 proc parseExpressionStatement(p: Parser): Node =
   let node = p.parseExpression(Lowest)
   return node
@@ -552,6 +567,7 @@ proc parseStatement(p: Parser): Node =
   of MUT:    return p.parseMutStatement()
   of DEFINE: return p.parseDefineStatement()
   of FOR:    return p.parseForStatement()
+  of IF:     return p.parseIfStatement()
   else:      return p.parseExpressionStatement()
 
 # ASTを作る

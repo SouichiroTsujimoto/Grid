@@ -35,9 +35,11 @@ type NodeKind* = enum
   nkIfStatement
   nkElifStatement
   nkElseStatement
+  nkPipeExpression,
 
 type Precedence* = enum
   Lowest = 0
+  Pipeline
   Assign
   Ifexpression
   Equals
@@ -49,6 +51,7 @@ type Precedence* = enum
 
 proc tokenPrecedence*(tok: Token): Precedence =
   case tok.Type
+  of PIPE:            return Pipeline
   of CEQUAL:          return Assign
   of IFEX, COLON:     return Ifexpression
   of LT, GT, LE, GE:  return Lg

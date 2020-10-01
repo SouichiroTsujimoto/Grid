@@ -6,15 +6,15 @@
 
 int main() {
   if ( _k_ee ( 1 ) ( 3 ) ) {
-    return ( "ok" ) ;
+    _k_puts ( "ok" ) ;
   }
-  elif ( _k_ne ( 4 ) ( 5 ) ) {
-    return ( true ) ;
+  else if ( _k_ne ( 4 ) ( 5 ) ) {
+    _k_puts ( true ) ;
   }
-  elif ( false ) {
-    return ( "違う" ) ;
+  else if ( false ) {
+    _k_puts ( "違う" ) ;
   }
   else {
-    return ( "else" ) ;
+    _k_puts ( "else" ) ;
   }
 }
