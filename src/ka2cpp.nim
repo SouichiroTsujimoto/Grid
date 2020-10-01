@@ -554,7 +554,7 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
       code.add((OTHER, ")"))
       code.addSemicolon()
       codeType = oc[1]
-    elif l[1] == r[1]:
+    elif typeMatch(l[1], r[1])[0]:
       let oc = node.operator.conversionCppFunction(@[l[1], r[1]])
       code.add((node.token.Type, oc[2]))
       if oc[0] == false:

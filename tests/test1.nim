@@ -26,6 +26,29 @@ suite "operator":
     let program = makeAST("\"Hello\" == \"Hello\"")
     check(makeCppCode(program[0], 0).findStr("_k_ee ( \"Hello\" ) ( \"Hello\" )"))
 
+suite "|>":
+  test "\"Hello\" |> puts":
+    initTables()
+    let program = makeAST("\"Hello\" |> puts")
+    var res = ""
+    for tree in program:
+      res.add(makeCppCode(tree, 0))
+    check(res.findStr("_k_puts ( \"Hello\" ) ;"))
+  test "1 |> + 2 |> + 3 |> / 6":
+    initTables()
+    let program = makeAST("1 |> + 2 |> + 3 |> / 6")
+    var res = ""
+    for tree in program:
+      res.add(makeCppCode(tree, 0))
+    check(res.findStr("_k_div ( _k_add ( _k_add ( 1 ) ( 2 ) ) ( 3 ) ) ( 6 ) ;"))
+  test "(3 |> + 10) + (1 |> + 1) |> puts":
+    initTables()
+    let program = makeAST("(3 |> + 10) + (1 |> + 1) |> puts")
+    var res = ""
+    for tree in program:
+      res.add(makeCppCode(tree, 0))
+    check(res.findStr("_k_puts ( _k_add ( _k_add ( 3 ) ( 10 ) ) ( _k_add ( 1 ) ( 1 ) ) ) ;"))
+
 suite "let":
   test "let #int a = 10":
     initTables()
@@ -272,29 +295,30 @@ suite "array":
     let res = makeCppCode(program[0], 0)
     check(res.findStr("std::vector<std::vector<std::vector<int>>> a = { { { 2 } , { 5 , 6 } } , { { 4 , 1 } , { 5 } } } ;"))
 
-suite "map":
-  test "map({1}, + 1)":
-    initTables()
-    let program = makeAST("map({1}, + 1)")
-    var res = ""
-    for tree in program:
-      res.add(makeCppCode(tree, 0))
-    check(res.findStr("_k_map ( { 1 } , _k_add ( 1 ) ) ;"))
-  test "let #array #int b = map({1, 2, 3}, + 1)":
-    initTables()
-    let program = makeAST("let #array #int b = map({1, 2, 3}, + 1)")
-    var res = ""
-    for tree in program:
-      res.add(makeCppCode(tree, 0))
-    check(res.findStr("const std::vector<int> b = _k_map ( { 1 , 2 , 3 } , _k_add ( 1 ) ) ;"))
-  test "let #array #int a = {1, 2, 3} let #array #int b = map(a, + 1)":
-    initTables()
-    let program = makeAST("let #array #int a = {1, 2, 3} let #array #int b = map(a, + 1)")
-    var res = ""
-    for tree in program:
-      res.add(makeCppCode(tree, 0))
-    check(res.findStr("const std::vector<int> a = { 1 , 2 , 3 } ;"))
-    check(res.findStr("const std::vector<int> b = _k_map ( a , _k_add ( 1 ) ) ;"))
+# 〜保留〜
+# suite "map":
+#   test "map({1}, + 1)":
+#     initTables()
+#     let program = makeAST("map({1}, + 1)")
+#     var res = ""
+#     for tree in program:
+#       res.add(makeCppCode(tree, 0))
+#     check(res.findStr("_k_map ( { 1 } , _k_add ( 1 ) ) ;"))
+#   test "let #array #int b = map({1, 2, 3}, + 1)":
+#     initTables()
+#     let program = makeAST("let #array #int b = map({1, 2, 3}, + 1)")
+#     var res = ""
+#     for tree in program:
+#       res.add(makeCppCode(tree, 0))
+#     check(res.findStr("const std::vector<int> b = _k_map ( { 1 , 2 , 3 } , _k_add ( 1 ) ) ;"))
+#   test "let #array #int a = {1, 2, 3} let #array #int b = map(a, + 1)":
+#     initTables()
+#     let program = makeAST("let #array #int a = {1, 2, 3} let #array #int b = map(a, + 1)")
+#     var res = ""
+#     for tree in program:
+#       res.add(makeCppCode(tree, 0))
+#     check(res.findStr("const std::vector<int> a = { 1 , 2 , 3 } ;"))
+#     check(res.findStr("const std::vector<int> b = _k_map ( a , _k_add ( 1 ) ) ;"))
   
 suite "for":
   test "for #string a <- {\"a\", \"b\", \"c\"} do puts(a) end":
