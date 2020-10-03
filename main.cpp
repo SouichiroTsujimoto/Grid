@@ -5,6 +5,10 @@
 #include "ka2lib/ka2IO.h"
 
 int main() {
-  _k_puts ( _k_add ( _k_add ( 3 ) ( 10 ) ) ( _k_add ( 1 ) ( 1 ) ) ) ;
+  std::vector<int> a = { 1 , 2 } ;
+  _k_push_back ( a ) ( 3 ) ;
+  for ( int i : a ) {
+    _k_puts ( i ) ;
+  }
 
 }

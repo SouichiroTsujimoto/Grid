@@ -204,6 +204,19 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
       return (fmr1[0], NIL, "_k_puts")
     else:
       return (true, anything_t & "=>" & NIL, "_k_puts")
+  of "add":
+    let fmr1 = funcTypesMatch(ARRAY & "->" & anything_t & "=>" & anything_t & "=>" & NIL, argsTypeC[0])
+    if fmr1[0]:
+      if argsTypeC.len()-1 != 0:
+        let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
+        if fmr2[0] and argsTypeC[0] == ARRAY & "->" & argsTypeC[1]:
+          echo fmr2
+          echo "これ"
+          return (fmr2[0], fmr2[1], "_k_push_back")
+      else:
+        return (true, anything_t & "=>" & NIL, "_k_push_back")
+    else:
+      return (true, ARRAY & "->" & anything_t & "=>" & anything_t & "=>" & NIL, "_k_push_back")
   else:
     return (false, NIL, "NULL")
 
@@ -616,7 +629,7 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
       newRight.add(r[0][1..r[0].len()-1])
       newRight.addSemicolon()
       code.add(newRight)
-      codeType = ftmr[2]
+      codeType = ftmr[2].funcTypeSplit("=>")[2]
     else:
       echo "エラー！！！(15.3)"
       quit()

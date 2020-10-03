@@ -5,7 +5,6 @@
   _result;\
 })
 
-
 auto _k_add = [](auto a) {
   return [a](auto b) { return a + b; };
 };
@@ -46,9 +45,8 @@ auto _k_ne = [](auto a) {
   return [a](auto b) {return a != b;};
 };
 
-auto _k_assign = [](auto *a) {
-  return [a](auto b) {
-    *a = b;
-    return b;
+auto _k_push_back = [](auto &a) {
+  return [&a](auto b) {
+    a.push_back(b);
   };
 };

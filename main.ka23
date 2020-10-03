@@ -1,1 +1,5 @@
-(3 |> + 10) + (1 |> + 1) |> puts
+mut #array #int a = {1, 2}
+a |> add(3)
+for #int i <- a do
+  puts(i)
+end
