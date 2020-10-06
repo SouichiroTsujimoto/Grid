@@ -1,2 +1,2 @@
-mut #array #int a = {1, 2}
-let #int b =  a !! 2
+let #array #int a = {1, 2, 3}
+puts(a!!3 + 3)

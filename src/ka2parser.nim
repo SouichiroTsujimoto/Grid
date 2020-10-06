@@ -454,7 +454,7 @@ proc parseIfExpression(p: Parser): Node =
   p.shiftToken()
   node.condition = p.parseExpression(cp1)
   if p.peekToken.Type != COLON:
-    echo "構文エラー！！！(p0.1)"
+    echo "構文エラー！！！(0.1)"
     quit()
   p.shiftToken()
   let cp2 = p.curToken.tokenPrecedence()
@@ -471,7 +471,7 @@ proc parseIfExpression(p: Parser): Node =
     )
     return node
   else:
-    echo "構文エラー！！！(p1)"
+    echo "構文エラー！！！(1)"
     quit()
 
 # for文

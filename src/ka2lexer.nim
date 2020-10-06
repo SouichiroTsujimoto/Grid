@@ -158,13 +158,22 @@ proc nextToken*(l: Lexer): Token =
       tok = Token(Type: CEQUAL, Literal: literal)
     else:
       tok = newToken(COLON, l.ch)
+  of '-' :
+    if l.peekChar().isDigit():
+      l.nextChar()
+      let (lit, decimal) = l.readNumber
+      if decimal:
+        tok = Token(Type: FLOAT, Literal: "-" & lit)
+      else:
+        tok = Token(Type: INT, Literal: "-" & lit)
+    else:
+      tok = newToken(MINUS, l.ch)
+  of '+' : tok = newToken(PLUS, l.ch)
+  of '*' : tok = newToken(ASTERISC, l.ch)
+  of '/' : tok = newToken(SLASH, l.ch)
   of '(' : tok = newToken(LPAREN, l.ch)
   of ')' : tok = newToken(RPAREN, l.ch)
   of ',' : tok = newToken(COMMA, l.ch)
-  of '+' : tok = newToken(PLUS, l.ch)
-  of '-' : tok = newToken(MINUS, l.ch)
-  of '*' : tok = newToken(ASTERISC, l.ch)
-  of '/' : tok = newToken(SLASH, l.ch)
   of '{' : tok = newToken(LBRACE, l.ch)
   of '}' : tok = newToken(RBRACE, l.ch)
   else:

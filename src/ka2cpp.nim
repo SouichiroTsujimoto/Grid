@@ -431,7 +431,7 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
     let li = node.let_ident.makeCodeParts()
     let lv = node.let_value.makeCodeParts()
     # echo li[1] & "___" & lv[1]
-    if typeMatch(li[1], lv[1])[0]:
+    if li[1] == lv[1]:
       if identExistenceCheck(li[0][1][1]):
         echo "エラー！！！(8)"
         quit()
@@ -457,7 +457,7 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
   of nkMutStatement:
     let li = node.let_ident.makeCodeParts()
     let lv = node.let_value.makeCodeParts()
-    if typeMatch(li[1], lv[1])[0]:
+    if li[1] == lv[1]:
       if identExistenceCheck(li[0][1][1]):
         echo "エラー！！！(10)"
         quit()
@@ -667,7 +667,6 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
       quit()
     
   # 配列の要素へのアクセス
-  # TODO: 存在しない要素へのアクセスをできないようにする
   of nkAccessElement:
     if node.left != nil and node.right != nil:
       let l = node.left.makeCodeParts()
@@ -675,7 +674,7 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
       let rv = r[0].replaceSemicolon((OTHER, ""))
       let ls = l[1].split("->")
       # TODO: 最悪
-      if identTable[l[0][0].Code].arrayLength <= rv[0].Code.parseInt():
+      if identTable[l[0][0].Code].arrayLength <= rv[0].Code.parseInt() or rv[0].Code.parseInt() < 0:
         echo "エラー！！！(15.3.1)"
         quit()
       if r[1] == INT and l[0][0].Type == IDENT and ls[0] == ARRAY:
@@ -900,7 +899,7 @@ proc makeCppCode*(node: Node, indent: int): string =
       newLine = ""
     elif part.Type == OTHER and part.Code == "\n":
       newLine.add(part.Code)
-    elif part.Type == OTHER and part.Code == "":
+    elif part.Code == "":
       continue
     else:
       newLine.add(part.Code & " ")
