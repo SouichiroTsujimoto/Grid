@@ -68,6 +68,7 @@ const
   T_FUNCTION*   = "T_FUNCTION"
   # その他
   MAP*          = "MAP"
+  INDEX*        = "INDEX"
   FOR*          = "FOR"
   AUTO*         = "AUTO"
   FUNCTION*     = "FUNCTION"

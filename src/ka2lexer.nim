@@ -114,6 +114,11 @@ proc nextToken*(l: Lexer): Token =
       l.nextChar()
       let literal = $ch & $l.ch
       tok = Token(Type: NE, Literal: literal)
+    elif l.peekChar() == '!':
+      let ch = l.ch
+      l.nextChar()
+      let literal = $ch & $l.ch
+      tok = Token(Type: INDEX, Literal: literal)
     else:
       tok = newToken(NOT, l.ch)
   of '<':
@@ -143,6 +148,8 @@ proc nextToken*(l: Lexer): Token =
       l.nextChar()
       let literal = $ch & $l.ch
       tok = Token(Type: PIPE, Literal: literal)
+    else:
+      echo "エラ〜〜〜 : '|'"
   of ':':
     if l.peekChar() == '=':
       let ch = l.ch
@@ -178,7 +185,7 @@ proc nextToken*(l: Lexer): Token =
       else:
         return Token(Type: INT, Literal: lit)
     elif l.ch.isLetter():
-      echo "命名エラー:\"_\"から始まっています"
+      echo "エラ〜〜〜 : '_'から始まっています"
       quit()
     else:
       if l.input.len()-1 <= l.position:

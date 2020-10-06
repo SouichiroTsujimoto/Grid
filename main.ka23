@@ -1,5 +1,2 @@
 mut #array #int a = {1, 2}
-a |> add(3)
-for #int i <- a do
-  puts(i)
-end
+let #int b =  a !! 2

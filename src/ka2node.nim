@@ -36,6 +36,7 @@ type NodeKind* = enum
   nkElifStatement
   nkElseStatement
   nkPipeExpression,
+  nkAccessElement,
 
 type Precedence* = enum
   Lowest = 0
@@ -59,7 +60,7 @@ proc tokenPrecedence*(tok: Token): Precedence =
   of PLUS, MINUS:     return Sum
   of SLASH, ASTERISC: return Product
   of ARROW:           return Generator
-  of LPAREN:          return Call
+  of LPAREN, INDEX:   return Call
   else:               return Lowest
 
 type 
@@ -93,6 +94,7 @@ type
     alternative*:                 Node
     generator*:                   Node
     return_expression*:           Node
+    index*:                       string
   # ブロック文クラス
   BlockStatement* = ref object of RootObj
     token*: Token

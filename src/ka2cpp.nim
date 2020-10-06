@@ -7,17 +7,54 @@ type codeParts = tuple
   Type: string
   Code: string
 
+type IdentInfo* = ref object of RootObj
+  Type*:        string
+  contents*:    seq[codeParts]
+  path*:        string
+  mutable*:     bool
+  arrayLength*: int
+
 var
-  identTable = initTable[string, string]()
-  scopeTable: seq[seq[string]]
-  mutTable: seq[string]
-  count = 0
+  identTable = initTable[string, IdentInfo]()
+  blockPath = "0"
 
 proc initTables*() =
-  identTable = initTable[string, string]()
-  scopeTable = @[@[""]]
-  mutTable = @[""]
-  count = 0
+  identTable = initTable[string, IdentInfo]()
+  blockPath = "0"
+
+proc blockPathMatch(target: string): bool =
+  let bps = blockPath.split("-")
+  let tps = target.split("-")
+  
+  # # 後で消す
+  # echo tps[0..tps.len()-2]
+  # echo "pathのチェック"
+
+  if tps != @[]:
+    for i, tp in tps[0..tps.len()-2]:
+      if tp != bps[i]:
+        return false
+  
+  return true
+
+proc nextPath(): string =
+  let bps = blockPath.split("-")
+  let next = bps[bps.len()-1].parseInt() + 1
+  let res = bps[0..bps.len()-2] & $next
+
+  return res.join("-")
+
+proc deletePathTail(): string =
+  let bps = blockPath.split("-")
+
+  return bps[0..bps.len()-2].join("-")
+
+proc identExistenceCheck(ident: string): bool =
+  if identTable.contains(ident):
+    if identTable[ident].path.blockPathMatch():
+      return true
+  
+  return false
 
 proc typeMatch(type1: string, type2: string): (bool, string) =
   # echo type1 & "___" & type2
@@ -55,9 +92,9 @@ proc typeMatch(type1: string, type2: string): (bool, string) =
 proc funcTypeSplit(funcType: string, target: string): (bool, string, string) =
   var fnTs = funcType.split(target)
   if fnTs.len() == 1:
-    return (false, fnTs[0], "")
+    return (false, "", funcType)
 
-  fnTs[1] = fnTs[1..fnTs.len()-1].join("=>")
+  fnTs[1] = fnTs[1..fnTs.len()-1].join(target)
   
   return (true, fnTs[0], fnTs[1])
 
@@ -242,12 +279,12 @@ proc addIndent(code: var string, indent: int) =
   for i in 0..indent:
     code.add("  ")
 
-proc addScopeTable(str: string) =
-  if scopeTable.len()-1 == count:
-    scopeTable[count].add(str)
-  elif scopeTable.len()-1 < count:
-    scopeTable.setLen(count)
-    scopeTable.add(@[str])
+# proc addScopeTable(str: string) =
+#   if scopeTable.len()-1 == nestCount:
+#     scopeTable[nestCount].add(str)
+#   elif scopeTable.len()-1 < nestCount:
+#     scopeTable.setLen(nestCount)
+#     scopeTable.add(@[str])
 
 proc makeCodeParts(node: Node): (seq[codeParts], string) =
   var
@@ -284,9 +321,10 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
     if node.arrayValue != @[]:
       code.add((LBRACE, "{"))
       var eltype: string
-      for i, arv in node.arrayValue:
+      var loopCount = 0
+      for arv in node.arrayValue:
         let elem = arv.makeCodeParts()
-        if i == 0:
+        if loopCount == 0:
           eltype = elem[1]
           code.add(elem[0])
         elif typeMatch(elem[1], eltype)[0]:
@@ -295,11 +333,14 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
         else:
           echo "エラー！！！(0.0.1)"
           quit()
+        loopCount += 1
       code.add((RBRACE, "}"))
+      code.add(($loopCount, ""))
       codeType = ARRAY & "->" & eltype
     else:
       code.add((LBRACE, "{"))
       code.add((RBRACE, "}"))
+      code.add(("0", ""))
       codeType = ARRAY
   of nkNIl:
     code.add((NIL, "NULL"))
@@ -367,26 +408,17 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
 
   # 名前
   of nkIdent:
-    var im = false
-    if scopeTable.len() != 0:
-      var indmax = 0
-      if count > scopeTable.len()-1:
-        indmax = scopeTable.len()-1
-      else:
-        indmax = count
-      for s in scopeTable[0..indmax]:
-        for ident in s:
-          if ident == node.identValue:
-            code.add((IDENT, node.identValue))
-            codeType = identTable[ident]
-            im = true
-            break
-        if im:
-          break
-    if im == false:
+    if identExistenceCheck(node.identValue):
+      code.add((IDENT, node.identValue))
+      codeType = identTable[node.identValue].Type
+    else:
       let ic = node.identValue.conversionCppFunction(@[""])
-      code.add((ic[1], ic[2]))
-      codeType = ic[1]
+      if ic[0]:
+        code.add((ic[1], ic[2]))
+        codeType = ic[1]
+      else:
+        echo "エラー！！！(7)"
+        quit()
 
   # 仮
   of nkMapFunction:
@@ -400,47 +432,49 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
     let lv = node.let_value.makeCodeParts()
     # echo li[1] & "___" & lv[1]
     if typeMatch(li[1], lv[1])[0]:
-      if scopeTable.len() != 0:
-        for sc in scopeTable:
-          for ident in sc:
-            if ident == li[0][1][1]:
-              echo "エラー！！！(8)"
-              quit()
+      if identExistenceCheck(li[0][1][1]):
+        echo "エラー！！！(8)"
+        quit()
       code.add(li[0])
       code.add((OTHER, "="))
       code.add(lv[0])
       code.addSemicolon()
-      identTable[li[0][1][1]] = li[1]
-      addScopeTable(li[0][1][1])
-      # 後で消す
-      echo scopeTable
-      #
+      blockPath = nextPath()
+      identTable[li[0][1][1]] = IdentInfo(
+        Type: li[1],
+        contents: lv[0],
+        path: blockPath,
+        mutable: false,
+      )
+      # TODO: 最悪
+      if li[1].startsWith("ARRAY"):
+        identTable[li[0][1][1]].arrayLength = lv[0][lv[0].len()-1].Type.parseInt()
     else:
       echo "エラー！！！(9)"
       quit()
   
   # mut文
-  # TODO
   of nkMutStatement:
     let li = node.let_ident.makeCodeParts()
     let lv = node.let_value.makeCodeParts()
     if typeMatch(li[1], lv[1])[0]:
-      if scopeTable.len() != 0:
-        for sc in scopeTable:
-          for ident in sc:
-            if ident == li[0][1][1]:
-              echo "エラー！！！(10)"
-              quit()
+      if identExistenceCheck(li[0][1][1]):
+        echo "エラー！！！(10)"
+        quit()
       code.add(li[0])
       code.add((OTHER, "="))
       code.add(lv[0])
       code.addSemicolon()
-      identTable[li[0][1][1]] = li[1]
-      addScopeTable(li[0][1][1])
-      mutTable.add(li[0][1][1])
-      # 後で消す
-      echo scopeTable
-      #
+      blockPath = nextPath()
+      identTable[li[0][1][1]] = IdentInfo(
+        Type: li[1],
+        contents: lv[0],
+        path: blockPath,
+        mutable: true,
+      )
+      # TODO: 最悪
+      if li[1].startsWith("ARRAY"):
+        identTable[li[0][1][1]].arrayLength = lv[0][lv[0].len()-1].Type.parseInt()
     else:
       echo "エラー！！！(11)"
       quit()
@@ -449,28 +483,28 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
   of nkDefineStatement:
     code.add((AUTO, "auto"))
     let di = node.define_ident.makeCodeParts()
-    echo scopeTable
-    if scopeTable.len() != 0:
-      for sc in scopeTable:
-        for ident in sc:
-          if ident == di[0][1][1]:
-            echo "エラー！！！(12)"
-            quit()
+    if identExistenceCheck(di[0][1][1]):
+      echo "エラー！！！(12)"
+      quit()
     code.add(di[0][1])
     code.add((EQUAL, "="))
     if node.define_args == @[]:
-      identTable[di[0][1][1]] = NIL & "=>" & di[1]
+      identTable[di[0][1][1]] = IdentInfo(
+        Type: NIL & "=>" & di[1],
+        path: blockPath,
+        mutable: false,
+      )
     else:
       var argsType: seq[string]
       for parameter in node.define_args:
         argsType.add(parameter.token.Type.removeT())
-      identTable[di[0][1][1]] = argsType.join("->") & "=>" & di[1]
-    addScopeTable(di[0][1][1])
-    let oc = count
-    count += 1
-    # 後で消す
-    echo scopeTable
-    #
+      identTable[di[0][1][1]] = IdentInfo(
+        Type: argsType.join("->") & "=>" & di[1],
+        path: blockPath,
+        mutable: false,
+      )
+    let obp = blockPath
+    blockPath.add("-0")
     if node.define_args == @[]:
       code.add((OTHER, "[]"))
       code.add((OTHER, "()"))
@@ -496,11 +530,11 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
         code.add(pr[0])
         code.add((OTHER, ")"))
         arg = parameter.identValue
-        identTable[arg] = pr[1]
-        addScopeTable(arg)
-        # 後で消す
-        echo scopeTable
-        #
+        blockPath = nextPath()
+        identTable[arg] = IdentInfo(
+          Type: pr[1],
+          path: blockPath,
+        )
         code.add((OTHER, "{"))
         if i != node.define_args.len()-1:
           code.add((RETURN, "return"))
@@ -517,11 +551,7 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
       for _ in node.define_args:
         code.add((OTHER, "}"))
         code.addSemicolon()
-    count -= 1
-    scopeTable.setLen(oc + 1)
-    # 後で消す
-    echo scopeTable
-    #
+    blockPath = obp
     codeType = DEFINE
 
   # return文
@@ -593,12 +623,14 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
       let l = node.left.makeCodeParts()
       code.add(l[0])
       lt = l[1]
-      count += 1
-      identTable[l[0][1][1]] = l[1]
-      addScopeTable(l[0][1][1])
-      # 後で消す
-      echo scopeTable
-      #
+      blockPath.add("-0")
+      if identExistenceCheck(l[0][1][1]):
+        echo "エラー！！！(15.1.1.1)"
+        quit()
+      identTable[l[0][1][1]] = IdentInfo(
+        Type: lt,
+        path: blockPath,
+      )
       codeType = l[1]
     else:
       echo "エラー！！！(15.1.2)"
@@ -623,9 +655,9 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
     if ftmr[0]:
       var newRight: seq[codeParts]
       newRight.add(r[0][0])
-      newRight.add((Type: "OTHER", Code: "("))
+      newRight.add(("OTHER", "("))
       newRight.add(l[0].replaceSemicolon((OTHER, "")))
-      newRight.add((Type: "OTHER", Code: ")"))
+      newRight.add(("OTHER", ")"))
       newRight.add(r[0][1..r[0].len()-1])
       newRight.addSemicolon()
       code.add(newRight)
@@ -633,18 +665,49 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
     else:
       echo "エラー！！！(15.3)"
       quit()
+    
+  # 配列の要素へのアクセス
+  # TODO: 存在しない要素へのアクセスをできないようにする
+  of nkAccessElement:
+    if node.left != nil and node.right != nil:
+      let l = node.left.makeCodeParts()
+      let r = node.right.makeCodeParts()
+      let rv = r[0].replaceSemicolon((OTHER, ""))
+      let ls = l[1].split("->")
+      # TODO: 最悪
+      if identTable[l[0][0].Code].arrayLength <= rv[0].Code.parseInt():
+        echo "エラー！！！(15.3.1)"
+        quit()
+      if r[1] == INT and l[0][0].Type == IDENT and ls[0] == ARRAY:
+        code.add(l[0])
+        code.add((OTHER, "["))
+        code.add(rv)
+        code.add((OTHER, "]"))
+        code.addSemicolon()
+        codeType = ls[1..ls.len()-1].join("->")
+      else:
+        echo "エラー！！！(15.3.2)"
+        quit()
+    else:
+      echo "エラー！！！(15.4)"
+      quit()
 
   # 代入式
   of nkAssignExpression:
     var lt, rt: string
+    var lmc: string
     if node.left != nil:
       # 値を代入しようとしている変数のチェック
       let l = node.left.makeCodeParts()
-      var lmc: string = l[0][l[0].len()-1].Code
+      lmc = l[0][l[0].len()-1].Code
       if lmc == ";":
         lmc = l[0][l[0].len()-2].Code
-      if lmc notin mutTable:
-        echo "エラー！！！(16.0.0.1)"
+      if identExistenceCheck(lmc):
+        if identTable[lmc].mutable == false:
+          echo "エラー！！！(16.0.0.1)"
+          quit()
+      else:
+        echo "エラー！！！(16.0.0.2)"
         quit()
       code.add(l[0].replaceSemicolon((OTHER, "")))
       lt = l[1]
@@ -655,6 +718,7 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
     if node.right != nil:
       let r = node.right.makeCodeParts()
       code.add(r[0])
+      identTable[lmc].contents = r[0]
       rt = r[1]
     else:
       echo "エラー！！！(16.0.2)"
@@ -701,7 +765,6 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
       codeType = fm[1]
   
   # if文
-  # TODO
   of nkIfStatement:
     code.add((OTHER, "if"))
     code.add((OTHER, "("))
@@ -757,7 +820,6 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
     codeType = sr[1]
   
   # if式
-  # TODO
   of nkIfExpression:
     code.add((OTHER, "("))
     code.add(node.condition.makeCodeParts()[0].replaceSemicolon((OTHER, "")))
@@ -784,7 +846,7 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
   # for文
   # TODO
   of nkForStatement:
-    let oc = count
+    let obp = blockPath
     code.add((OTHER, "for"))
     code.add((OTHER, "("))
     code.add(node.generator.makeCodeParts()[0])
@@ -796,12 +858,8 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
       code.add(sr[0])
     code.add((OTHER, "}"))
     code.add((OTHER, "\n"))
-    count -= 1
-    scopeTable.setLen(oc + 1)
+    blockPath = obp
     codeType = sr[1]
-    # 後で消す
-    echo scopeTable
-    #
   else:
     return (code, codeType)
   

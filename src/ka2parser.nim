@@ -145,6 +145,21 @@ proc parsePipeExpression(p: Parser, left: Node): Node =
   )
   return node
 
+# 配列の要素へのアクセス
+proc parseAccessElement(p: Parser, left: Node): Node =
+  let operator = p.curToken.Type
+  let cp = p.curToken.tokenPrecedence()
+  p.shiftToken()
+  let right = p.parseExpression(cp)
+  let node = Node(
+    kind: nkAccessElement,
+    token: p.curToken,
+    operator: operator,
+    left: left,
+    right: right,
+  )
+  return node
+
 # 代入式
 proc parseAssignExpression(p: Parser, left: Node): Node =
   let operator = p.curToken.Type
@@ -514,7 +529,7 @@ proc parseExpression(p: Parser, precedence: Precedence): Node =
   of LPAREN     : left = p.parseGroupedExpression()
   of LBRACE     : left = p.parseArrayLiteral()
   else          : left = p.parseType()
-  
+
   while precedence < p.peekToken.tokenPrecedence() and p.peekToken.Type != EOF or left == nil:
     if left != nil:
       p.shiftToken()
@@ -529,6 +544,8 @@ proc parseExpression(p: Parser, precedence: Precedence): Node =
       left = p.parseCallExpression(left)
     of PIPE:
       left = p.parsePipeExpression(left)
+    of INDEX:
+      left = p.parseAccessElement(left)
     else:
       return left
   
