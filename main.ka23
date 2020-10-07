@@ -1,2 +1,3 @@
-let #array #int a = {1, 2, 3}
-puts(a!!3 + 3)
+mut #array #int a = {1, 2, 3}
+add(a, len(a))
+puts(a !! 3 + 3)

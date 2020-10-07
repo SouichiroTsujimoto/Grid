@@ -247,13 +247,17 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
       if argsTypeC.len()-1 != 0:
         let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
         if fmr2[0] and argsTypeC[0] == ARRAY & "->" & argsTypeC[1]:
-          echo fmr2
-          echo "これ"
-          return (fmr2[0], fmr2[1], "_k_push_back")
+          return (fmr2[0], fmr2[2], "_k_push_back")
       else:
         return (true, anything_t & "=>" & NIL, "_k_push_back")
     else:
       return (true, ARRAY & "->" & anything_t & "=>" & anything_t & "=>" & NIL, "_k_push_back")
+  of "len":
+    let fmr1 = funcTypesMatch(ARRAY & "->" & anything_t & "=>" & INT, argsTypeC[0])
+    if fmr1[0]:
+      return (fmr1[0], INT, "_k_len")
+    else:
+      return (true, ARRAY & "->" & anything_t & "=>" & INT, "_k_len")
   else:
     return (false, NIL, "NULL")
 
@@ -734,6 +738,7 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
   of nkCallExpression:
     let fn = node.function.makeCodeParts()
     code.add(fn[0])
+    var argsCode: seq[codeParts]
     var argsType: seq[string]
     # 後でいろいろ変更
     if node.function.kind == nkMapFunction:
@@ -754,6 +759,7 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
         code.add((OTHER, "("))
         let a = arg.makeCodeParts()
         code.add(a[0].replaceSemicolon((OTHER, "")))
+        argsCode.add(a[0])
         argsType.add(a[1])
         code.add((OTHER, ")"))
       code.addSemicolon()
@@ -761,6 +767,9 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
       if fm[0] == false:
         echo "エラー！！！(16.2)"
         quit()
+      case fm[2]
+      of "_k_push_back":
+        identTable[argsCode[0].Code].arrayLength += 1
       codeType = fm[1]
   
   # if文
