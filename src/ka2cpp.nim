@@ -653,22 +653,10 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
 
   # パイプライン演算子
   of nkPipeExpression:
-    let l = node.left.makeCodeParts()
+    node.right.args = node.left & node.right.args
     let r = node.right.makeCodeParts()
-    let ftmr = funcTypesMatch(r[1], l[1])
-    if ftmr[0]:
-      var newRight: seq[codeParts]
-      newRight.add(r[0][0])
-      newRight.add(("OTHER", "("))
-      newRight.add(l[0].replaceSemicolon((OTHER, "")))
-      newRight.add(("OTHER", ")"))
-      newRight.add(r[0][1..r[0].len()-1])
-      newRight.addSemicolon()
-      code.add(newRight)
-      codeType = ftmr[2].funcTypeSplit("=>")[2]
-    else:
-      echo "エラー！！！(15.3)"
-      quit()
+    code.add(r[0])
+    codeType = r[1]
     
   # 配列の要素へのアクセス
   of nkAccessElement:
@@ -682,7 +670,7 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
         echo "エラー！！！(15.3.1)"
         quit()
       if r[1] == INT and l[0][0].Type == IDENT and ls[0] == ARRAY:
-        code.add(l[0])
+        code.add(l[0].replaceSemicolon((OTHER, "")))
         code.add((OTHER, "["))
         code.add(rv)
         code.add((OTHER, "]"))

@@ -295,6 +295,69 @@ suite "array":
     let res = makeCppCode(program[0], 0)
     check(res.findStr("std::vector<std::vector<std::vector<int>>> a = { { { 2 } , { 5 , 6 } } , { { 4 , 1 } , { 5 } } } ;"))
 
+suite "[]":
+  test "let #array #int a = {1, 2} puts(a!!1)":
+    initTables()
+    let program = makeAST("let #array #int a = {1, 2} puts(a!!1)")
+    var res = ""
+    for tree in program:
+      res.add(makeCppCode(tree, 0))
+    check(res.findStr("std::vector<int> a = { 1 , 2 } ;"))
+    check(res.findStr("_k_puts ( a [ 1 ] ) ;"))
+  test "let #array #array #int a = {{1, 2}, {3, 4}} puts(a!!1!!0)":
+    initTables()
+    let program = makeAST("let #array #array #int a = {{1, 2}, {3, 4}} puts(a!!1!!0)")
+    var res = ""
+    for tree in program:
+      res.add(makeCppCode(tree, 0))
+    check(res.findStr("const std::vector<std::vector<int>> a = { { 1 , 2 } , { 3 , 4 } } ;"))
+    check(res.findStr("_k_puts ( a [ 1 ] [ 0 ] ) ;"))
+
+suite "add":
+  test "mut #array #int a = {1, 2} add(a, 10)":
+    initTables()
+    let program = makeAST("mut #array #int a = {1, 2} add(a, 10)")
+    var res = ""
+    for tree in program:
+      res.add(makeCppCode(tree, 0))
+    check(res.findStr("std::vector<int> a = { 1 , 2 } ;"))
+    check(res.findStr("_k_push_back ( a ) ( 10 ) ;"))
+  test "mut #array #int a = {1, 2} a |> add(10)":
+    initTables()
+    let program = makeAST("mut #array #int a = {1, 2} a |> add(10)")
+    var res = ""
+    for tree in program:
+      res.add(makeCppCode(tree, 0))
+    check(res.findStr("std::vector<int> a = { 1 , 2 } ;"))
+    check(res.findStr("_k_push_back ( a ) ( 10 ) ;"))
+  test "mut #array #int a = {1, 2} a |> add(10) puts(a !! 2)":
+    initTables()
+    let program = makeAST("mut #array #int a = {1, 2} a |> add(10) puts(a !! 2)")
+    var res = ""
+    for tree in program:
+      res.add(makeCppCode(tree, 0))
+    check(res.findStr("std::vector<int> a = { 1 , 2 } ;"))
+    check(res.findStr("_k_push_back ( a ) ( 10 ) ;"))
+    check(res.findStr("_k_puts ( a [ 2 ] ) ;"))
+  
+suite "len":
+  test "mut #array #int a = {1, 2} puts(len(a))":
+    initTables()
+    let program = makeAST("mut #array #int a = {1, 2} puts(len(a))")
+    var res = ""
+    for tree in program:
+      res.add(makeCppCode(tree, 0))
+    check(res.findStr("std::vector<int> a = { 1 , 2 } ;"))
+    check(res.findStr("_k_puts ( _k_len ( a ) ) ;"))
+  test "mut #array #int a = {1, 2} a |> len() |> puts()":
+    initTables()
+    let program = makeAST("mut #array #int a = {1, 2} a |> len() |> puts()")
+    var res = ""
+    for tree in program:
+      res.add(makeCppCode(tree, 0))
+    check(res.findStr("std::vector<int> a = { 1 , 2 } ;"))
+    check(res.findStr("_k_puts ( _k_len ( a ) ) ;"))
+
 # 〜保留〜
 # suite "map":
 #   test "map({1}, + 1)":
