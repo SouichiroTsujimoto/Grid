@@ -29,7 +29,7 @@ when isMainModule:
   ・ if文 ✅
   ・ パイプライン演算子 ✅
   ・ 【急遽】 負の数実装 ✅
-  ・ plus, minus, multiply, divide関数を作る
+  ・ plus, minus, multiply, divide関数を作る ✅
   ・ 関数を増やす
     ・ ~配列~
       ・ 要素へのアクセス (hoge[0]<- これ) ✅

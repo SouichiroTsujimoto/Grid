@@ -1,1 +1,1 @@
-mut #array #int a = {1, 2} a |> len() |> puts()
+mult(9, 3) |> puts()

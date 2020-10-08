@@ -128,6 +128,115 @@ proc conversionCppType(Type: string): (string, string) =
     else:
       return (NIL, "NULL")
 
+# 型のチェックをしてC++の演算子に変換する
+proc conversionCppOperator(fn: string, argsType: seq[string]): (bool, string, string) =
+  let anything_t = INT & "|" & FLOAT & "|" & CHAR & "|" & STRING & "|" & BOOL
+  let number_t = INT & "|" & FLOAT
+  var argsTypeC = argsType
+
+  case fn
+  of PLUS:
+    let fmr1 = funcTypesMatch(number_t & "=>" & number_t & "=>" & number_t, argsTypeC[0])
+    if fmr1[0]:
+      if argsTypeC.len()-1 != 0:
+        let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
+        return (fmr2[0], fmr2[1], "+")
+      else:
+        return (false, "", "+")
+    else:
+      return (false, "", "+")
+  of MINUS:
+    let fmr1 = funcTypesMatch(number_t & "=>" & number_t & "=>" & number_t, argsTypeC[0])
+    if fmr1[0]:
+      if argsTypeC.len()-1 != 0:
+        let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
+        return (fmr2[0], fmr2[1], "-")
+      else:
+        return (false, "", "-")
+    else:
+      return (false, "", "-")
+  of ASTERISC:
+    let fmr1 = funcTypesMatch(number_t & "=>" & number_t & "=>" & number_t, argsTypeC[0])
+    if fmr1[0]:
+      if argsTypeC.len()-1 != 0:
+        let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
+        return (fmr2[0], fmr2[1], "*")
+      else:
+        return (false, "", "*")
+    else:
+      return (false, "", "*")
+  of SLASH:
+    let fmr1 = funcTypesMatch(number_t & "=>" & number_t & "=>" & number_t, argsTypeC[0])
+    if fmr1[0]:
+      if argsTypeC.len()-1 != 0:
+        let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
+        return (fmr2[0], fmr2[1], "/")
+      else:
+        return (false, "", "/")
+    else:
+      return (false, "", "/")
+  of LT:
+    let fmr1 = funcTypesMatch(anything_t & "=>" & anything_t & "=>" & BOOL, argsTypeC[0])
+    if fmr1[0]:
+      if argsTypeC.len()-1 != 0:
+        let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
+        return (fmr2[0], BOOL, "<")
+      else:
+        return (false, "", "<")
+    else:
+      return (false, "", "<")
+  of GT:
+    let fmr1 = funcTypesMatch(anything_t & "=>" & anything_t & "=>" & BOOL, argsTypeC[0])
+    if fmr1[0]:
+      if argsTypeC.len()-1 != 0:
+        let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
+        return (fmr2[0], BOOL, ">")
+      else:
+        return (false, "", ">")
+    else:
+      return (false, "", ">")
+  of LE:
+    let fmr1 = funcTypesMatch(anything_t & "=>" & anything_t & "=>" & BOOL, argsTypeC[0])
+    if fmr1[0]:
+      if argsTypeC.len()-1 != 0:
+        let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
+        return (fmr2[0], BOOL, "<=")
+      else:
+        return (false, "", "<=")
+    else:
+      return (false, "", "<=")
+  of GE:
+    let fmr1 = funcTypesMatch(anything_t & "=>" & anything_t & "=>" & BOOL, argsTypeC[0])
+    if fmr1[0]:
+      if argsTypeC.len()-1 != 0:
+        let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
+        return (fmr2[0], BOOL, ">=")
+      else:
+        return (false, "", ">=")
+    else:
+      return (false, "", ">=")
+  of EE:
+    let fmr1 = funcTypesMatch(anything_t & "=>" & anything_t & "=>" & BOOL, argsTypeC[0])
+    if fmr1[0]:
+      if argsTypeC.len()-1 != 0:
+        let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
+        return (fmr2[0], BOOL, "==")
+      else:
+        return (false, "", "==")
+    else:
+      return (false, "", "==")
+  of NE:
+    let fmr1 = funcTypesMatch(anything_t & "=>" & anything_t & "=>" & BOOL, argsTypeC[0])
+    if fmr1[0]:
+      if argsTypeC.len()-1 != 0:
+        let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
+        return (fmr2[0], BOOL, "!=")
+      else:
+        return (false, "", "!=")
+    else:
+      return (false, "", "!=")
+
+# 型のチェックをしてC++の関数に変換する
 proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, string) =
   let anything_t = INT & "|" & FLOAT & "|" & CHAR & "|" & STRING & "|" & BOOL
   let number_t = INT & "|" & FLOAT
@@ -135,7 +244,7 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
   # for _ in [argsTypeC.len()-1..2]:
   #   argsTypeC.add("")
   case fn
-  of PLUS:
+  of "plus":
     let fmr1 = funcTypesMatch(number_t & "=>" & number_t & "=>" & number_t, argsTypeC[0])
     if fmr1[0]:
       if argsTypeC.len()-1 != 0:
@@ -145,7 +254,7 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
         return (true, number_t & "=>" & number_t, "_k_add")
     else:
       return (true, number_t & "=>" & number_t & "=>" & number_t, "_k_add")
-  of MINUS:
+  of "minu":
     let fmr1 = funcTypesMatch(number_t & "=>" & number_t & "=>" & number_t, argsTypeC[0])
     if fmr1[0]:
       if argsTypeC.len()-1 != 0:
@@ -155,7 +264,7 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
         return (true, number_t & "=>" & number_t, "_k_sub")
     else:
       return (true, number_t & "=>" & number_t & "=>" & number_t, "_k_sub")
-  of ASTERISC:
+  of "mult":
     let fmr1 = funcTypesMatch(number_t & "=>" & number_t & "=>" & number_t, argsTypeC[0])
     if fmr1[0]:
       if argsTypeC.len()-1 != 0:
@@ -165,7 +274,7 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
         return (true, number_t & "=>" & number_t, "_k_mul")
     else:
       return (true, number_t & "=>" & number_t & "=>" & number_t, "_k_mul")
-  of SLASH:
+  of "divi":
     let fmr1 = funcTypesMatch(number_t & "=>" & number_t & "=>" & number_t, argsTypeC[0])
     if fmr1[0]:
       if argsTypeC.len()-1 != 0:
@@ -175,66 +284,6 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
         return (true, number_t & "=>" & number_t, "_k_div")
     else:
       return (true, number_t & "=>" & number_t & "=>" & number_t, "_k_div")
-  of LT:
-    let fmr1 = funcTypesMatch(anything_t & "=>" & anything_t & "=>" & BOOL, argsTypeC[0])
-    if fmr1[0]:
-      if argsTypeC.len()-1 != 0:
-        let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
-        return (fmr2[0], BOOL, "_k_lt")
-      else:
-        return (true, anything_t & "=>" & BOOL, "_k_lt")
-    else:
-      return (true, anything_t & "=>" & anything_t & "=>" & BOOL, "_k_lt")
-  of GT:
-    let fmr1 = funcTypesMatch(anything_t & "=>" & anything_t & "=>" & BOOL, argsTypeC[0])
-    if fmr1[0]:
-      if argsTypeC.len()-1 != 0:
-        let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
-        return (fmr2[0], BOOL, "_k_gt")
-      else:
-        return (true, anything_t & "=>" & BOOL, "_k_gt")
-    else:
-      return (true, anything_t & "=>" & anything_t & "=>" & BOOL, "_k_gt")
-  of LE:
-    let fmr1 = funcTypesMatch(anything_t & "=>" & anything_t & "=>" & BOOL, argsTypeC[0])
-    if fmr1[0]:
-      if argsTypeC.len()-1 != 0:
-        let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
-        return (fmr2[0], BOOL, "_k_le")
-      else:
-        return (true, anything_t & "=>" & BOOL, "_k_le")
-    else:
-      return (true, anything_t & "=>" & anything_t & "=>" & BOOL, "_k_le")
-  of GE:
-    let fmr1 = funcTypesMatch(anything_t & "=>" & anything_t & "=>" & BOOL, argsTypeC[0])
-    if fmr1[0]:
-      if argsTypeC.len()-1 != 0:
-        let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
-        return (fmr2[0], BOOL, "_k_ge")
-      else:
-        return (true, anything_t & "=>" & BOOL, "_k_ge")
-    else:
-      return (true, anything_t & "=>" & anything_t & "=>" & BOOL, "_k_ge")
-  of EE:
-    let fmr1 = funcTypesMatch(anything_t & "=>" & anything_t & "=>" & BOOL, argsTypeC[0])
-    if fmr1[0]:
-      if argsTypeC.len()-1 != 0:
-        let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
-        return (fmr2[0], BOOL, "_k_ee")
-      else:
-        return (true, anything_t & "=>" & BOOL, "_k_ee")
-    else:
-      return (true, anything_t & "=>" & anything_t & "=>" & BOOL, "_k_ee")
-  of NE:
-    let fmr1 = funcTypesMatch(anything_t & "=>" & anything_t & "=>" & BOOL, argsTypeC[0])
-    if fmr1[0]:
-      if argsTypeC.len()-1 != 0:
-        let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
-        return (fmr2[0], BOOL, "_k_ne")
-      else:
-        return (true, anything_t & "=>" & BOOL, "_k_ne")
-    else:
-      return (true, anything_t & "=>" & anything_t & "=>" & BOOL, "_k_ne")
   of "puts":
     let fmr1 = funcTypesMatch(anything_t & "=>" & NIL, argsTypeC[0])
     if fmr1[0]:
@@ -330,10 +379,10 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
         let elem = arv.makeCodeParts()
         if loopCount == 0:
           eltype = elem[1]
-          code.add(elem[0])
+          code.add(elem[0].replaceSemicolon((OTHER, "")))
         elif typeMatch(elem[1], eltype)[0]:
           code.add((COMMA, ","))
-          code.add(elem[0])
+          code.add(elem[0].replaceSemicolon((OTHER, "")))
         else:
           echo "エラー！！！(0.0.1)"
           quit()
@@ -577,42 +626,20 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
     var 
       l: (seq[codeParts], string)
       r: (seq[codeParts], string)
-    if node.left != nil:
-      l = node.left.makeCodeParts()
-    if node.right != nil:
-      r = node.right.makeCodeParts()
-    if l[1] == "" and r[1] == "":
-      let oc = node.operator.conversionCppFunction(@[""])
-      code.add((node.token.Type, oc[2]))
-      codeType = oc[1]
-    elif l[1] == "":
-      let oc = node.operator.conversionCppFunction(@[r[1]])
-      code.add((node.token.Type, oc[2]))
-      code.add((OTHER, "("))
-      code.add(r[0].replaceSemicolon((OTHER, "")))
-      code.add((OTHER, ")"))
-      code.addSemicolon()
-      codeType = oc[1]
-    elif r[1] == "":
-      let oc = node.operator.conversionCppFunction(@[l[1]])
-      code.add((node.token.Type, oc[2]))
-      code.add((OTHER, "("))
-      code.add(l[0].replaceSemicolon((OTHER, "")))
-      code.add((OTHER, ")"))
-      code.addSemicolon()
-      codeType = oc[1]
-    elif typeMatch(l[1], r[1])[0]:
-      let oc = node.operator.conversionCppFunction(@[l[1], r[1]])
-      code.add((node.token.Type, oc[2]))
+    if node.left == nil or node.right == nil:
+      echo "エラー！！！(15.0.1)"
+      quit()
+    
+    l = node.left.makeCodeParts()
+    r = node.right.makeCodeParts()
+    if l[1] == r[1]:
+      let oc = node.operator.conversionCppOperator(@[l[1], r[1]])
       if oc[0] == false:
         echo "エラー！！！(15.1)"
         quit()
-      code.add((OTHER, "("))
       code.add(l[0].replaceSemicolon((OTHER, "")))
-      code.add((OTHER, ")"))
-      code.add((OTHER, "("))
+      code.add((node.token.Type, oc[2]))
       code.add(r[0].replaceSemicolon((OTHER, "")))
-      code.add((OTHER, ")"))
       code.addSemicolon()
       codeType = oc[1]
     else:
