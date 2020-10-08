@@ -4,50 +4,78 @@ import unittest, strutils
 proc findStr(code: string, str: string): bool =
   return code.count(str) != 0
 
-suite "operator":
+suite "operators":
   test "1 + 1":
     initTables()
     let program = makeAST("1 + 1")
-    check(makeCppCode(program[0], 0).findStr("_k_add ( 1 ) ( 1 )"))
-  test "1 + 1 * 2":
+    check(makeCppCode(program[0], 0).findStr("( 1 + 1 )"))
+  test "1 + -1 * 2":
     initTables()
     let program = makeAST("1 + 1 * 2")
-    check(makeCppCode(program[0], 0).findStr("_k_add ( 1 ) ( _k_mul ( 1 ) ( 2 ) )"))
+    check(makeCppCode(program[0], 0).findStr("( 1 + ( 1 * 2 ) )"))
   test "(1 + 1) * 2":
     initTables()
     let program = makeAST("(1 + 1) * 2")
-    check(makeCppCode(program[0], 0).findStr("_k_mul ( _k_add ( 1 ) ( 1 ) ) ( 2 )"))
+    check(makeCppCode(program[0], 0).findStr("( ( 1 + 1 ) * 2 )"))
   test "1 + (1 * 2)":
     initTables()
     let program = makeAST("1 + (1 * 2)")
-    check(makeCppCode(program[0], 0).findStr("_k_add ( 1 ) ( _k_mul ( 1 ) ( 2 ) )"))
+    check(makeCppCode(program[0], 0).findStr("( 1 + ( 1 * 2 ) )"))
+  test "1 + -1 * 2":
+    initTables()
+    let program = makeAST("1 + -1 * 2")
+    check(makeCppCode(program[0], 0).findStr("( 1 + ( -1 * 2 ) )"))
   test "\"Hello\" == \"Hello\"":
     initTables()
     let program = makeAST("\"Hello\" == \"Hello\"")
-    check(makeCppCode(program[0], 0).findStr("_k_ee ( \"Hello\" ) ( \"Hello\" )"))
+    check(makeCppCode(program[0], 0).findStr("( \"Hello\" == \"Hello\" )"))
+
+suite "plus":
+  test "plus(1, 3)":
+    initTables()
+    let program = makeAST("plus(1, 3)")
+    check(makeCppCode(program[0], 0).findStr("_k_add ( 1 ) ( 3 )"))
+  
+suite "minu":
+  test "minu(4, plus(3, 2))":
+    initTables()
+    let program = makeAST("minu(4, plus(3, 2))")
+    check(makeCppCode(program[0], 0).findStr("_k_sub ( 4 ) ( _k_add ( 3 ) ( 2 ) )"))
+
+suite "mult":
+  test "mult(minu(100, plus(10, 10)), 2)":
+    initTables()
+    let program = makeAST("mult(minu(100, plus(10, 10)), 2)")
+    check(makeCppCode(program[0], 0).findStr("_k_mul ( _k_sub ( 100 ) ( _k_add ( 10 ) ( 10 ) ) ) ( 2 )"))
+
+suite "divi":
+  test "divi(365, mult(minu(100, plus(10, 10)), 2))":
+    initTables()
+    let program = makeAST("divi(365, mult(minu(100, plus(10, 10)), 2))")
+    check(makeCppCode(program[0], 0).findStr("_k_div ( 365 ) ( _k_mul ( _k_sub ( 100 ) ( _k_add ( 10 ) ( 10 ) ) ) ( 2 ) )"))
 
 suite "|>":
   test "\"Hello\" |> puts":
     initTables()
-    let program = makeAST("\"Hello\" |> puts")
+    let program = makeAST("\"Hello\" |> puts()")
     var res = ""
     for tree in program:
       res.add(makeCppCode(tree, 0))
     check(res.findStr("_k_puts ( \"Hello\" ) ;"))
-  test "1 |> + 2 |> + 3 |> / 6":
+  test "1 |> plus(2) |> plus(3) |> divi(6)":
     initTables()
-    let program = makeAST("1 |> + 2 |> + 3 |> / 6")
+    let program = makeAST("1 |> plus(2) |> plus(3) |> divi(6)")
     var res = ""
     for tree in program:
       res.add(makeCppCode(tree, 0))
     check(res.findStr("_k_div ( _k_add ( _k_add ( 1 ) ( 2 ) ) ( 3 ) ) ( 6 ) ;"))
-  test "(3 |> + 10) + (1 |> + 1) |> puts":
+  test "(3 |> plus(10)) + (1 |> plus(1)) |> puts()":
     initTables()
-    let program = makeAST("(3 |> + 10) + (1 |> + 1) |> puts")
+    let program = makeAST("(3 |> plus(10)) + (1 |> plus(1)) |> puts()")
     var res = ""
     for tree in program:
       res.add(makeCppCode(tree, 0))
-    check(res.findStr("_k_puts ( _k_add ( _k_add ( 3 ) ( 10 ) ) ( _k_add ( 1 ) ( 1 ) ) ) ;"))
+    check(res.findStr("_k_puts ( ( _k_add ( 3 ) ( 10 ) + _k_add ( 1 ) ( 1 ) ) ) ;"))
 
 suite "let":
   test "let #int a = 10":
@@ -57,7 +85,7 @@ suite "let":
   test "let #int a = 10 + 10":
     initTables()
     let program = makeAST("let #int a = 10 + 10")
-    check(makeCppCode(program[0], 0).findStr("const int a = _k_add ( 10 ) ( 10 ) ;"))
+    check(makeCppCode(program[0], 0).findStr("const int a = ( 10 + 10 ) ;"))
   test "let #float a = 1.5":
     initTables()
     let program = makeAST("let #float a = 1.5")
@@ -77,7 +105,7 @@ suite "let":
   test "let #bool a = 1 >= 10":
     initTables()
     let program = makeAST("let #bool a = 1 >= 10")
-    check(makeCppCode(program[0], 0).findStr("bool a = _k_ge ( 1 ) ( 10 ) ;"))
+    check(makeCppCode(program[0], 0).findStr("bool a = ( 1 >= 10 ) ;"))
 
 suite "mut":
   test "mut #int a = 10":
@@ -87,7 +115,7 @@ suite "mut":
   test "mut #int a = 10 + 10":
     initTables()
     let program = makeAST("mut #int a = 10 + 10")
-    check(makeCppCode(program[0], 0).findStr("int a = _k_add ( 10 ) ( 10 ) ;"))
+    check(makeCppCode(program[0], 0).findStr("int a = ( 10 + 10 ) ;"))
   test "mut #float a = 1.5":
     initTables()
     let program = makeAST("mut #float a = 1.5")
@@ -107,7 +135,7 @@ suite "mut":
   test "mut #bool a = 1 >= 10":
     initTables()
     let program = makeAST("mut #bool a = 1 >= 10")
-    check(makeCppCode(program[0], 0).findStr("bool a = _k_ge ( 1 ) ( 10 ) ;"))
+    check(makeCppCode(program[0], 0).findStr("bool a = ( 1 >= 10 ) ;"))
 
 suite ":=":
   test "mut #int a = 10 a := 20":
@@ -144,7 +172,7 @@ suite "def":
     let program = makeAST("def #int a(#int b) do return b * 2 end")
     let res = makeCppCode(program[0], 0)
     check(res.findStr("auto a = [] ( int b ) {"))
-    check(res.findStr("return ( _k_mul ( b ) ( 2 ) )"))
+    check(res.findStr("return ( ( b * 2 ) )"))
     check(res.findStr("}  ;"))
   test "def #int a(#int b, #int c) do return b / c end":
     initTables()
@@ -152,7 +180,7 @@ suite "def":
     let res = makeCppCode(program[0], 0)
     check(res.findStr("auto a = [] ( int b ) {"))
     check(res.findStr("return [b] ( int c ) {"))
-    check(res.findStr("return ( _k_div ( b ) ( c ) ) ;"))
+    check(res.findStr("return ( ( b / c ) ) ;"))
     check(res.findStr("}  ;"))
     check(res.findStr("}  ;"))
   test "def #bool a(#int b, #bool c) do let #bool d = b == 10 return c == d end":
@@ -161,19 +189,28 @@ suite "def":
     let res = makeCppCode(program[0], 0)
     check(res.findStr("auto a = [] ( int b ) {"))
     check(res.findStr("return [b] ( bool c ) {"))
-    check(res.findStr("bool d = _k_ee ( b ) ( 10 ) ;"))
-    check(res.findStr("return ( _k_ee ( c ) ( d ) ) ;"))
+    check(res.findStr("bool d = ( b == 10 ) ;"))
+    check(res.findStr("return ( ( c == d ) ) ;"))
     check(res.findStr("}  ;"))
     check(res.findStr("}  ;"))
 
 suite "if":
+  test "if 1 + 1 <= 3 do puts(\"OK\") end":
+    initTables()
+    let program = makeAST("if 1 + 1 <= 3 do puts(\"OK\") end")
+    var res = ""
+    for tree in program:
+      res.add(makeCppCode(tree, 0))
+    check(res.findStr("if ( ( ( 1 + 1 ) <= 3 ) ) {"))
+    check(res.findStr("_k_puts ( \"OK\" ) ;"))
+    check(res.findStr("}"))
   test "if 5 + 5 == 10 do puts(\"5 + 5 = 10\") else puts(\"?\")":
     initTables()
     let program = makeAST("if 5 + 5 == 10 do puts(\"5 + 5 = 10\") else puts(\"?\")")
     var res = ""
     for tree in program:
       res.add(makeCppCode(tree, 0))
-    check(res.findStr("if ( _k_ee ( _k_add ( 5 ) ( 5 ) ) ( 10 ) ) {"))
+    check(res.findStr("if ( ( ( 5 + 5 ) == 10 ) ) {"))
     check(res.findStr("_k_puts ( \"5 + 5 = 10\" ) ;"))
     check(res.findStr("}"))
     check(res.findStr("else {"))
@@ -200,10 +237,10 @@ suite "if":
     var res = ""
     for tree in program:
       res.add(makeCppCode(tree, 0))
-    check(res.findStr("if ( _k_ee ( 1 ) ( 3 ) ) {"))
+    check(res.findStr("if ( ( 1 == 3 ) ) {"))
     check(res.findStr("k_puts ( \"ok\" ) ;"))
     check(res.findStr("}"))
-    check(res.findStr("else if ( _k_ne ( 4 ) ( 5 ) ) {"))
+    check(res.findStr("else if ( ( 4 != 5 ) ) {"))
     check(res.findStr("k_puts ( true ) ;"))
     check(res.findStr("}"))
     check(res.findStr("else if ( false ) {"))
@@ -212,21 +249,13 @@ suite "if":
     check(res.findStr("else {"))
     check(res.findStr("k_puts ( \"else\" ) ;"))
     check(res.findStr("}"))
-    
-  test "let #int a = ifex 2 + 2 == 5 : 1984 : ifex 2 + 2 == 4 : 2020 : 0":
-    initTables()
-    let program = makeAST("let #int a = ifex 2 + 2 == 5 : 1984 : ifex 2 + 2 == 4 : 2020 : 0")
-    var res = ""
-    for tree in program:
-      res.add(makeCppCode(tree, 0))
-    check(res.findStr("const int a = ( _k_ee ( _k_add ( 2 ) ( 2 ) ) ( 5 ) ? 1984 : ( _k_ee ( _k_add ( 2 ) ( 2 ) ) ( 4 ) ? 2020 : 0 ) ) ;"))
 
 suite "ifex":
   test "ifex 5 + 5 == 10 : \"5 + 5 = 10\" : \"?\"":
     initTables()
     let program = makeAST("ifex 5 + 5 == 10 : \"5 + 5 = 10\" : \"?\"")
     let res = makeCppCode(program[0], 0)
-    check(res.findStr("( _k_ee ( _k_add ( 5 ) ( 5 ) ) ( 10 ) ? \"5 + 5 = 10\" : \"?\" ) ;"))
+    check(res.findStr("( ( ( 5 + 5 ) == 10 ) ? \"5 + 5 = 10\" : \"?\" ) ;"))
   test "ifex True : \"1\" : ifex True : \"2\" : \"3\"":
     initTables()
     let program = makeAST("ifex True : \"1\" : ifex True : \"2\" : \"3\"")
@@ -240,8 +269,10 @@ suite "ifex":
   test "let #int a = ifex 2 + 2 == 5 : 1984 : ifex 2 + 2 == 4 : 2020 : 0":
     initTables()
     let program = makeAST("let #int a = ifex 2 + 2 == 5 : 1984 : ifex 2 + 2 == 4 : 2020 : 0")
-    let res = makeCppCode(program[0], 0)
-    check(res.findStr("const int a = ( _k_ee ( _k_add ( 2 ) ( 2 ) ) ( 5 ) ? 1984 : ( _k_ee ( _k_add ( 2 ) ( 2 ) ) ( 4 ) ? 2020 : 0 ) ) ;"))
+    var res = ""
+    for tree in program:
+      res.add(makeCppCode(tree, 0))
+    check(res.findStr("const int a = ( ( ( 2 + 2 ) == 5 ) ? 1984 : ( ( ( 2 + 2 ) == 4 ) ? 2020 : 0 ) ) ;"))
 
 suite "puts":
   test "puts(\"Hello\")":
@@ -414,5 +445,5 @@ suite "for":
       res.add(makeCppCode(tree, 0))
     check(res.findStr("int x = 0 ;"))
     check(res.findStr("for ( int a : { 1 , 2 , 3 } ) {"))
-    check(res.findStr("x = _k_add ( x ) ( a ) ;"))
+    check(res.findStr("x = ( x + a ) ;"))
     check(res.findStr("}"))

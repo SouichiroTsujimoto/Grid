@@ -420,7 +420,7 @@ proc parseIfStatement(p: Parser): Node =
   if p.peekToken.Type != DO:
     return Node(kind: nkNil)
   p.shiftToken()
-  node.consequence = p.parseBlockStatement(@[ELIF, ELSE])
+  node.consequence = p.parseBlockStatement(@[ELIF, ELSE, END])
   # elifがあった場合
   if p.peekToken.Type == ELIF:
     p.shiftToken()
@@ -443,6 +443,12 @@ proc parseIfStatement(p: Parser): Node =
     )
     p.shiftToken()
     return node
+  elif p.peekToken.Type == END:
+    p.shiftToken()
+    return node
+  else:
+    echo "構文エラー！！！(0.0.1)"
+    quit()
 
 # if式
 proc parseIfExpression(p: Parser): Node =

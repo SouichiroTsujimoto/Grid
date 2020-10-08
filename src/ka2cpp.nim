@@ -637,9 +637,11 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
       if oc[0] == false:
         echo "エラー！！！(15.1)"
         quit()
+      code.add(((OTHER, "(")))
       code.add(l[0].replaceSemicolon((OTHER, "")))
       code.add((node.token.Type, oc[2]))
       code.add(r[0].replaceSemicolon((OTHER, "")))
+      code.add(((OTHER, ")")))
       code.addSemicolon()
       codeType = oc[1]
     else:
@@ -803,8 +805,11 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
         sr = statement.makeCodeParts()
         code.add(sr[0])
     code.add((OTHER, "}"))
-    let ar = node.alternative.makeCodeParts()
-    code.add(ar[0])
+    if node.alternative != nil:
+      let ar = node.alternative.makeCodeParts()
+      code.add(ar[0])
+    else:
+      code.add((OTHER, "\n"))
     codeType = sr[1]
 
   # elif文
@@ -823,8 +828,11 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
         sr = statement.makeCodeParts()
         code.add(sr[0])
     code.add((OTHER, "}"))
-    let ar = node.alternative.makeCodeParts()
-    code.add(ar[0])
+    if node.alternative != nil:
+      let ar = node.alternative.makeCodeParts()
+      code.add(ar[0])
+    else:
+      code.add((OTHER, "\n"))
     codeType = sr[1]
 
   # else文
@@ -840,6 +848,7 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
         sr = statement.makeCodeParts()
         code.add(sr[0])
     code.add((OTHER, "}"))
+    code.add((OTHER, "\n"))
     codeType = sr[1]
   
   # if式
