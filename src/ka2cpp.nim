@@ -1,4 +1,4 @@
-import ka2token, ka2node, ka2token
+import ka2token, ka2node, ka2token, ka2error
 import strutils, tables
 
 #------↓仮↓------
@@ -138,101 +138,71 @@ proc conversionCppOperator(fn: string, argsType: seq[string]): (bool, string, st
   of PLUS:
     let fmr1 = funcTypesMatch(number_t & "=>" & number_t & "=>" & number_t, argsTypeC[0])
     if fmr1[0]:
-      if argsTypeC.len()-1 != 0:
-        let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
-        return (fmr2[0], fmr2[1], "+")
-      else:
-        return (false, "", "+")
+      let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
+      return (fmr2[0], fmr2[1], "+")
     else:
       return (false, "", "+")
   of MINUS:
     let fmr1 = funcTypesMatch(number_t & "=>" & number_t & "=>" & number_t, argsTypeC[0])
     if fmr1[0]:
-      if argsTypeC.len()-1 != 0:
-        let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
-        return (fmr2[0], fmr2[1], "-")
-      else:
-        return (false, "", "-")
+      let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
+      return (fmr2[0], fmr2[1], "-")
     else:
       return (false, "", "-")
   of ASTERISC:
     let fmr1 = funcTypesMatch(number_t & "=>" & number_t & "=>" & number_t, argsTypeC[0])
     if fmr1[0]:
-      if argsTypeC.len()-1 != 0:
-        let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
-        return (fmr2[0], fmr2[1], "*")
-      else:
-        return (false, "", "*")
+      let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
+      return (fmr2[0], fmr2[1], "*")
     else:
       return (false, "", "*")
   of SLASH:
     let fmr1 = funcTypesMatch(number_t & "=>" & number_t & "=>" & number_t, argsTypeC[0])
     if fmr1[0]:
-      if argsTypeC.len()-1 != 0:
-        let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
-        return (fmr2[0], fmr2[1], "/")
-      else:
-        return (false, "", "/")
+      let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
+      return (fmr2[0], fmr2[1], "/")
     else:
       return (false, "", "/")
   of LT:
     let fmr1 = funcTypesMatch(anything_t & "=>" & anything_t & "=>" & BOOL, argsTypeC[0])
     if fmr1[0]:
-      if argsTypeC.len()-1 != 0:
-        let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
-        return (fmr2[0], BOOL, "<")
-      else:
-        return (false, "", "<")
+      let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
+      return (fmr2[0], BOOL, "<")
     else:
       return (false, "", "<")
   of GT:
     let fmr1 = funcTypesMatch(anything_t & "=>" & anything_t & "=>" & BOOL, argsTypeC[0])
     if fmr1[0]:
-      if argsTypeC.len()-1 != 0:
-        let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
-        return (fmr2[0], BOOL, ">")
-      else:
-        return (false, "", ">")
+      let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
+      return (fmr2[0], BOOL, ">")
     else:
       return (false, "", ">")
   of LE:
     let fmr1 = funcTypesMatch(anything_t & "=>" & anything_t & "=>" & BOOL, argsTypeC[0])
     if fmr1[0]:
-      if argsTypeC.len()-1 != 0:
-        let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
-        return (fmr2[0], BOOL, "<=")
-      else:
-        return (false, "", "<=")
+      let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
+      return (fmr2[0], BOOL, "<=")
     else:
       return (false, "", "<=")
   of GE:
     let fmr1 = funcTypesMatch(anything_t & "=>" & anything_t & "=>" & BOOL, argsTypeC[0])
     if fmr1[0]:
-      if argsTypeC.len()-1 != 0:
-        let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
-        return (fmr2[0], BOOL, ">=")
-      else:
-        return (false, "", ">=")
+      let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
+      return (fmr2[0], BOOL, ">=")
     else:
       return (false, "", ">=")
   of EE:
     let fmr1 = funcTypesMatch(anything_t & "=>" & anything_t & "=>" & BOOL, argsTypeC[0])
     if fmr1[0]:
-      if argsTypeC.len()-1 != 0:
-        let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
-        return (fmr2[0], BOOL, "==")
-      else:
-        return (false, "", "==")
+      let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
+      return (fmr2[0], BOOL, "==")
     else:
       return (false, "", "==")
   of NE:
     let fmr1 = funcTypesMatch(anything_t & "=>" & anything_t & "=>" & BOOL, argsTypeC[0])
     if fmr1[0]:
-      if argsTypeC.len()-1 != 0:
-        let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
-        return (fmr2[0], BOOL, "!=")
-      else:
-        return (false, "", "!=")
+      let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
+      return (fmr2[0], BOOL, "!=")
     else:
       return (false, "", "!=")
 
@@ -339,7 +309,7 @@ proc addIndent(code: var string, indent: int) =
 #     scopeTable.setLen(nestCount)
 #     scopeTable.add(@[str])
 
-proc makeCodeParts(node: Node): (seq[codeParts], string) =
+proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
   var
     code: seq[codeParts]
     codeType: string
@@ -362,21 +332,22 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
   of nkStringLiteral:
     code.add((STRING, "\"" & node.stringValue & "\""))
     codeType = STRING
-  of nkCppCode:
-    if node.cppCodeValue != "":
-      code.add((CPPCODE, node.cppCodeValue))
-      code.addSemicolon()
-      codeType = CPPCODE
-    else:
-      echo "エラー！！！(0)"
-      quit()
+  # 保留
+  # of nkCppCode:
+  #   if node.cppCodeValue != "":
+  #     code.add((CPPCODE, node.cppCodeValue))
+  #     code.addSemicolon()
+  #     codeType = CPPCODE
+  #   else:
+  #     echoErrorMessage(13, test)
+  #     quit()
   of nkArrayLiteral:
     if node.arrayValue != @[]:
       code.add((LBRACE, "{"))
       var eltype: string
       var loopCount = 0
       for arv in node.arrayValue:
-        let elem = arv.makeCodeParts()
+        let elem = arv.makeCodeParts(test)
         if loopCount == 0:
           eltype = elem[1]
           code.add(elem[0].replaceSemicolon((OTHER, "")))
@@ -384,8 +355,7 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
           code.add((COMMA, ","))
           code.add(elem[0].replaceSemicolon((OTHER, "")))
         else:
-          echo "エラー！！！(0.0.1)"
-          quit()
+          echoErrorMessage(0, test)
         loopCount += 1
       code.add((RBRACE, "}"))
       code.add(($loopCount, ""))
@@ -404,40 +374,35 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
       code.add((INT, node.identValue))
       codeType = INT
     else:
-      echo "エラー！！！(1)"
-      quit()
+      echoErrorMessage(1, test)
   of nkFloatType:
     if node.identValue != "":
       code.add(node.typeValue.conversionCppType())
       code.add((FLOAT, node.identValue))
       codeType = FLOAT
     else:
-      echo "エラー！！！(2)"
-      quit()
+      echoErrorMessage(1, test)
   of nkCharType:
     if node.identValue != "":
       code.add(node.typeValue.conversionCppType())
       code.add((CHAR, node.identValue))
       codeType = CHAR
     else:
-      echo "エラー！！！(3)"
-      quit()
+      echoErrorMessage(1, test)
   of nkStringType:
     if node.identValue != "":
       code.add(node.typeValue.conversionCppType())
       code.add((STRING, node.identValue))
       codeType = STRING
     else:
-      echo "エラー！！！(4)"
-      quit()
+      echoErrorMessage(1, test)
   of nkBoolType:
     if node.identValue != "":
       code.add(node.typeValue.conversionCppType())
       code.add((BOOL, node.identValue))
       codeType = BOOL
     else:
-      echo "エラー！！！(5)"
-      quit()
+      echoErrorMessage(1, test)
   of nkArrayType:
     if node.identValue != "":
       code.add(node.typeValue.conversionCppType())
@@ -448,16 +413,14 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
           codeType.add("->")
         codeType.add(tv[2..tv.len()-1])
     else:
-      echo "エラー！！！(5.1)"
-      quit()
+      echoErrorMessage(1, test)
   of nkFunctionType:
     if node.identValue != "":
       code.add((T_FUNCTION, "auto"))
       code.add((FUNCTION, node.identValue))
       codeType = FUNCTION
     else:
-      echo "エラー！！！(6)"
-      quit()
+      echoErrorMessage(1, test)
 
   # 名前
   of nkIdent:
@@ -470,8 +433,7 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
         code.add((ic[1], ic[2]))
         codeType = ic[1]
       else:
-        echo "エラー！！！(7)"
-        quit()
+        echoErrorMessage(2, test)
 
   # 仮
   of nkMapFunction:
@@ -481,13 +443,12 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
   # let文
   of nkLetStatement:
     code.add((OTHER, "const"))
-    let li = node.let_ident.makeCodeParts()
-    let lv = node.let_value.makeCodeParts()
+    let li = node.let_ident.makeCodeParts(test)
+    let lv = node.let_value.makeCodeParts(test)
     # echo li[1] & "___" & lv[1]
     if li[1] == lv[1]:
       if identExistenceCheck(li[0][1][1]):
-        echo "エラー！！！(8)"
-        quit()
+        echoErrorMessage(3, test)
       code.add(li[0])
       code.add((OTHER, "="))
       code.add(lv[0])
@@ -503,17 +464,15 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
       if li[1].startsWith("ARRAY"):
         identTable[li[0][1][1]].arrayLength = lv[0][lv[0].len()-1].Type.parseInt()
     else:
-      echo "エラー！！！(9)"
-      quit()
+      echoErrorMessage(4, test)
   
   # mut文
   of nkMutStatement:
-    let li = node.let_ident.makeCodeParts()
-    let lv = node.let_value.makeCodeParts()
+    let li = node.let_ident.makeCodeParts(test)
+    let lv = node.let_value.makeCodeParts(test)
     if li[1] == lv[1]:
       if identExistenceCheck(li[0][1][1]):
-        echo "エラー！！！(10)"
-        quit()
+        echoErrorMessage(3, test)
       code.add(li[0])
       code.add((OTHER, "="))
       code.add(lv[0])
@@ -529,16 +488,14 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
       if li[1].startsWith("ARRAY"):
         identTable[li[0][1][1]].arrayLength = lv[0][lv[0].len()-1].Type.parseInt()
     else:
-      echo "エラー！！！(11)"
-      quit()
+      echoErrorMessage(4, test)
 
   # def文
   of nkDefineStatement:
     code.add((AUTO, "auto"))
-    let di = node.define_ident.makeCodeParts()
+    let di = node.define_ident.makeCodeParts(test)
     if identExistenceCheck(di[0][1][1]):
-      echo "エラー！！！(12)"
-      quit()
+      echoErrorMessage(3, test)
     code.add(di[0][1])
     code.add((EQUAL, "="))
     if node.define_args == @[]:
@@ -564,20 +521,19 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
       code.add((OTHER, "{"))
       for statement in node.define_block.statements:
         if statement.kind == nkReturnStatement:
-          let st = statement.makeCodeParts()
+          let st = statement.makeCodeParts(test)
           if typeMatch(st[1], di[1])[0]:
             code.add(st[0])
           else:
-            echo "エラー！！！(13)"
-            quit()
+            echoErrorMessage(5, test)
         else:
-          code.add(statement.makeCodeParts()[0])
+          code.add(statement.makeCodeParts(test)[0])
       code.add((OTHER, "}"))
       code.addSemicolon()
     else:
       var arg: string = ""
       for i, parameter in node.define_args:
-        let pr = parameter.makeCodeParts()
+        let pr = parameter.makeCodeParts(test)
         code.add((OTHER, "[" & arg & "]"))
         code.add((OTHER, "("))
         code.add(pr[0])
@@ -593,14 +549,13 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
           code.add((RETURN, "return"))
       for statement in node.define_block.statements:
         if statement.kind == nkReturnStatement:
-          let st = statement.makeCodeParts()
+          let st = statement.makeCodeParts(test)
           if typeMatch(st[1], di[1])[0]:
             code.add(st[0])
           else:
-            echo "エラー！！！(14)"
-            quit()
+            echoErrorMessage(5, test)
         else:
-          code.add(statement.makeCodeParts()[0])
+          code.add(statement.makeCodeParts(test)[0])
       for _ in node.define_args:
         code.add((OTHER, "}"))
         code.addSemicolon()
@@ -612,14 +567,13 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
     if node.return_expression != nil:
       code.add((OTHER, "return"))
       code.add((OTHER, "("))
-      let r = node.return_expression.makeCodeParts()
+      let r = node.return_expression.makeCodeParts(test)
       code.add(r[0].replaceSemicolon((OTHER, "")))
       code.add((OTHER, ")"))
       code.addSemicolon()
       codeType = r[1]
     else:
-      echo "エラー！！！(15)"
-      quit()
+      echoErrorMessage(6, test)
   
   # 中置
   of nkInfixExpression:
@@ -627,16 +581,14 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
       l: (seq[codeParts], string)
       r: (seq[codeParts], string)
     if node.left == nil or node.right == nil:
-      echo "エラー！！！(15.0.1)"
-      quit()
+      echoErrorMessage(7, test)
     
-    l = node.left.makeCodeParts()
-    r = node.right.makeCodeParts()
+    l = node.left.makeCodeParts(test)
+    r = node.right.makeCodeParts(test)
     if l[1] == r[1]:
       let oc = node.operator.conversionCppOperator(@[l[1], r[1]])
       if oc[0] == false:
-        echo "エラー！！！(15.1)"
-        quit()
+        echoErrorMessage(8, test)
       code.add(((OTHER, "(")))
       code.add(l[0].replaceSemicolon((OTHER, "")))
       code.add((node.token.Type, oc[2]))
@@ -645,59 +597,53 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
       code.addSemicolon()
       codeType = oc[1]
     else:
-      echo "エラー！！！(15.1.1)"
-      quit()
+      echoErrorMessage(9, test)
   
   # Generator
   of nkGenerator:
     # TODO: 型のチェック
     var lt: string
     if node.left != nil:
-      let l = node.left.makeCodeParts()
+      let l = node.left.makeCodeParts(test)
       code.add(l[0])
       lt = l[1]
       blockPath.add("-0")
       if identExistenceCheck(l[0][1][1]):
-        echo "エラー！！！(15.1.1.1)"
-        quit()
+        echoErrorMessage(3, test)
       identTable[l[0][1][1]] = IdentInfo(
         Type: lt,
         path: blockPath,
       )
       codeType = l[1]
     else:
-      echo "エラー！！！(15.1.2)"
-      quit()
+      echoErrorMessage(6, test)
     code.add((COLON, ":"))
     if node.right != nil:
-      let r = node.right.makeCodeParts()
-      if lt == r[1].split("ARRAY->")[1]:
+      let r = node.right.makeCodeParts(test)
+      if lt == r[1].funcTypeSplit("ARRAY->")[2]:
         code.add(r[0])
       else:
-        echo "エラー！！！(15.1.3)"
-        quit()
+        echoErrorMessage(4, test)
     else:
-      echo "エラー！！！(15.2)"
-      quit()
+      echoErrorMessage(6, test)
 
   # パイプライン演算子
   of nkPipeExpression:
     node.right.args = node.left & node.right.args
-    let r = node.right.makeCodeParts()
+    let r = node.right.makeCodeParts(test)
     code.add(r[0])
     codeType = r[1]
     
   # 配列の要素へのアクセス
   of nkAccessElement:
     if node.left != nil and node.right != nil:
-      let l = node.left.makeCodeParts()
-      let r = node.right.makeCodeParts()
+      let l = node.left.makeCodeParts(test)
+      let r = node.right.makeCodeParts(test)
       let rv = r[0].replaceSemicolon((OTHER, ""))
       let ls = l[1].split("->")
       # TODO: 最悪
       if identTable[l[0][0].Code].arrayLength <= rv[0].Code.parseInt() or rv[0].Code.parseInt() < 0:
-        echo "エラー！！！(15.3.1)"
-        quit()
+        echoErrorMessage(10, test)
       if r[1] == INT and l[0][0].Type == IDENT and ls[0] == ARRAY:
         code.add(l[0].replaceSemicolon((OTHER, "")))
         code.add((OTHER, "["))
@@ -706,11 +652,9 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
         code.addSemicolon()
         codeType = ls[1..ls.len()-1].join("->")
       else:
-        echo "エラー！！！(15.3.2)"
-        quit()
+        echoErrorMessage(8, test)
     else:
-      echo "エラー！！！(15.4)"
-      quit()
+      echoErrorMessage(7, test)
 
   # 代入式
   of nkAssignExpression:
@@ -718,42 +662,37 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
     var lmc: string
     if node.left != nil:
       # 値を代入しようとしている変数のチェック
-      let l = node.left.makeCodeParts()
+      let l = node.left.makeCodeParts(test)
       lmc = l[0][l[0].len()-1].Code
       if lmc == ";":
         lmc = l[0][l[0].len()-2].Code
       if identExistenceCheck(lmc):
         if identTable[lmc].mutable == false:
-          echo "エラー！！！(16.0.0.1)"
-          quit()
+          echoErrorMessage(11, test)
       else:
-        echo "エラー！！！(16.0.0.2)"
-        quit()
+        echoErrorMessage(2, test)
       code.add(l[0].replaceSemicolon((OTHER, "")))
       lt = l[1]
     else:
-      echo "エラー！！！(16.0.1)"
-      quit()
+      echoErrorMessage(7, test)
     code.add((OTHER, "="))
     if node.right != nil:
-      let r = node.right.makeCodeParts()
+      let r = node.right.makeCodeParts(test)
       code.add(r[0])
       identTable[lmc].contents = r[0]
       rt = r[1]
     else:
-      echo "エラー！！！(16.0.2)"
-      quit()
+      echoErrorMessage(7, test)
     code.addSemicolon()
     if typeMatch(lt, rt)[0]:
       codeType = lt
     else:
-      echo "エラー！！！(16.1)"
-      quit()
+      echoErrorMessage(9, test)
 
   # 前置
   # TODO 
   of nkCallExpression:
-    let fn = node.function.makeCodeParts()
+    let fn = node.function.makeCodeParts(test)
     code.add(fn[0])
     var argsCode: seq[codeParts]
     var argsType: seq[string]
@@ -762,7 +701,7 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
       code.add((OTHER, "("))
       var at: string
       for i, arg in node.args:
-        let a = arg.makeCodeParts()
+        let a = arg.makeCodeParts(test)
         if i != 0:
           code.add((OTHER, ","))
           at = a[1]
@@ -774,7 +713,7 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
     else:
       for arg in node.args:
         code.add((OTHER, "("))
-        let a = arg.makeCodeParts()
+        let a = arg.makeCodeParts(test)
         code.add(a[0].replaceSemicolon((OTHER, "")))
         argsCode.add(a[0])
         argsType.add(a[1])
@@ -782,31 +721,31 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
       code.addSemicolon()
       let fm = conversionCppFunction(node.function.identValue, argsType)
       if fm[0] == false:
-        echo "エラー！！！(16.2)"
-        quit()
+        echoErrorMessage(2, test)
+      # 特殊ケース
       case fm[2]
       of "_k_push_back":
         identTable[argsCode[0].Code].arrayLength += 1
       codeType = fm[1]
-  
+
   # if文
   of nkIfStatement:
     code.add((OTHER, "if"))
     code.add((OTHER, "("))
-    code.add(node.condition.makeCodeParts()[0].replaceSemicolon((OTHER, "")))
+    code.add(node.condition.makeCodeParts(test)[0].replaceSemicolon((OTHER, "")))
     code.add((OTHER, ")"))
     code.add((OTHER, "{"))
     var sr: (seq[codeParts], string)
     for i, statement in node.consequence.statements:
       if i == node.consequence.statements.len()-1:
-        sr = statement.makeCodeParts()
+        sr = statement.makeCodeParts(test)
         code.add(sr[0])
       else:
-        sr = statement.makeCodeParts()
+        sr = statement.makeCodeParts(test)
         code.add(sr[0])
     code.add((OTHER, "}"))
     if node.alternative != nil:
-      let ar = node.alternative.makeCodeParts()
+      let ar = node.alternative.makeCodeParts(test)
       code.add(ar[0])
     else:
       code.add((OTHER, "\n"))
@@ -816,20 +755,20 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
   of nkElifStatement:
     code.add((OTHER, "else if"))
     code.add((OTHER, "("))
-    code.add(node.condition.makeCodeParts()[0].replaceSemicolon((OTHER, "")))
+    code.add(node.condition.makeCodeParts(test)[0].replaceSemicolon((OTHER, "")))
     code.add((OTHER, ")"))
     code.add((OTHER, "{"))
     var sr: (seq[codeParts], string)
     for i, statement in node.consequence.statements:
       if i == node.consequence.statements.len()-1:
-        sr = statement.makeCodeParts()
+        sr = statement.makeCodeParts(test)
         code.add(sr[0])
       else:
-        sr = statement.makeCodeParts()
+        sr = statement.makeCodeParts(test)
         code.add(sr[0])
     code.add((OTHER, "}"))
     if node.alternative != nil:
-      let ar = node.alternative.makeCodeParts()
+      let ar = node.alternative.makeCodeParts(test)
       code.add(ar[0])
     else:
       code.add((OTHER, "\n"))
@@ -842,10 +781,10 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
     var sr: (seq[codeParts], string)
     for i, statement in node.consequence.statements:
       if i == node.consequence.statements.len()-1:
-        sr = statement.makeCodeParts()
+        sr = statement.makeCodeParts(test)
         code.add(sr[0])
       else:
-        sr = statement.makeCodeParts()
+        sr = statement.makeCodeParts(test)
         code.add(sr[0])
     code.add((OTHER, "}"))
     code.add((OTHER, "\n"))
@@ -854,11 +793,11 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
   # if式
   of nkIfExpression:
     code.add((OTHER, "("))
-    code.add(node.condition.makeCodeParts()[0].replaceSemicolon((OTHER, "")))
+    code.add(node.condition.makeCodeParts(test)[0].replaceSemicolon((OTHER, "")))
     code.add((OTHER, "?"))
-    var sr = node.consequence_expression.makeCodeParts()
+    var sr = node.consequence_expression.makeCodeParts(test)
     code.add(sr[0].replaceSemicolon((OTHER, "")))
-    let ar = node.alternative.makeCodeParts()
+    let ar = node.alternative.makeCodeParts(test)
     if typeMatch(ar[1], sr[1])[0]:
       code.add((OTHER, ":"))
       code.add(ar[0].replaceSemicolon((OTHER, "")))
@@ -866,12 +805,11 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
       code.add((OTHER, ")"))
       code.addSemicolon()
     else:
-      echo "エラー！！！(17)"
-      quit()
+      echoErrorMessage(12, test)
 
   # else式
   of nkElseExpression:
-    var sr = node.consequence_expression.makeCodeParts()
+    var sr = node.consequence_expression.makeCodeParts(test)
     code.add(sr[0].replaceSemicolon((OTHER, "")))
     codeType = sr[1]
 
@@ -881,12 +819,12 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
     let obp = blockPath
     code.add((OTHER, "for"))
     code.add((OTHER, "("))
-    code.add(node.generator.makeCodeParts()[0])
+    code.add(node.generator.makeCodeParts(test)[0])
     code.add((OTHER, ")"))
     code.add((OTHER, "{"))
     var sr: (seq[codeParts], string)
     for i, statement in node.consequence.statements:
-      sr = statement.makeCodeParts()
+      sr = statement.makeCodeParts(test)
       code.add(sr[0])
     code.add((OTHER, "}"))
     code.add((OTHER, "\n"))
@@ -897,8 +835,8 @@ proc makeCodeParts(node: Node): (seq[codeParts], string) =
   
   return (code, codeType)
 
-proc makeCppCode*(node: Node, indent: int): string =
-  var codeParts = makeCodeParts(node)
+proc makeCppCode*(node: Node, indent: int, test: bool): string =
+  var codeParts = makeCodeParts(node, test)
   var outCode: seq[string]
   var newLine: string
   var braceCount: int = indent

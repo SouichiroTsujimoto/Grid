@@ -17,9 +17,10 @@ when isMainModule:
   let sourceName = "main.ka23"
   let input = sourceName.readSource()
   let program = makeAST(input)
+  let test = false
 
   for tree in program:
-    cppCode.add(makeCppCode(tree, 0))
+    cppCode.add(makeCppCode(tree, 0, test))
   cppCode.add("\n}")
 
   let cppFileName = sourceName.split(".")[0] & ".cpp"
@@ -43,8 +44,10 @@ when isMainModule:
       ・ case文
       ・ include?(import?)
       ・ 構造体
+  ・ エラーメッセージをちゃんと作る ✅
   ・ 構文エラーを検出できるようにする 
-  ・ エラーメッセージをちゃんと作る
+  ・ エラーメッセージに行番号を付ける
+  ・ エラーメッセージを英語化できるようにする
   ・ てきとうすぎる変数名、関数名をどうにかする
   ・ 「仮」「後で修正」「後で変更する」とかいろいろ書いてるところを修正していく
   ・ ka23の関数名がc++の関数と競合しないようにする
