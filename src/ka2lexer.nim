@@ -163,9 +163,9 @@ proc nextToken*(l: Lexer): Token =
       l.nextChar()
       let (lit, decimal) = l.readNumber
       if decimal:
-        tok = Token(Type: FLOAT, Literal: "-" & lit)
+        return Token(Type: FLOAT, Literal: "-" & lit)
       else:
-        tok = Token(Type: INT, Literal: "-" & lit)
+        return Token(Type: INT, Literal: "-" & lit)
     else:
       tok = newToken(MINUS, l.ch)
   of '+' : tok = newToken(PLUS, l.ch)

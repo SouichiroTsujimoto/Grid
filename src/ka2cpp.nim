@@ -719,6 +719,8 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
         argsType.add(a[1])
         code.add((OTHER, ")"))
       code.addSemicolon()
+      # TODO
+      # let fm = identExistenceCheck(node.function.identValue)
       let fm = conversionCppFunction(node.function.identValue, argsType)
       if fm[0] == false:
         echoErrorMessage(2, test)

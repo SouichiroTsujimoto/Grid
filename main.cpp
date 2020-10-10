@@ -5,6 +5,6 @@
 #include "ka2lib/ka2IO.h"
 
 int main() {
-  ( 1 + ( -1 * 2 ) ) ;
+  const std::vector<int> a = { 1 , -1892 , 13 } ;
 
 }
