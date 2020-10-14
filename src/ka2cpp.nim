@@ -260,17 +260,6 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
       return (fmr1[0], NIL, "_k_puts")
     else:
       return (true, anything_t & "=>" & NIL, "_k_puts")
-  of "add":
-    let fmr1 = funcTypesMatch(ARRAY & "->" & anything_t & "=>" & anything_t & "=>" & NIL, argsTypeC[0])
-    if fmr1[0]:
-      if argsTypeC.len()-1 != 0:
-        let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
-        if fmr2[0] and argsTypeC[0] == ARRAY & "->" & argsTypeC[1]:
-          return (fmr2[0], fmr2[2], "_k_push_back")
-      else:
-        return (true, anything_t & "=>" & NIL, "_k_push_back")
-    else:
-      return (true, ARRAY & "->" & anything_t & "=>" & anything_t & "=>" & NIL, "_k_push_back")
   of "len":
     let fmr1 = funcTypesMatch(ARRAY & "->" & anything_t & "=>" & INT, argsTypeC[0])
     if fmr1[0]:
@@ -724,10 +713,6 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
       let fm = conversionCppFunction(node.function.identValue, argsType)
       if fm[0] == false:
         echoErrorMessage(2, test)
-      # 特殊ケース
-      case fm[2]
-      of "_k_push_back":
-        identTable[argsCode[0].Code].arrayLength += 1
       codeType = fm[1]
 
   # if文

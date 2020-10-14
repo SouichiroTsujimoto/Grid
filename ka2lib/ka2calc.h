@@ -45,12 +45,6 @@ auto _k_ne = [](auto a) {
   return [a](auto b) {return a != b;};
 };
 
-auto _k_push_back = [](auto &a) {
-  return [&a](auto b) {
-    a.push_back(b);
-  };
-};
-
 auto _k_len = [](auto a) {
   return (int)a.size();
 };
