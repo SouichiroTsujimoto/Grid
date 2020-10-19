@@ -6,9 +6,6 @@ type Lexer* = ref object of RootObj
   readPosition: int
   ch: char
 
-proc newToken(tokenType: string, ch: char): Token =
-  return Token(Type: tokenType, Literal: $ch)
-
 proc nextChar(l: Lexer) =
   if l.readPosition >= len(l.input):
     l.ch = ' '
@@ -37,13 +34,6 @@ proc isLetter(ch: char): bool =
 proc isDigit(ch: char): bool =
   return '0' <= ch and ch <= '9'
 
-# TODO バックスラッシュ
-proc isSingleQuote(ch: char): bool =
-  return ch == '\''
-
-proc isDoubleQuote(ch: char): bool =
-  return ch == '\"'
-
 proc readIdent(l: Lexer): string =
   let position = l.position
   while isLetter(l.ch):
@@ -64,7 +54,7 @@ proc readNumber(l: Lexer): (string, bool) =
 
 proc readChar(l: Lexer): string =
   l.nextChar()
-  if l.ch.isSingleQuote == false:
+  if l.ch != '\'':
     let c = $l.ch
     l.nextChar()
     l.nextChar()
@@ -76,7 +66,7 @@ proc readChar(l: Lexer): string =
 proc readString(l: Lexer): string =
   l.nextChar()
   var str: string
-  while l.ch.isDoubleQuote == false:
+  while l.ch != '\"':
     str.add(l.ch)
     l.nextChar()
   l.nextChar()
@@ -107,7 +97,7 @@ proc nextToken*(l: Lexer): Token =
       let literal = $ch & $l.ch
       tok = Token(Type: EE, Literal: literal)
     else:
-      tok = newToken(EQUAL, l.ch)
+      tok = Token(Type: EQUAL, Literal: $l.ch)
   of '!': 
     if l.peekChar() == '=':
       let ch = l.ch
@@ -120,7 +110,7 @@ proc nextToken*(l: Lexer): Token =
       let literal = $ch & $l.ch
       tok = Token(Type: INDEX, Literal: literal)
     else:
-      tok = newToken(NOT, l.ch)
+      tok = Token(Type: NOT, Literal: $l.ch)
   of '<':
     if l.peekChar() == '=':
       let ch = l.ch
@@ -133,7 +123,7 @@ proc nextToken*(l: Lexer): Token =
       let literal = $ch & $l.ch
       tok = Token(Type: ARROW, Literal: literal)
     else:
-      tok = newToken(LT, l.ch)
+      tok = Token(Type: LT, Literal: $l.ch)
   of '>':
     if l.peekChar() == '=':
       let ch = l.ch
@@ -141,7 +131,7 @@ proc nextToken*(l: Lexer): Token =
       let literal = $ch & $l.ch
       tok = Token(Type: GE, Literal: literal)
     else:
-      tok = newToken(GT, l.ch)
+      tok = Token(Type: GT, Literal: $l.ch)
   of '|':
     if l.peekChar() == '>':
       let ch = l.ch
@@ -157,7 +147,7 @@ proc nextToken*(l: Lexer): Token =
       let literal = $ch & $l.ch
       tok = Token(Type: CEQUAL, Literal: literal)
     else:
-      tok = newToken(COLON, l.ch)
+      tok = Token(Type: COLON, Literal: $l.ch)
   of '-' :
     if l.peekChar().isDigit():
       l.nextChar()
@@ -167,20 +157,20 @@ proc nextToken*(l: Lexer): Token =
       else:
         return Token(Type: INT, Literal: "-" & lit)
     else:
-      tok = newToken(MINUS, l.ch)
-  of '+' : tok = newToken(PLUS, l.ch)
-  of '*' : tok = newToken(ASTERISC, l.ch)
-  of '/' : tok = newToken(SLASH, l.ch)
-  of '(' : tok = newToken(LPAREN, l.ch)
-  of ')' : tok = newToken(RPAREN, l.ch)
-  of ',' : tok = newToken(COMMA, l.ch)
-  of '{' : tok = newToken(LBRACE, l.ch)
-  of '}' : tok = newToken(RBRACE, l.ch)
+      tok = Token(Type: MINUS, Literal: $l.ch)
+  of '+' : tok = Token(Type: PLUS, Literal: $l.ch)
+  of '*' : tok = Token(Type: ASTERISC, Literal: $l.ch)
+  of '/' : tok = Token(Type: SLASH, Literal: $l.ch)
+  of '(' : tok = Token(Type: LPAREN, Literal: $l.ch)
+  of ')' : tok = Token(Type: RPAREN, Literal: $l.ch)
+  of ',' : tok = Token(Type: COMMA, Literal: $l.ch)
+  of '{' : tok = Token(Type: LBRACE, Literal: $l.ch)
+  of '}' : tok = Token(Type: RBRACE, Literal: $l.ch)
   else:
-    if l.ch.isSingleQuote():
+    if l.ch == '\'':
       let lit = l.readChar()
       return Token(Type: CHAR, Literal: lit)
-    elif l.ch.isDoubleQuote():
+    elif l.ch == '\"':
       let lit = l.readString()
       return Token(Type: STRING, Literal: lit)
     elif l.ch.isStringHead():
@@ -198,9 +188,9 @@ proc nextToken*(l: Lexer): Token =
       quit()
     else:
       if l.input.len()-1 <= l.position:
-        tok = newToken(EOF, l.ch)
+        tok = Token(Type: EOF, Literal: $l.ch)
       else:
-        tok = newToken(ILLEGAL, l.ch)
+        tok = Token(Type: ILLEGAL, Literal: $l.ch)
   
   l.nextChar()
   return tok

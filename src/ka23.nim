@@ -1,4 +1,4 @@
-import  ka2parser, ka2cpp, ka2rw
+import  ka2parser, ka2rw, ka2node
 import strutils
 
 var cppCode = """
@@ -11,6 +11,17 @@ var cppCode = """
 int main() {
 """
 
+proc showAST(node: Node, indent: int): string =
+  for i in 0..indent-1:
+    result.add("  ")
+  result.add("{:" & $node.kind & ", [Type:" & $node.token.Type & ", Literal:" & $node.token.Literal & "], [")
+  for child in node.child_nodes:
+    result.add("\n")
+    result.add(showAST(child, indent + 1))
+  for i in 0..indent-1:
+    result.add("  ")
+  result.add("]}\n")
+
 when isMainModule:
   # echo "ファイル名を入力してください"
   # let sourceName = readLine(stdin)
@@ -19,12 +30,16 @@ when isMainModule:
   let program = makeAST(input)
   let test = false
 
-  for tree in program:
-    cppCode.add(makeCppCode(tree, 0, test))
-  cppCode.add("\n}")
+  echo showAST(program[0], 0)
 
-  let cppFileName = sourceName.split(".")[0] & ".cpp"
-  writeCpp(cppFileName, cppCode)
+  # for tree in program:
+  #   cppCode.add(makeCppCode(tree, 0, test))
+  # cppCode.add("\n}")
+
+  # let cppFileName = sourceName.split(".")[0] & ".cpp"
+  # writeCpp(cppFileName, cppCode)
+
+  
 #[
   TODO
   ・ if文 ✅
@@ -34,7 +49,6 @@ when isMainModule:
   ・ 機能を増やす
     ・ ~配列~
       ・ 要素へのアクセス (hoge[0]<- これ) ✅
-      ・ add関数 ← よく考えたらこれ普通に破壊的な関数じゃねえか
       ・ len関数 ✅
       ・ 配列の連結
       ・ head, tail, last, init関数
@@ -47,6 +61,8 @@ when isMainModule:
       ・ include?(import?)
       ・ 構造体
       ・ map関数
+      ・ filter関数
+      ・ エスケープ文字
   ・ エラーメッセージをちゃんと作る 🔺
   ・ 構文エラーを検出できるようにする 
   ・ エラーメッセージに行番号を付ける

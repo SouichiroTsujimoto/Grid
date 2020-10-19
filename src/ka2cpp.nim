@@ -44,10 +44,10 @@ proc nextPath(): string =
 
   return res.join("-")
 
-proc deletePathTail(): string =
-  let bps = blockPath.split("-")
-
-  return bps[0..bps.len()-2].join("-")
+proc searchCodeParts(codePartsList: seq[codeParts], target: string): seq[codeParts] =
+  for cp in codePartsList:
+    if cp.Type == target:
+      result.add(cp)
 
 proc identExistenceCheck(ident: string): bool =
   if identTable.contains(ident):
@@ -63,9 +63,9 @@ proc typeMatch(type1: string, type2: string): (bool, string) =
     typeList1: seq[seq[string]]
     typeList2: seq[seq[string]]
 
-  for t1s in type1.split("->"):
+  for t1s in type1.split("::"):
     typeList1.add(@[t1s.split("|")])
-  for t2s in type2.split("->"):
+  for t2s in type2.split("::"):
     typeList2.add(@[t2s.split("|")])
 
   # echo $typeList1 & "________" & $typeList2
@@ -81,7 +81,7 @@ proc typeMatch(type1: string, type2: string): (bool, string) =
           typeCandidacies.add(t1sss)
     if typeCandidacies != @[]:
       if i != 0:
-        typeFlow.add("->")
+        typeFlow.add("::")
       typeFlow.add(typeCandidacies.join("|"))
       typeCandidacies = @[]
     else:
@@ -99,7 +99,7 @@ proc funcTypeSplit(funcType: string, target: string): (bool, string, string) =
   return (true, fnTs[0], fnTs[1])
 
 proc funcTypesMatch(funcType: string, argsType: string): (bool, string, string) =
-  var fnTs = funcType.funcTypeSplit("=>")
+  var fnTs = funcType.funcTypeSplit(">>")
   let res = typeMatch(fnTs[1], argsType)
   
   if fnTs[0] == false or res[0] == false or argsType == "":
@@ -108,7 +108,7 @@ proc funcTypesMatch(funcType: string, argsType: string): (bool, string, string) 
   return (res[0], res[1], fnTs[2])
 
 proc conversionCppType(Type: string): (string, string) =
-  let ts = Type.split("->")
+  let ts = Type.split("::")
   for t in ts:
     case t
     of T_INT:
@@ -122,7 +122,7 @@ proc conversionCppType(Type: string): (string, string) =
     of T_BOOL:
       return (T_BOOL, "bool")
     of T_ARRAY:
-      return (T_ARRAY, "std::vector<" & ts[1..ts.len()-1].join("->").conversionCppType()[1] & ">")
+      return (T_ARRAY, "std::vector<" & ts[1..ts.len()-1].join("::").conversionCppType()[1] & ">")
     of T_FUNCTION:
       return (T_FUNCTION, "auto")
     else:
@@ -136,70 +136,70 @@ proc conversionCppOperator(fn: string, argsType: seq[string]): (bool, string, st
 
   case fn
   of PLUS:
-    let fmr1 = funcTypesMatch(number_t & "=>" & number_t & "=>" & number_t, argsTypeC[0])
+    let fmr1 = funcTypesMatch(number_t & ">>" & number_t & ">>" & number_t, argsTypeC[0])
     if fmr1[0]:
       let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
       return (fmr2[0], fmr2[1], "+")
     else:
       return (false, "", "+")
   of MINUS:
-    let fmr1 = funcTypesMatch(number_t & "=>" & number_t & "=>" & number_t, argsTypeC[0])
+    let fmr1 = funcTypesMatch(number_t & ">>" & number_t & ">>" & number_t, argsTypeC[0])
     if fmr1[0]:
       let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
       return (fmr2[0], fmr2[1], "-")
     else:
       return (false, "", "-")
   of ASTERISC:
-    let fmr1 = funcTypesMatch(number_t & "=>" & number_t & "=>" & number_t, argsTypeC[0])
+    let fmr1 = funcTypesMatch(number_t & ">>" & number_t & ">>" & number_t, argsTypeC[0])
     if fmr1[0]:
       let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
       return (fmr2[0], fmr2[1], "*")
     else:
       return (false, "", "*")
   of SLASH:
-    let fmr1 = funcTypesMatch(number_t & "=>" & number_t & "=>" & number_t, argsTypeC[0])
+    let fmr1 = funcTypesMatch(number_t & ">>" & number_t & ">>" & number_t, argsTypeC[0])
     if fmr1[0]:
       let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
       return (fmr2[0], fmr2[1], "/")
     else:
       return (false, "", "/")
   of LT:
-    let fmr1 = funcTypesMatch(anything_t & "=>" & anything_t & "=>" & BOOL, argsTypeC[0])
+    let fmr1 = funcTypesMatch(anything_t & ">>" & anything_t & ">>" & BOOL, argsTypeC[0])
     if fmr1[0]:
       let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
       return (fmr2[0], BOOL, "<")
     else:
       return (false, "", "<")
   of GT:
-    let fmr1 = funcTypesMatch(anything_t & "=>" & anything_t & "=>" & BOOL, argsTypeC[0])
+    let fmr1 = funcTypesMatch(anything_t & ">>" & anything_t & ">>" & BOOL, argsTypeC[0])
     if fmr1[0]:
       let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
       return (fmr2[0], BOOL, ">")
     else:
       return (false, "", ">")
   of LE:
-    let fmr1 = funcTypesMatch(anything_t & "=>" & anything_t & "=>" & BOOL, argsTypeC[0])
+    let fmr1 = funcTypesMatch(anything_t & ">>" & anything_t & ">>" & BOOL, argsTypeC[0])
     if fmr1[0]:
       let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
       return (fmr2[0], BOOL, "<=")
     else:
       return (false, "", "<=")
   of GE:
-    let fmr1 = funcTypesMatch(anything_t & "=>" & anything_t & "=>" & BOOL, argsTypeC[0])
+    let fmr1 = funcTypesMatch(anything_t & ">>" & anything_t & ">>" & BOOL, argsTypeC[0])
     if fmr1[0]:
       let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
       return (fmr2[0], BOOL, ">=")
     else:
       return (false, "", ">=")
   of EE:
-    let fmr1 = funcTypesMatch(anything_t & "=>" & anything_t & "=>" & BOOL, argsTypeC[0])
+    let fmr1 = funcTypesMatch(anything_t & ">>" & anything_t & ">>" & BOOL, argsTypeC[0])
     if fmr1[0]:
       let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
       return (fmr2[0], BOOL, "==")
     else:
       return (false, "", "==")
   of NE:
-    let fmr1 = funcTypesMatch(anything_t & "=>" & anything_t & "=>" & BOOL, argsTypeC[0])
+    let fmr1 = funcTypesMatch(anything_t & ">>" & anything_t & ">>" & BOOL, argsTypeC[0])
     if fmr1[0]:
       let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
       return (fmr2[0], BOOL, "!=")
@@ -215,57 +215,67 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
   #   argsTypeC.add("")
   case fn
   of "plus":
-    let fmr1 = funcTypesMatch(number_t & "=>" & number_t & "=>" & number_t, argsTypeC[0])
+    let fmr1 = funcTypesMatch(number_t & ">>" & number_t & ">>" & number_t, argsTypeC[0])
     if fmr1[0]:
       if argsTypeC.len()-1 != 0:
         let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
         return (fmr2[0], fmr2[1], "_k_add")
       else:
-        return (true, number_t & "=>" & number_t, "_k_add")
+        return (true, number_t & ">>" & number_t, "_k_add")
     else:
-      return (true, number_t & "=>" & number_t & "=>" & number_t, "_k_add")
+      return (true, number_t & ">>" & number_t & ">>" & number_t, "_k_add")
   of "minu":
-    let fmr1 = funcTypesMatch(number_t & "=>" & number_t & "=>" & number_t, argsTypeC[0])
+    let fmr1 = funcTypesMatch(number_t & ">>" & number_t & ">>" & number_t, argsTypeC[0])
     if fmr1[0]:
       if argsTypeC.len()-1 != 0:
         let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
         return (fmr2[0], fmr2[1], "_k_sub")
       else:
-        return (true, number_t & "=>" & number_t, "_k_sub")
+        return (true, number_t & ">>" & number_t, "_k_sub")
     else:
-      return (true, number_t & "=>" & number_t & "=>" & number_t, "_k_sub")
+      return (true, number_t & ">>" & number_t & ">>" & number_t, "_k_sub")
   of "mult":
-    let fmr1 = funcTypesMatch(number_t & "=>" & number_t & "=>" & number_t, argsTypeC[0])
+    let fmr1 = funcTypesMatch(number_t & ">>" & number_t & ">>" & number_t, argsTypeC[0])
     if fmr1[0]:
       if argsTypeC.len()-1 != 0:
         let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
         return (fmr2[0], fmr2[1], "_k_mul")
       else:
-        return (true, number_t & "=>" & number_t, "_k_mul")
+        return (true, number_t & ">>" & number_t, "_k_mul")
     else:
-      return (true, number_t & "=>" & number_t & "=>" & number_t, "_k_mul")
+      return (true, number_t & ">>" & number_t & ">>" & number_t, "_k_mul")
   of "divi":
-    let fmr1 = funcTypesMatch(number_t & "=>" & number_t & "=>" & number_t, argsTypeC[0])
+    let fmr1 = funcTypesMatch(number_t & ">>" & number_t & ">>" & number_t, argsTypeC[0])
     if fmr1[0]:
       if argsTypeC.len()-1 != 0:
         let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
         return (fmr2[0], fmr2[1], "_k_div")
       else:
-        return (true, number_t & "=>" & number_t, "_k_div")
+        return (true, number_t & ">>" & number_t, "_k_div")
     else:
-      return (true, number_t & "=>" & number_t & "=>" & number_t, "_k_div")
+      return (true, number_t & ">>" & number_t & ">>" & number_t, "_k_div")
   of "puts":
-    let fmr1 = funcTypesMatch(anything_t & "=>" & NIL, argsTypeC[0])
+    let fmr1 = funcTypesMatch(anything_t & ">>" & NIL, argsTypeC[0])
     if fmr1[0]:
       return (fmr1[0], NIL, "_k_puts")
     else:
-      return (true, anything_t & "=>" & NIL, "_k_puts")
+      return (true, anything_t & ">>" & NIL, "_k_puts")
   of "len":
-    let fmr1 = funcTypesMatch(ARRAY & "->" & anything_t & "=>" & INT, argsTypeC[0])
+    let fmr1 = funcTypesMatch(ARRAY & "::" & anything_t & ">>" & INT, argsTypeC[0])
     if fmr1[0]:
       return (fmr1[0], INT, "_k_len")
     else:
-      return (true, ARRAY & "->" & anything_t & "=>" & INT, "_k_len")
+      return (true, ARRAY & "::" & anything_t & ">>" & INT, "_k_len")
+  of "join":
+    let fmr1 = funcTypesMatch("ARRAY" & "::" & anything_t & ">>" & "ARRAY" & "::" & anything_t & ">>" & "ARRAY" & "::" & anything_t, argsTypeC[0])
+    if fmr1[0]:
+      if argsTypeC.len()-1 != 0:
+        let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
+        return (fmr2[0], fmr2[1], "_k_join")
+      else:
+        return (true, "ARRAY" & "::" & anything_t & ">>" & "ARRAY" & "::" & anything_t, "_k_join")
+    else:
+      return (true, "ARRAY" & "::" & anything_t & ">>" & "ARRAY" & "::" & anything_t & ">>" & "ARRAY" & "::" & anything_t, "_k_join")
   else:
     return (false, NIL, "NULL")
 
@@ -280,9 +290,11 @@ proc addSemicolon(parts: var seq[codeParts]) =
   if tail.Type != SEMICOLON:
     parts.add((SEMICOLON, ";"))
 
-proc replaceSemicolon(parts: seq[codeParts], obj: codeParts): seq[codeParts] =
+proc replaceSemicolon(parts: seq[codeParts], obj: seq[codeParts]): seq[codeParts] =
   let tail = parts[parts.len()-1]
-  if tail.Type == SEMICOLON:
+  if tail.Type[0] == '@':
+    return replaceSemicolon(parts[0..parts.len()-2], @[parts[parts.len()-1]] & obj)
+  elif tail.Type == SEMICOLON:
     return parts[0..parts.len()-2] & obj
   else:
     return parts
@@ -339,20 +351,20 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
         let elem = arv.makeCodeParts(test)
         if loopCount == 0:
           eltype = elem[1]
-          code.add(elem[0].replaceSemicolon((OTHER, "")))
+          code.add(elem[0].replaceSemicolon(@[(OTHER, "")]))
         elif typeMatch(elem[1], eltype)[0]:
           code.add((COMMA, ","))
-          code.add(elem[0].replaceSemicolon((OTHER, "")))
+          code.add(elem[0].replaceSemicolon(@[(OTHER, "")]))
         else:
           echoErrorMessage(0, test)
         loopCount += 1
       code.add((RBRACE, "}"))
-      code.add(($loopCount, ""))
-      codeType = ARRAY & "->" & eltype
+      code.add(("@ARRAYLENGTH", $loopCount))
+      codeType = ARRAY & "::" & eltype
     else:
       code.add((LBRACE, "{"))
       code.add((RBRACE, "}"))
-      code.add(("0", ""))
+      code.add(("@ARRAYLENGTH", "0"))
       codeType = ARRAY
   of nkNIl:
     code.add((NIL, "NULL"))
@@ -396,10 +408,10 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
     if node.identValue != "":
       code.add(node.typeValue.conversionCppType())
       code.add((node.typeValue, node.identValue))
-      let types = node.typeValue.split("->")
+      let types = node.typeValue.split("::")
       for i, tv in types:
         if i != 0:
-          codeType.add("->")
+          codeType.add("::")
         codeType.add(tv[2..tv.len()-1])
     else:
       echoErrorMessage(1, test)
@@ -440,7 +452,7 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
         echoErrorMessage(3, test)
       code.add(li[0])
       code.add((OTHER, "="))
-      code.add(lv[0])
+      code.add(lv[0].replaceSemicolon(@[(OTHER, "")]))
       code.addSemicolon()
       blockPath = nextPath()
       identTable[li[0][1][1]] = IdentInfo(
@@ -451,7 +463,8 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
       )
       # TODO: 最悪
       if li[1].startsWith("ARRAY"):
-        identTable[li[0][1][1]].arrayLength = lv[0][lv[0].len()-1].Type.parseInt()
+        var ats = lv[0].searchCodeParts("@ARRAYLENGTH")
+        identTable[li[0][1][1]].arrayLength = ats[ats.len()-1].Code.parseInt()
     else:
       echoErrorMessage(4, test)
   
@@ -475,7 +488,8 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
       )
       # TODO: 最悪
       if li[1].startsWith("ARRAY"):
-        identTable[li[0][1][1]].arrayLength = lv[0][lv[0].len()-1].Type.parseInt()
+        var ats = lv[0].searchCodeParts("@ARRAYLENGTH")
+        identTable[li[0][1][1]].arrayLength = ats[ats.len()-1].Code.parseInt()
     else:
       echoErrorMessage(4, test)
 
@@ -489,7 +503,7 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
     code.add((EQUAL, "="))
     if node.define_args == @[]:
       identTable[di[0][1][1]] = IdentInfo(
-        Type: NIL & "=>" & di[1],
+        Type: NIL & ">>" & di[1],
         path: blockPath,
         mutable: false,
       )
@@ -498,7 +512,7 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
       for parameter in node.define_args:
         argsType.add(parameter.token.Type.removeT())
       identTable[di[0][1][1]] = IdentInfo(
-        Type: argsType.join("->") & "=>" & di[1],
+        Type: argsType.join("::") & ">>" & di[1],
         path: blockPath,
         mutable: false,
       )
@@ -557,7 +571,7 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
       code.add((OTHER, "return"))
       code.add((OTHER, "("))
       let r = node.return_expression.makeCodeParts(test)
-      code.add(r[0].replaceSemicolon((OTHER, "")))
+      code.add(r[0].replaceSemicolon(@[(OTHER, "")]))
       code.add((OTHER, ")"))
       code.addSemicolon()
       codeType = r[1]
@@ -571,7 +585,6 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
       r: (seq[codeParts], string)
     if node.left == nil or node.right == nil:
       echoErrorMessage(7, test)
-    
     l = node.left.makeCodeParts(test)
     r = node.right.makeCodeParts(test)
     if l[1] == r[1]:
@@ -579,9 +592,9 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
       if oc[0] == false:
         echoErrorMessage(8, test)
       code.add(((OTHER, "(")))
-      code.add(l[0].replaceSemicolon((OTHER, "")))
+      code.add(l[0].replaceSemicolon(@[(OTHER, "")]))
       code.add((node.token.Type, oc[2]))
-      code.add(r[0].replaceSemicolon((OTHER, "")))
+      code.add(r[0].replaceSemicolon(@[(OTHER, "")]))
       code.add(((OTHER, ")")))
       code.addSemicolon()
       codeType = oc[1]
@@ -609,7 +622,7 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
     code.add((COLON, ":"))
     if node.right != nil:
       let r = node.right.makeCodeParts(test)
-      if lt == r[1].funcTypeSplit("ARRAY->")[2]:
+      if lt == r[1].funcTypeSplit("ARRAY::")[2]:
         code.add(r[0])
       else:
         echoErrorMessage(4, test)
@@ -628,18 +641,19 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
     if node.left != nil and node.right != nil:
       let l = node.left.makeCodeParts(test)
       let r = node.right.makeCodeParts(test)
-      let rv = r[0].replaceSemicolon((OTHER, ""))
-      let ls = l[1].split("->")
+      let rv = r[0].replaceSemicolon(@[(OTHER, "")])
+      let ls = l[1].split("::")
       # TODO: 最悪
+      echo identTable[l[0][0].Code].arrayLength
       if identTable[l[0][0].Code].arrayLength <= rv[0].Code.parseInt() or rv[0].Code.parseInt() < 0:
         echoErrorMessage(10, test)
       if r[1] == INT and l[0][0].Type == IDENT and ls[0] == ARRAY:
-        code.add(l[0].replaceSemicolon((OTHER, "")))
+        code.add(l[0].replaceSemicolon(@[(OTHER, "")]))
         code.add((OTHER, "["))
         code.add(rv)
         code.add((OTHER, "]"))
         code.addSemicolon()
-        codeType = ls[1..ls.len()-1].join("->")
+        codeType = ls[1..ls.len()-1].join("::")
       else:
         echoErrorMessage(8, test)
     else:
@@ -660,7 +674,7 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
           echoErrorMessage(11, test)
       else:
         echoErrorMessage(2, test)
-      code.add(l[0].replaceSemicolon((OTHER, "")))
+      code.add(l[0].replaceSemicolon(@[(OTHER, "")]))
       lt = l[1]
     else:
       echoErrorMessage(7, test)
@@ -685,41 +699,50 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
     code.add(fn[0])
     var argsCode: seq[codeParts]
     var argsType: seq[string]
-    # 後でいろいろ変更
-    if node.function.kind == nkMapFunction:
+    # 保留
+    # if node.function.kind == nkMapFunction:
+    #   code.add((OTHER, "("))
+    #   var at: string
+    #   for i, arg in node.args:
+    #     let a = arg.makeCodeParts(test)
+    #     if i != 0:
+    #       code.add((OTHER, ","))
+    #       at = a[1]
+    #     code.add(a[0].replaceSemicolon(@[(OTHER, "")]))
+    #   code.add((OTHER, ")"))
+    #   code.addSemicolon()
+    #   codeType = ARRAY & "::" & at.funcTypeSplit(">>")[2]
+    #   echo codeType
+    
+    for arg in node.args:
       code.add((OTHER, "("))
-      var at: string
-      for i, arg in node.args:
-        let a = arg.makeCodeParts(test)
-        if i != 0:
-          code.add((OTHER, ","))
-          at = a[1]
-        code.add(a[0].replaceSemicolon((OTHER, "")))
+      let a = arg.makeCodeParts(test)
+      code.add(a[0].replaceSemicolon(@[(OTHER, "")]))
+      argsCode.add(a[0])
+      argsType.add(a[1])
       code.add((OTHER, ")"))
-      code.addSemicolon()
-      codeType = ARRAY & "->" & at.funcTypeSplit("=>")[2]
-      echo codeType
+    code.addSemicolon()
+    # TODO
+    # let fm = identExistenceCheck(node.function.identValue)
+    let fm = conversionCppFunction(node.function.identValue, argsType)
+    if fm[0] == false:
+      echoErrorMessage(2, test)
     else:
-      for arg in node.args:
-        code.add((OTHER, "("))
-        let a = arg.makeCodeParts(test)
-        code.add(a[0].replaceSemicolon((OTHER, "")))
-        argsCode.add(a[0])
-        argsType.add(a[1])
-        code.add((OTHER, ")"))
-      code.addSemicolon()
-      # TODO
-      # let fm = identExistenceCheck(node.function.identValue)
-      let fm = conversionCppFunction(node.function.identValue, argsType)
-      if fm[0] == false:
-        echoErrorMessage(2, test)
+      # 特殊
+      case fm[2]
+      of "_k_join":
+        let ats = argsCode.searchCodeParts("@ARRAYLENGTH")
+        if ats.len() >= 2:
+          # 最悪
+          code.add(("@ARRAYLENGTH", $(ats[ats.len()-1].Code.parseInt() + ats[ats.len()-2].Code.parseInt())))
+      
       codeType = fm[1]
 
   # if文
   of nkIfStatement:
     code.add((OTHER, "if"))
     code.add((OTHER, "("))
-    code.add(node.condition.makeCodeParts(test)[0].replaceSemicolon((OTHER, "")))
+    code.add(node.condition.makeCodeParts(test)[0].replaceSemicolon(@[(OTHER, "")]))
     code.add((OTHER, ")"))
     code.add((OTHER, "{"))
     var sr: (seq[codeParts], string)
@@ -742,7 +765,7 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
   of nkElifStatement:
     code.add((OTHER, "else if"))
     code.add((OTHER, "("))
-    code.add(node.condition.makeCodeParts(test)[0].replaceSemicolon((OTHER, "")))
+    code.add(node.condition.makeCodeParts(test)[0].replaceSemicolon(@[(OTHER, "")]))
     code.add((OTHER, ")"))
     code.add((OTHER, "{"))
     var sr: (seq[codeParts], string)
@@ -780,14 +803,14 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
   # if式
   of nkIfExpression:
     code.add((OTHER, "("))
-    code.add(node.condition.makeCodeParts(test)[0].replaceSemicolon((OTHER, "")))
+    code.add(node.condition.makeCodeParts(test)[0].replaceSemicolon(@[(OTHER, "")]))
     code.add((OTHER, "?"))
     var sr = node.consequence_expression.makeCodeParts(test)
-    code.add(sr[0].replaceSemicolon((OTHER, "")))
+    code.add(sr[0].replaceSemicolon(@[(OTHER, "")]))
     let ar = node.alternative.makeCodeParts(test)
     if typeMatch(ar[1], sr[1])[0]:
       code.add((OTHER, ":"))
-      code.add(ar[0].replaceSemicolon((OTHER, "")))
+      code.add(ar[0].replaceSemicolon(@[(OTHER, "")]))
       codeType = sr[1]
       code.add((OTHER, ")"))
       code.addSemicolon()
@@ -797,7 +820,7 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
   # else式
   of nkElseExpression:
     var sr = node.consequence_expression.makeCodeParts(test)
-    code.add(sr[0].replaceSemicolon((OTHER, "")))
+    code.add(sr[0].replaceSemicolon(@[(OTHER, "")]))
     codeType = sr[1]
 
   # for文
@@ -830,6 +853,9 @@ proc makeCppCode*(node: Node, indent: int, test: bool): string =
 
   for i, part in codeParts[0]:
     # echo $i & "回目 : " & part
+    echo part
+    if part.Type[0] == '@' or part.Code == "":
+      continue
     if part.Type == SEMICOLON and part.Code == ";":
       newLine.add(part.Code)
       var ind = ""
@@ -857,8 +883,6 @@ proc makeCppCode*(node: Node, indent: int, test: bool): string =
       newLine = ""
     elif part.Type == OTHER and part.Code == "\n":
       newLine.add(part.Code)
-    elif part.Code == "":
-      continue
     else:
       newLine.add(part.Code & " ")
     

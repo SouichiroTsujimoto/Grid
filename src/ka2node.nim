@@ -2,6 +2,8 @@ import ka2token
 
 type NodeKind* = enum
   nkNil
+  nkDo
+  nkArgs
   nkIdent
   nkNilLiteral
   nkIntLiteral
@@ -38,6 +40,133 @@ type NodeKind* = enum
   nkPipeExpression,
   nkAccessElement,
 
+type 
+#   # ノードクラス
+#   OldNode* = ref object of RootObj
+#     kind*:                        NodeKind
+#     token*:                       Token
+#     operator*:                    string
+#     left*:                        Node
+#     right*:                       Node
+#     function*:                    Node
+#     args*:                        seq[Node]
+#     intValue*:                    int
+#     floatValue*:                  float
+#     identValue*:                  string
+#     boolValue*:                   bool
+#     charValue*:                   char
+#     stringValue*:                 string
+#     cppCodeValue*:                string
+#     arrayValue*:                  seq[Node]
+#     typeValue*:                   string
+#     let_ident*:                   Node
+#     let_value*:                   Node
+#     define_name*:                 Node
+#     define_ident*:                Node
+#     define_args*:                 seq[Node]
+#     define_block*:                BlockStatement
+#     condition*:                   Node
+#     consequence*:                 BlockStatement
+#     consequence_expression*:      Node
+#     alternative*:                 Node
+#     generator*:                   Node
+#     return_expression*:           Node
+#     index*:                       string
+#   # ブロック文クラス
+#   BlockStatement* = ref object of RootObj
+#     token*: Token
+#     statements*: seq[Node]
+# import ka2token
+
+# type NodeKind* = enum
+#   nkNil
+#   nkDo
+#   nkArgs
+#   nkIdent
+#   nkNilLiteral
+#   nkIntLiteral
+#   nkFloatLiteral
+#   nkBoolLiteral
+#   nkCharLiteral
+#   nkStringLiteral
+#   nkCppCode
+#   nkArrayLiteral
+#   nkIntType
+#   nkFloatType
+#   nkBoolType
+#   nkCharType
+#   nkStringType
+#   nkArrayType
+#   nkFunctionType
+#   nkInfixExpression
+#   nkGenerator
+#   nkAssignExpression
+#   nkLetStatement
+#   nkMutStatement
+#   nkDefineStatement
+#   nkReturnStatement
+#   nkRetrunExpression
+#   nkMapFunction
+#   nkForStatement
+#   nkExpressionStatement
+#   nkCallExpression
+#   nkIfExpression
+#   nkElseExpression
+#   nkIfStatement
+#   nkElifStatement
+#   nkElseStatement
+#   nkPipeExpression,
+#   nkAccessElement,
+
+# type 
+#   # ノードクラス
+#   OldNode* = ref object of RootObj
+#     kind*:                        NodeKind
+#     token*:                       Token
+#     operator*:                    string
+#     left*:                        Node
+#     right*:                       Node
+#     function*:                    Node
+#     args*:                        seq[Node]
+#     intValue*:                    int
+#     floatValue*:                  float
+#     identValue*:                  string
+#     boolValue*:                   bool
+#     charValue*:                   char
+#     stringValue*:                 string
+#     cppCodeValue*:                string
+#     arrayValue*:                  seq[Node]
+#     typeValue*:                   string
+#     let_ident*:                   Node
+#     let_value*:                   Node
+#     define_name*:                 Node
+#     define_ident*:                Node
+#     define_args*:                 seq[Node]
+#     define_block*:                BlockStatement
+#     condition*:                   Node
+#     consequence*:                 BlockStatement
+#     consequence_expression*:      Node
+#     alternative*:                 Node
+#     generator*:                   Node
+#     return_expression*:           Node
+#     index*:                       string
+#   # ブロック文クラス
+#   BlockStatement* = ref object of RootObj
+#     token*: Token
+#     statements*: seq[Node]
+  
+  Node* = ref object of RootObj
+    kind*:          NodeKind
+    token*:         Token
+    child_nodes*:   seq[Node]
+    value*:         Token
+    intValue*:      int
+    floatValue*:    float
+    identValue*:    string
+    boolValue*:     bool
+    charValue*:     char
+    stringValue*:   string
+
 type Precedence* = enum
   Lowest = 0
   Pipeline
@@ -62,40 +191,3 @@ proc tokenPrecedence*(tok: Token): Precedence =
   of ARROW:           return Generator
   of LPAREN, INDEX:   return Call
   else:               return Lowest
-
-type 
-  # ノードクラス
-  Node* = ref object of RootObj
-    kind*:                        NodeKind
-    token*:                       Token
-    operator*:                    string
-    left*:                        Node
-    right*:                       Node
-    function*:                    Node
-    args*:                        seq[Node]
-    intValue*:                    int
-    floatValue*:                  float
-    identValue*:                  string
-    boolValue*:                   bool
-    charValue*:                   char
-    stringValue*:                 string
-    cppCodeValue*:                string
-    arrayValue*:                  seq[Node]
-    typeValue*:                   string
-    let_ident*:                   Node
-    let_value*:                   Node
-    define_name*:                 Node
-    define_ident*:                Node
-    define_args*:                 seq[Node]
-    define_block*:                BlockStatement
-    condition*:                   Node
-    consequence*:                 BlockStatement
-    consequence_expression*:      Node
-    alternative*:                 Node
-    generator*:                   Node
-    return_expression*:           Node
-    index*:                       string
-  # ブロック文クラス
-  BlockStatement* = ref object of RootObj
-    token*: Token
-    statements*: seq[Node]
