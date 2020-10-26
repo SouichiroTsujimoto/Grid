@@ -5,7 +5,6 @@
 #include "ka2lib/ka2IO.h"
 
 int main() {
-  const std::vector<int> a = _k_join ( _k_join ( _k_join ( _k_join ( { 1 , 2 } ) ( { 3 , 4 } ) ) ( _k_join ( { 1 , 2 } ) ( { 3 , 4 } ) ) ) ( { 1 , 2 } ) ) ( { 1 , 2 } ) ;
-  _k_puts ( a [ 11 ] ) ;
+  const std::vector<std::string> a = { "Hello" , "World" } ;
 
 }

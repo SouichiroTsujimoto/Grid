@@ -30,6 +30,8 @@ proc echoErrorMessage*(number: int, test: bool) =
     echo "返り値の型が異なっています[12]"
   of 13:
     echo "引数の数が足りていません[13]"
+  of 14:
+    echo "対象が関数ではありません[14]"
   else:
     echo "不明なエラー"
   

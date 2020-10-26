@@ -23,7 +23,7 @@ proc parseBlockStatement(p: Parser, endTokenTypes: seq[string]): Node
 proc parseCallExpression(p: Parser, left: Node): Node
 proc parseNodes(p: Parser, endToken: string): Node
 proc parseType(p: Parser): Node
-proc parseNameProc(p: Parser, endToken: string): seq[Node]
+proc parseNameProc(p: Parser, endToken: string): Node
 
 # curTokenとpeekTokenを一つ進める
 proc shiftToken(p: Parser) =
@@ -194,23 +194,27 @@ proc parseNodes(p: Parser, endToken: string): Node =
   else:
     echo "構文エラー！！！(0)"
 
-# 宣言の処理
-proc parseNameProc(p: Parser, endToken: string): seq[Node] =
-  var list = newSeq[Node]()
+# 関数を宣言するときの引数の処理
+proc parseNameProc(p: Parser, endToken: string): Node =
+  var args = Node(
+    kind: nkArgs,
+    token: p.curToken,
+    child_nodes: @[],
+  )
   if p.peekToken.Type == endToken:
     p.shiftToken()
-    return list
+    return args
 
   p.shiftToken()
-  list.add(p.parseType())
+  args.child_nodes.add(p.parseType())
 
   while p.peekToken.Type == COMMA:
     p.shiftToken()
     p.shiftToken()
-    list.add(p.parseType())
+    args.child_nodes.add(p.parseType())
 
   p.shiftToken()
-  return list
+  return args
 
 # 関数呼び出しの処理
 proc parseCallExpression(p: Parser, left: Node): Node =
@@ -226,25 +230,22 @@ proc parseIdent(p: Parser): Node =
   let node = Node(
     kind:  nkIdent,
     token: p.curToken,
-    identValue: p.curToken.Literal,
   )
   return node
 
-# map関数
-proc parseMapFunction(p: Parser): Node =
-  let node = Node(
-    kind:  nkMapFunction,
-    token: p.curToken,
-    identValue: p.curToken.Literal,
-  )
-  return node
+# # map関数 【保留】
+# proc parseMapFunction(p: Parser): Node =
+#   let node = Node(
+#     kind:  nkMapFunction,
+#     token: p.curToken,
+#   )
+#   return node
 
 # 整数値リテラル
 proc parseIntLiteral(p: Parser): Node =
   let node = Node(
     kind:  nkIntLiteral,
     token: p.curToken,
-    intValue: p.curToken.Literal.parseInt()
   )
   return node
 
@@ -253,7 +254,6 @@ proc parseFloatLiteral(p: Parser): Node =
   let node = Node(
     kind:  nkFloatLiteral,
     token: p.curToken,
-    floatValue: p.curToken.Literal.parseFloat()
   )
   return node
 
@@ -262,7 +262,6 @@ proc parseCharLiteral(p: Parser): Node =
   let node = Node(
     kind:  nkCharLiteral,
     token: p.curToken,
-    charValue: p.curToken.Literal[0],
   )
   return node
 
@@ -271,7 +270,6 @@ proc parseStringLiteral(p: Parser): Node =
   let node = Node(
     kind:  nkStringLiteral,
     token: p.curToken,
-    stringValue: p.curToken.Literal,
   )
   return node
 
@@ -280,7 +278,6 @@ proc parseBoolLiteral(p: Parser): Node =
   let node = Node(
     kind:  nkBoolLiteral,
     token: p.curToken,
-    boolValue: p.curToken.Literal.parseBool(),
   )
   return node
 
@@ -323,7 +320,7 @@ proc parseIntType(p: Parser): Node =
   )
   if p.peekToken.Type == IDENT:
     p.shiftToken()
-    node.value = Token(Type: p.curToken.Type, Literal: p.curToken.Literal)
+    node.child_nodes.add(p.parseIdent())
   return node
 
 # float型
@@ -334,7 +331,7 @@ proc parseFloatType(p: Parser): Node =
   )
   if p.peekToken.Type == IDENT:
     p.shiftToken()
-    node.value = Token(Type: p.curToken.Type, Literal: p.curToken.Literal)
+    node.child_nodes.add(p.parseIdent())
   return node
 
 # char型
@@ -345,7 +342,7 @@ proc parseCharType(p: Parser): Node =
   )
   if p.peekToken.Type == IDENT:
     p.shiftToken()
-    node.value = Token(Type: p.curToken.Type, Literal: p.curToken.Literal)
+    node.child_nodes.add(p.parseIdent())
   return node
 
 # string型
@@ -356,7 +353,7 @@ proc parseStringType(p: Parser): Node =
   )
   if p.peekToken.Type == IDENT:
     p.shiftToken()
-    node.value = Token(Type: p.curToken.Type, Literal: p.curToken.Literal)
+    node.child_nodes.add(p.parseIdent())
   return node
 
 # bool型
@@ -367,7 +364,7 @@ proc parseBoolType(p: Parser): Node =
   )
   if p.peekToken.Type == IDENT:
     p.shiftToken()
-    node.value = Token(Type: p.curToken.Type, Literal: p.curToken.Literal)
+    node.child_nodes.add(p.parseIdent())
   return node
 
 # array型
@@ -378,12 +375,12 @@ proc parseArrayType(p: Parser): Node =
   )
   if p.peekToken.Type == IDENT:
     p.shiftToken()
-    node.value = Token(Type: p.curToken.Type, Literal: p.curToken.Literal)
+    node.child_nodes.add(p.parseIdent())
   else:
     p.shiftToken()
     let ppa = p.parseType()
-    node.value = ppa.value
-    node.token.Type = "ARRAY" & "::" & ppa.token.Type
+    node.child_nodes.add(ppa.child_nodes)
+    node.token.Type = "T_ARRAY" & "::" & ppa.token.Type
   return node
 
 # function型
@@ -394,7 +391,7 @@ proc parseFunctionType(p: Parser): Node =
   )
   if p.peekToken.Type == IDENT:
     p.shiftToken()
-    node.value = Token(Type: p.curToken.Type, Literal: p.curToken.Literal)
+    node.child_nodes.add(p.parseIdent())
   return node
 
 #------ここまで------
@@ -514,7 +511,7 @@ proc parseExpression(p: Parser, precedence: Precedence): Node =
   of IFEX       : left = p.parseIfExpression()
   of RETURN     : left = p.parseReturnStatement()
   of IDENT      : left = p.parseIdent()
-  of MAP        : left = p.parseMapFunction()
+  # of MAP        : left = p.parseMapFunction()
   of INT        : left = p.parseIntLiteral()
   of FLOAT      : left = p.parseFloatLiteral()
   of CHAR       : left = p.parseCharLiteral()

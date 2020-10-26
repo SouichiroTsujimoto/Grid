@@ -159,13 +159,6 @@ type
     kind*:          NodeKind
     token*:         Token
     child_nodes*:   seq[Node]
-    value*:         Token
-    intValue*:      int
-    floatValue*:    float
-    identValue*:    string
-    boolValue*:     bool
-    charValue*:     char
-    stringValue*:   string
 
 type Precedence* = enum
   Lowest = 0

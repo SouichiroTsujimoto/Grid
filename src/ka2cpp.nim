@@ -318,20 +318,22 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
   case node.kind
   # リテラル
   of nkIntLiteral:
-    code.add((INT, $node.intValue))
+    code.add((INT, node.token.Literal))
     codeType = INT
   of nkFloatLiteral:
-    code.add((FLOAT, $node.floatValue))
-    codeType = FLOAT
+    code.add((FLOAT, node.token.Literal))
     codeType = FLOAT
   of nkBoolLiteral:
-    code.add((BOOL, $node.boolValue))
+    if node.token.Literal == "True":
+      code.add((BOOL, "true"))
+    else:
+      code.add((BOOL, "false"))
     codeType = BOOL
   of nkCharLiteral:
-    code.add((CHAR, "\'" & $node.charValue & "\'"))
+    code.add((CHAR, "\'" & node.token.Literal & "\'"))
     codeType = CHAR
   of nkStringLiteral:
-    code.add((STRING, "\"" & node.stringValue & "\""))
+    code.add((STRING, "\"" & node.token.Literal & "\""))
     codeType = STRING
   # 保留
   # of nkCppCode:
@@ -343,11 +345,11 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
   #     echoErrorMessage(13, test)
   #     quit()
   of nkArrayLiteral:
-    if node.arrayValue != @[]:
+    if node.child_nodes != @[]:
       code.add((LBRACE, "{"))
       var eltype: string
       var loopCount = 0
-      for arv in node.arrayValue:
+      for arv in node.child_nodes[0].child_nodes:
         let elem = arv.makeCodeParts(test)
         if loopCount == 0:
           eltype = elem[1]
@@ -370,82 +372,82 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
     code.add((NIL, "NULL"))
     codeType = NIL
   of nkIntType:
-    if node.identValue != "":
-      code.add(node.typeValue.conversionCppType())
-      code.add((INT, node.identValue))
+    if node.child_nodes != @[]:
+      code.add(node.token.Type.conversionCppType())
+      code.add((INT, node.child_nodes[0].token.Literal))
       codeType = INT
     else:
       echoErrorMessage(1, test)
   of nkFloatType:
-    if node.identValue != "":
-      code.add(node.typeValue.conversionCppType())
-      code.add((FLOAT, node.identValue))
+    if node.child_nodes != @[]:
+      code.add(node.token.Type.conversionCppType())
+      code.add((FLOAT, node.child_nodes[0].token.Literal))
       codeType = FLOAT
     else:
       echoErrorMessage(1, test)
   of nkCharType:
-    if node.identValue != "":
-      code.add(node.typeValue.conversionCppType())
-      code.add((CHAR, node.identValue))
+    if node.child_nodes != @[]:
+      code.add(node.token.Type.conversionCppType())
+      code.add((CHAR, node.child_nodes[0].token.Literal))
       codeType = CHAR
     else:
       echoErrorMessage(1, test)
   of nkStringType:
-    if node.identValue != "":
-      code.add(node.typeValue.conversionCppType())
-      code.add((STRING, node.identValue))
+    if node.child_nodes != @[]:
+      code.add(node.token.Type.conversionCppType())
+      code.add((STRING, node.child_nodes[0].token.Literal))
       codeType = STRING
     else:
       echoErrorMessage(1, test)
   of nkBoolType:
-    if node.identValue != "":
-      code.add(node.typeValue.conversionCppType())
-      code.add((BOOL, node.identValue))
+    if node.child_nodes != @[]:
+      code.add(node.token.Type.conversionCppType())
+      code.add((BOOL, node.child_nodes[0].token.Literal))
       codeType = BOOL
     else:
       echoErrorMessage(1, test)
   of nkArrayType:
-    if node.identValue != "":
-      code.add(node.typeValue.conversionCppType())
-      code.add((node.typeValue, node.identValue))
-      let types = node.typeValue.split("::")
+    if node.child_nodes != @[]:
+      code.add(node.token.Type.conversionCppType())
+      code.add((node.token.Type, node.child_nodes[0].token.Literal))
+      let types = node.token.Type.split("::")
       for i, tv in types:
         if i != 0:
           codeType.add("::")
-        codeType.add(tv[2..tv.len()-1])
+        codeType.add(tv.removeT())
     else:
       echoErrorMessage(1, test)
   of nkFunctionType:
-    if node.identValue != "":
+    if node.child_nodes != @[]:
       code.add((T_FUNCTION, "auto"))
-      code.add((FUNCTION, node.identValue))
+      code.add((FUNCTION, node.child_nodes[0].token.Literal))
       codeType = FUNCTION
     else:
       echoErrorMessage(1, test)
 
   # 名前
   of nkIdent:
-    if identExistenceCheck(node.identValue):
-      code.add((IDENT, node.identValue))
-      codeType = identTable[node.identValue].Type
+    if identExistenceCheck(node.token.Literal):
+      code.add((IDENT, node.token.Literal))
+      codeType = identTable[node.token.Literal].Type
     else:
-      let ic = node.identValue.conversionCppFunction(@[""])
+      let ic = node.token.Literal.conversionCppFunction(@[""])
       if ic[0]:
         code.add((ic[1], ic[2]))
         codeType = ic[1]
       else:
         echoErrorMessage(2, test)
 
-  # 仮
-  of nkMapFunction:
-    code.add((IDENT, "_k_map"))
-    codeType = IDENT
+  # 【】
+  # of nkMapFunction:
+  #   code.add((IDENT, "_k_map"))
+  #   codeType = IDENT
   
   # let文
   of nkLetStatement:
     code.add((OTHER, "const"))
-    let li = node.let_ident.makeCodeParts(test)
-    let lv = node.let_value.makeCodeParts(test)
+    let li = node.child_nodes[0].makeCodeParts(test)
+    let lv = node.child_nodes[1].makeCodeParts(test)
     # echo li[1] & "___" & lv[1]
     if li[1] == lv[1]:
       if identExistenceCheck(li[0][1][1]):
@@ -470,8 +472,8 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
   
   # mut文
   of nkMutStatement:
-    let li = node.let_ident.makeCodeParts(test)
-    let lv = node.let_value.makeCodeParts(test)
+    let li = node.child_nodes[0].makeCodeParts(test)
+    let lv = node.child_nodes[1].makeCodeParts(test)
     if li[1] == lv[1]:
       if identExistenceCheck(li[0][1][1]):
         echoErrorMessage(3, test)
@@ -496,12 +498,12 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
   # def文
   of nkDefineStatement:
     code.add((AUTO, "auto"))
-    let di = node.define_ident.makeCodeParts(test)
+    let di = node.child_nodes[0].makeCodeParts(test)
     if identExistenceCheck(di[0][1][1]):
       echoErrorMessage(3, test)
     code.add(di[0][1])
     code.add((EQUAL, "="))
-    if node.define_args == @[]:
+    if node.child_nodes[1].child_nodes == @[]:
       identTable[di[0][1][1]] = IdentInfo(
         Type: NIL & ">>" & di[1],
         path: blockPath,
@@ -509,7 +511,7 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
       )
     else:
       var argsType: seq[string]
-      for parameter in node.define_args:
+      for parameter in node.child_nodes[1].child_nodes:
         argsType.add(parameter.token.Type.removeT())
       identTable[di[0][1][1]] = IdentInfo(
         Type: argsType.join("::") & ">>" & di[1],
@@ -518,11 +520,11 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
       )
     let obp = blockPath
     blockPath.add("-0")
-    if node.define_args == @[]:
+    if node.child_nodes[1].child_nodes == @[]:
       code.add((OTHER, "[]"))
       code.add((OTHER, "()"))
       code.add((OTHER, "{"))
-      for statement in node.define_block.statements:
+      for statement in node.child_nodes[2].child_nodes:
         if statement.kind == nkReturnStatement:
           let st = statement.makeCodeParts(test)
           if typeMatch(st[1], di[1])[0]:
@@ -535,22 +537,22 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
       code.addSemicolon()
     else:
       var arg: string = ""
-      for i, parameter in node.define_args:
+      for i, parameter in node.child_nodes[1].child_nodes:
         let pr = parameter.makeCodeParts(test)
         code.add((OTHER, "[" & arg & "]"))
         code.add((OTHER, "("))
         code.add(pr[0])
         code.add((OTHER, ")"))
-        arg = parameter.identValue
+        arg = parameter.child_nodes[0].token.Literal
         blockPath = nextPath()
         identTable[arg] = IdentInfo(
           Type: pr[1],
           path: blockPath,
         )
         code.add((OTHER, "{"))
-        if i != node.define_args.len()-1:
+        if i != node.child_nodes[1].child_nodes.len()-1:
           code.add((RETURN, "return"))
-      for statement in node.define_block.statements:
+      for statement in node.child_nodes[2].child_nodes:
         if statement.kind == nkReturnStatement:
           let st = statement.makeCodeParts(test)
           if typeMatch(st[1], di[1])[0]:
@@ -559,7 +561,7 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
             echoErrorMessage(5, test)
         else:
           code.add(statement.makeCodeParts(test)[0])
-      for _ in node.define_args:
+      for _ in node.child_nodes[1].child_nodes:
         code.add((OTHER, "}"))
         code.addSemicolon()
     blockPath = obp
@@ -567,10 +569,10 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
 
   # return文
   of nkReturnStatement:
-    if node.return_expression != nil:
+    if node.child_nodes != @[]:
       code.add((OTHER, "return"))
       code.add((OTHER, "("))
-      let r = node.return_expression.makeCodeParts(test)
+      let r = node.child_nodes[0].makeCodeParts(test)
       code.add(r[0].replaceSemicolon(@[(OTHER, "")]))
       code.add((OTHER, ")"))
       code.addSemicolon()
@@ -583,12 +585,12 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
     var 
       l: (seq[codeParts], string)
       r: (seq[codeParts], string)
-    if node.left == nil or node.right == nil:
+    if node.child_nodes.len() != 2:
       echoErrorMessage(7, test)
-    l = node.left.makeCodeParts(test)
-    r = node.right.makeCodeParts(test)
+    l = node.child_nodes[0].makeCodeParts(test)
+    r = node.child_nodes[1].makeCodeParts(test)
     if l[1] == r[1]:
-      let oc = node.operator.conversionCppOperator(@[l[1], r[1]])
+      let oc = node.token.Literal.conversionCppOperator(@[l[1], r[1]])
       if oc[0] == false:
         echoErrorMessage(8, test)
       code.add(((OTHER, "(")))
@@ -605,8 +607,8 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
   of nkGenerator:
     # TODO: 型のチェック
     var lt: string
-    if node.left != nil:
-      let l = node.left.makeCodeParts(test)
+    if node.child_nodes.len() == 2:
+      let l = node.child_nodes[0].makeCodeParts(test)
       code.add(l[0])
       lt = l[1]
       blockPath.add("-0")
@@ -617,11 +619,10 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
         path: blockPath,
       )
       codeType = l[1]
-    else:
-      echoErrorMessage(6, test)
-    code.add((COLON, ":"))
-    if node.right != nil:
-      let r = node.right.makeCodeParts(test)
+      
+      code.add((COLON, ":"))
+
+      let r = node.child_nodes[1].makeCodeParts(test)
       if lt == r[1].funcTypeSplit("ARRAY::")[2]:
         code.add(r[0])
       else:
@@ -631,20 +632,29 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
 
   # パイプライン演算子
   of nkPipeExpression:
-    node.right.args = node.left & node.right.args
-    let r = node.right.makeCodeParts(test)
-    code.add(r[0])
-    codeType = r[1]
-    
+    if node.child_nodes.len() == 2:  
+      if node.child_nodes[1].kind == nkCallExpression:
+        # 右側の関数の引数の先頭に左の値を追加
+        let rightArgs = node.child_nodes[1].child_nodes[1].child_nodes
+        let leftValue = node.child_nodes[0]
+        node.child_nodes[1].child_nodes[1].child_nodes = leftValue & rightArgs
+        let r = node.child_nodes[1].makeCodeParts(test)
+        code.add(r[0])
+        codeType = r[1]
+      else:
+        echoErrorMessage(14, test)
+    else:
+      echoErrorMessage(7, test)
+
   # 配列の要素へのアクセス
   of nkAccessElement:
-    if node.left != nil and node.right != nil:
-      let l = node.left.makeCodeParts(test)
-      let r = node.right.makeCodeParts(test)
+    if node.child_nodes.len() == 2:
+      let l = node.child_nodes[0].makeCodeParts(test)
+      let r = node.child_nodes[1].makeCodeParts(test)
       let rv = r[0].replaceSemicolon(@[(OTHER, "")])
       let ls = l[1].split("::")
       # TODO: 最悪
-      echo identTable[l[0][0].Code].arrayLength
+      # echo identTable[l[0][0].Code].arrayLength
       if identTable[l[0][0].Code].arrayLength <= rv[0].Code.parseInt() or rv[0].Code.parseInt() < 0:
         echoErrorMessage(10, test)
       if r[1] == INT and l[0][0].Type == IDENT and ls[0] == ARRAY:
@@ -663,9 +673,9 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
   of nkAssignExpression:
     var lt, rt: string
     var lmc: string
-    if node.left != nil:
+    if node.child_nodes.len() == 2:
       # 値を代入しようとしている変数のチェック
-      let l = node.left.makeCodeParts(test)
+      let l = node.child_nodes[0].makeCodeParts(test)
       lmc = l[0][l[0].len()-1].Code
       if lmc == ";":
         lmc = l[0][l[0].len()-2].Code
@@ -676,11 +686,9 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
         echoErrorMessage(2, test)
       code.add(l[0].replaceSemicolon(@[(OTHER, "")]))
       lt = l[1]
-    else:
-      echoErrorMessage(7, test)
-    code.add((OTHER, "="))
-    if node.right != nil:
-      let r = node.right.makeCodeParts(test)
+
+      code.add((OTHER, "="))
+      let r = node.child_nodes[1].makeCodeParts(test)
       code.add(r[0])
       identTable[lmc].contents = r[0]
       rt = r[1]
@@ -695,7 +703,7 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
   # 前置
   # TODO 
   of nkCallExpression:
-    let fn = node.function.makeCodeParts(test)
+    let fn = node.child_nodes[0].makeCodeParts(test)
     code.add(fn[0])
     var argsCode: seq[codeParts]
     var argsType: seq[string]
@@ -714,7 +722,7 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
     #   codeType = ARRAY & "::" & at.funcTypeSplit(">>")[2]
     #   echo codeType
     
-    for arg in node.args:
+    for arg in node.child_nodes[1].child_nodes:
       code.add((OTHER, "("))
       let a = arg.makeCodeParts(test)
       code.add(a[0].replaceSemicolon(@[(OTHER, "")]))
@@ -724,7 +732,7 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
     code.addSemicolon()
     # TODO
     # let fm = identExistenceCheck(node.function.identValue)
-    let fm = conversionCppFunction(node.function.identValue, argsType)
+    let fm = conversionCppFunction(node.child_nodes[0].token.Literal, argsType)
     if fm[0] == false:
       echoErrorMessage(2, test)
     else:
@@ -742,20 +750,20 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
   of nkIfStatement:
     code.add((OTHER, "if"))
     code.add((OTHER, "("))
-    code.add(node.condition.makeCodeParts(test)[0].replaceSemicolon(@[(OTHER, "")]))
+    code.add(node.child_nodes[0].makeCodeParts(test)[0].replaceSemicolon(@[(OTHER, "")]))
     code.add((OTHER, ")"))
     code.add((OTHER, "{"))
     var sr: (seq[codeParts], string)
-    for i, statement in node.consequence.statements:
-      if i == node.consequence.statements.len()-1:
+    for i, statement in node.child_nodes[1].child_nodes:
+      if i == node.child_nodes[1].child_nodes.len()-1:
         sr = statement.makeCodeParts(test)
         code.add(sr[0])
       else:
         sr = statement.makeCodeParts(test)
         code.add(sr[0])
     code.add((OTHER, "}"))
-    if node.alternative != nil:
-      let ar = node.alternative.makeCodeParts(test)
+    if node.child_nodes.len() == 3:
+      let ar = node.child_nodes[2].makeCodeParts(test)
       code.add(ar[0])
     else:
       code.add((OTHER, "\n"))
@@ -765,20 +773,20 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
   of nkElifStatement:
     code.add((OTHER, "else if"))
     code.add((OTHER, "("))
-    code.add(node.condition.makeCodeParts(test)[0].replaceSemicolon(@[(OTHER, "")]))
+    code.add(node.child_nodes[0].makeCodeParts(test)[0].replaceSemicolon(@[(OTHER, "")]))
     code.add((OTHER, ")"))
     code.add((OTHER, "{"))
     var sr: (seq[codeParts], string)
-    for i, statement in node.consequence.statements:
-      if i == node.consequence.statements.len()-1:
+    for i, statement in node.child_nodes[1].child_nodes:
+      if i == node.child_nodes[1].child_nodes.len()-1:
         sr = statement.makeCodeParts(test)
         code.add(sr[0])
       else:
         sr = statement.makeCodeParts(test)
         code.add(sr[0])
     code.add((OTHER, "}"))
-    if node.alternative != nil:
-      let ar = node.alternative.makeCodeParts(test)
+    if node.child_nodes.len() == 3:
+      let ar = node.child_nodes[2].makeCodeParts(test)
       code.add(ar[0])
     else:
       code.add((OTHER, "\n"))
@@ -789,8 +797,8 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
     code.add((OTHER, "else"))
     code.add((OTHER, "{"))
     var sr: (seq[codeParts], string)
-    for i, statement in node.consequence.statements:
-      if i == node.consequence.statements.len()-1:
+    for i, statement in node.child_nodes[0].child_nodes:
+      if i == node.child_nodes[0].child_nodes.len()-1:
         sr = statement.makeCodeParts(test)
         code.add(sr[0])
       else:
@@ -803,11 +811,11 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
   # if式
   of nkIfExpression:
     code.add((OTHER, "("))
-    code.add(node.condition.makeCodeParts(test)[0].replaceSemicolon(@[(OTHER, "")]))
+    code.add(node.child_nodes[0].makeCodeParts(test)[0].replaceSemicolon(@[(OTHER, "")]))
     code.add((OTHER, "?"))
-    var sr = node.consequence_expression.makeCodeParts(test)
+    var sr = node.child_nodes[1].makeCodeParts(test)
     code.add(sr[0].replaceSemicolon(@[(OTHER, "")]))
-    let ar = node.alternative.makeCodeParts(test)
+    let ar = node.child_nodes[2].makeCodeParts(test)
     if typeMatch(ar[1], sr[1])[0]:
       code.add((OTHER, ":"))
       code.add(ar[0].replaceSemicolon(@[(OTHER, "")]))
@@ -819,7 +827,7 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
 
   # else式
   of nkElseExpression:
-    var sr = node.consequence_expression.makeCodeParts(test)
+    var sr = node.child_nodes[0].makeCodeParts(test)
     code.add(sr[0].replaceSemicolon(@[(OTHER, "")]))
     codeType = sr[1]
 
@@ -829,11 +837,11 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
     let obp = blockPath
     code.add((OTHER, "for"))
     code.add((OTHER, "("))
-    code.add(node.generator.makeCodeParts(test)[0])
+    code.add(node.child_nodes[0].makeCodeParts(test)[0])
     code.add((OTHER, ")"))
     code.add((OTHER, "{"))
     var sr: (seq[codeParts], string)
-    for i, statement in node.consequence.statements:
+    for i, statement in node.child_nodes[1].child_nodes:
       sr = statement.makeCodeParts(test)
       code.add(sr[0])
     code.add((OTHER, "}"))
@@ -853,7 +861,7 @@ proc makeCppCode*(node: Node, indent: int, test: bool): string =
 
   for i, part in codeParts[0]:
     # echo $i & "回目 : " & part
-    echo part
+    # echo part
     if part.Type[0] == '@' or part.Code == "":
       continue
     if part.Type == SEMICOLON and part.Code == ";":

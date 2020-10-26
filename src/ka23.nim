@@ -1,4 +1,4 @@
-import  ka2parser, ka2rw, ka2node
+import  ka2parser, ka2rw, ka2node, ka2cpp
 import strutils
 
 var cppCode = """
@@ -18,6 +18,7 @@ proc showAST(node: Node, indent: int): string =
   for child in node.child_nodes:
     result.add("\n")
     result.add(showAST(child, indent + 1))
+  
   for i in 0..indent-1:
     result.add("  ")
   result.add("]}\n")
@@ -30,16 +31,15 @@ when isMainModule:
   let program = makeAST(input)
   let test = false
 
-  echo showAST(program[0], 0)
+  for tree in program:
+    echo showAST(tree, 0)
+    cppCode.add(makeCppCode(tree, 0, test))
+  cppCode.add("\n}")
 
-  # for tree in program:
-  #   cppCode.add(makeCppCode(tree, 0, test))
-  # cppCode.add("\n}")
+  let cppFileName = sourceName.split(".")[0] & ".cpp"
+  writeCpp(cppFileName, cppCode)
 
-  # let cppFileName = sourceName.split(".")[0] & ".cpp"
-  # writeCpp(cppFileName, cppCode)
 
-  
 #[
   TODO
   ・ if文 ✅

@@ -1,1 +1,1 @@
-ifex 5 + 5 == 10 : "5 + 5 = 10" : "?"
+let #array #string a = {"Hello", "World"}
