@@ -1,4 +1,4 @@
-import  ka2parser, ka2rw, ka2node, ka2cpp
+import  ka2parser, ka2rw, ka2node, ka2cpp, ka2shaping, ka2show
 import strutils
 
 var cppCode = """
@@ -11,28 +11,17 @@ var cppCode = """
 int main() {
 """
 
-proc showAST(node: Node, indent: int): string =
-  for i in 0..indent-1:
-    result.add("  ")
-  result.add("{:" & $node.kind & ", [Type:" & $node.token.Type & ", Literal:" & $node.token.Literal & "], [")
-  for child in node.child_nodes:
-    result.add("\n")
-    result.add(showAST(child, indent + 1))
-  
-  for i in 0..indent-1:
-    result.add("  ")
-  result.add("]}\n")
-
 when isMainModule:
   # echo "ファイル名を入力してください"
   # let sourceName = readLine(stdin)
   let sourceName = "main.ka23"
   let input = sourceName.readSource()
-  let program = makeAST(input)
+  var program = makeAST(input)
   let test = false
 
+  program = astShaping(program)
+  echo showASTs(program)
   for tree in program:
-    echo showAST(tree, 0)
     cppCode.add(makeCppCode(tree, 0, test))
   cppCode.add("\n}")
 
@@ -51,7 +40,7 @@ when isMainModule:
       ・ 要素へのアクセス (hoge[0]<- これ) ✅
       ・ len関数 ✅
       ・ 配列の連結
-      ・ head, tail, last, init関数
+      ・ head, tail, last, init関数 <- これやる
     ・ ~変数~
       ・ 型のキャスト
       ・ 複合代入演算子? (+=,-=,*=,/=<- これら)

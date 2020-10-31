@@ -32,6 +32,10 @@ proc echoErrorMessage*(number: int, test: bool) =
     echo "引数の数が足りていません[13]"
   of 14:
     echo "対象が関数ではありません[14]"
+  of 15:
+    echo "配列が空です[15]"
+  of 16:
+    echo "引数の型が正しくありません"
   else:
     echo "不明なエラー"
   

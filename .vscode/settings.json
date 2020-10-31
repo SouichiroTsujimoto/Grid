@@ -1,5 +1,5 @@
 {
-  "clang.cxxflags": "-std=c++17",
+  "clang.cxxflags": "-std=c++2a",
 
   "files.associations": {
     "random": "cpp",

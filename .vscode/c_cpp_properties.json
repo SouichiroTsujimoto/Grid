@@ -8,8 +8,8 @@
             "defines": [],
             "macFrameworkPath": [],
             "compilerPath": "/usr/local/bin/gcc",
-            "cStandard": "gnu18",
-            "cppStandard": "gnu++17",
+            "cStandard": "gnu20",
+            "cppStandard": "gnu++20",
             "intelliSenseMode": "gcc-x64"
         }
     ],

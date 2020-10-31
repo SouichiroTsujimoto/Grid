@@ -1,1 +1,2 @@
-let #array #string a = {"Hello", "World"}
+let #int a = mult(minu(1, plus(2, 3)), 4)
+puts(a)
