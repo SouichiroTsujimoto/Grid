@@ -1,11 +1,14 @@
-#include <iostream>
-#include <vector>
 #include <algorithm>
-#include "ka2lib/ka2calc.h"
-#include "ka2lib/ka2IO.h"
+#include "ka2lib/ka2funcs.h"
 
 int main() {
-  const int a = _k_mult ( _k_minu ( 1 , _k_plus ( 2 , 3 ) ) , 4 ) ;
-  _k_puts ( a ) ;
+
+  auto a = [] ( int b ) {
+
+    return [b] ( int c ) {
+      return ( ( b / c ) ) ;
+    }    ;
+  }  ;
+  ka23::print ( a ( 4 , 2 ) ) ;
 
 }

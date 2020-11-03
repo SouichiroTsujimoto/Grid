@@ -3,10 +3,8 @@ import strutils
 
 var cppCode = """
 #include <iostream>
-#include <vector>
 #include <algorithm>
-#include "ka2lib/ka2calc.h"
-#include "ka2lib/ka2IO.h"
+#include "ka2lib/ka2funcs.h"
 
 int main() {
 """

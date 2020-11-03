@@ -62,9 +62,9 @@ proc typeMatch(type1: string, type2: string): (bool, string) =
     typeList1: seq[seq[string]]
     typeList2: seq[seq[string]]
 
-  for t1s in type1.split("::"):
+  for t1s in type1.split(">>"):
     typeList1.add(@[t1s.split("|")])
-  for t2s in type2.split("::"):
+  for t2s in type2.split(">>"):
     typeList2.add(@[t2s.split("|")])
 
   # echo $typeList1 & "________" & $typeList2
@@ -74,13 +74,13 @@ proc typeMatch(type1: string, type2: string): (bool, string) =
     typeCandidacies: seq[string]
 
   for i, t1ss in typeList1:
+    if typeList2.len() <= i:
+      return (false, "")
     for t2ss in typeList2[i]:
       for t1sss in t1ss:
         if t1sss == t2ss:
           typeCandidacies.add(t1sss)
     if typeCandidacies != @[]:
-      if i != 0:
-        typeFlow.add("::")
       typeFlow.add(typeCandidacies.join("|"))
       typeCandidacies = @[]
     else:
@@ -116,9 +116,12 @@ proc funcTypesMatch(funcType: string, argsType: seq[string]): (bool, string, str
       passedFuncType = res[1]
       nextFuncType = res[2]
     else:
-      return (false, "", funcType)
+      return (false, passedFuncType, nextFuncType)
   
-  return (true, passedFuncType, nextFuncType)
+  if nextFuncType.contains(">>"):
+    return (false, passedFuncType, nextFuncType)
+  else:
+    return (true, passedFuncType, nextFuncType)
 
 proc conversionCppType(Type: string): (string, string) =
   let ts = Type.split("::")
@@ -230,101 +233,101 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
   case fn
   of "plus":
     if argsTypeC.len() == 0:
-      return (true, IDENT, "_k_plus")
+      return (true, IDENT, "ka23::plus")
     elif argsTypeC.len() == 2:
       let fmr1 = funcTypesMatch(number_t & ">>" & number_t & ">>" & number_t, @[argsTypeC[0], argsTypeC[1]])
       if fmr1[0]:
         let res_type = fmr1[1]
-        return (fmr1[0], res_type, "_k_plus")
+        return (fmr1[0], res_type, "ka23::plus")
       else:
-        return (false, NIL, "NULL")
+        return (false, OTHER, "")
     else:
-      return (false, NIL, "NULL")
+      return (false, OTHER, "")
   of "minu":
     if argsTypeC.len() == 0:
-      return (true, IDENT, "_k_minu")
+      return (true, IDENT, "ka23::minu")
     elif argsTypeC.len() == 2:
-      echo (number_t & ">>" & number_t & ">>" & number_t, @[argsTypeC[0], argsTypeC[1]])
+      # echo (number_t & ">>" & number_t & ">>" & number_t, @[argsTypeC[0], argsTypeC[1]])
       let fmr1 = funcTypesMatch(number_t & ">>" & number_t & ">>" & number_t, @[argsTypeC[0], argsTypeC[1]])
       if fmr1[0]:
         let res_type = fmr1[1]
-        return (fmr1[0], res_type, "_k_minu")
+        return (fmr1[0], res_type, "ka23::minu")
       else:
-        return (false, NIL, "NULL")
+        return (false, OTHER, "")
     else:
-      return (false, NIL, "NULL")
+      return (false, OTHER, "")
   of "mult":
     if argsTypeC.len() == 0:
-      return (true, IDENT, "_k_mult")
+      return (true, IDENT, "ka23::mult")
     elif argsTypeC.len() == 2:
       let fmr1 = funcTypesMatch(number_t & ">>" & number_t & ">>" & number_t, @[argsTypeC[0], argsTypeC[1]])
       if fmr1[0]:
         let res_type = fmr1[1]
-        return (fmr1[0], res_type, "_k_mult")
+        return (fmr1[0], res_type, "ka23::mult")
       else:
-        return (false, NIL, "NULL")
+        return (false, OTHER, "")
     else:
-      return (false, NIL, "NULL")
+      return (false, OTHER, "")
   of "divi":
     if argsTypeC.len() == 0:
-      return (true, IDENT, "_k_divi")
+      return (true, IDENT, "ka23::divi")
     elif argsTypeC.len() == 2:
       let fmr1 = funcTypesMatch(number_t & ">>" & number_t & ">>" & number_t, @[argsTypeC[0], argsTypeC[1]])
       if fmr1[0]:
         let res_type = fmr1[1]
-        return (fmr1[0], res_type, "_k_divi")
+        return (fmr1[0], res_type, "ka23::divi")
       else:
-        return (false, NIL, "NULL")
+        return (false, OTHER, "")
     else:
-      return (false, NIL, "NULL")
-  of "puts":
+      return (false, OTHER, "")
+  of "print":
     if argsTypeC.len() == 0:
-      return (true, IDENT, "_k_puts")
+      return (true, IDENT, "ka23::print")
     elif argsTypeC.len() == 1:
       let fmr1 = funcTypesMatch(anything_t & ">>" & NIL, argsTypeC[0])
       if fmr1[0]:
         let res_type = NIL
-        return (fmr1[0], res_type, "_k_puts")
+        return (fmr1[0], res_type, "ka23::print")
       else:
-        return (false, NIL, "NULL")
+        return (false, OTHER, "")
     else:
-      return (false, NIL, "NULL")
+      return (false, OTHER, "")
   of "len":
     if argsTypeC.len() == 0:
-      return (true, IDENT, "_k_len")
+      return (true, IDENT, "ka23::len")
     elif argsTypeC.len() == 1:
       let fmr1 = funcTypesMatch(ARRAY & "::" & anything_t & ">>" & INT, argsTypeC[0])
       if fmr1[0]:
         let res_type = INT
-        return (fmr1[0], res_type, "_k_len")
+        return (fmr1[0], res_type, "ka23::len")
       else:
-        return (false, NIL, "NULL")
+        return (false, OTHER, "")
     else:
-      return (false, NIL, "NULL")
+      return (false, OTHER, "")
   of "join":
     if argsTypeC.len() == 0:
-      return (true, IDENT, "_k_join")
+      return (true, IDENT, "ka23::join")
     elif argsTypeC.len() == 2:
       let fmr1 = funcTypesMatch("ARRAY" & "::" & anything_t & ">>" & "ARRAY" & "::" & anything_t & ">>" & "ARRAY" & "::" & anything_t, @[argsTypeC[0], argsTypeC[1]])
       if fmr1[0]:
         let res_type = fmr1[1]
-        return (fmr1[0], res_type, "_k_join")
+        return (fmr1[0], res_type, "ka23::join")
       else:
-        return (false, NIL, "NULL")
+        return (false, OTHER, "")
     else:
-      return (false, NIL, "NULL")
+      return (false, OTHER, "")
   of "head":
     if argsTypeC.len() == 0:
-      return (true, IDENT, "_k_join")
+      return (true, IDENT, "ka23::join")
     elif argsTypeC.len() == 1:
       let fmr1 = funcTypesMatch("ARRAY" & "::" & anything_t & ">>" & anything_t, argsTypeC[0])
       if fmr1[0]:
         let res_type = fmr1[1].funcTypeSplit("ARRAY::")[2]
-        return (fmr1[0], res_type, "_k_head")
+        return (fmr1[0], res_type, "ka23::head")
       else:
-        return (false, NIL, "NULL")
+        return (false, OTHER, "")
     else:
-      return (false, NIL, "NULL")
+      return (false, OTHER, "")
   else:
     return (false, NIL, "NULL")
 
@@ -474,6 +477,7 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
     else:
       echoErrorMessage(1, test)
 
+  # これいらんくね↓
   # 名前
   of nkIdent:
     if identExistenceCheck(node.token.Literal):
@@ -486,7 +490,7 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
 
   # 【】
   # of nkMapFunction:
-  #   code.add((IDENT, "_k_map"))
+  #   code.add((IDENT, "ka23::map"))
   #   codeType = IDENT
   
   # let文
@@ -552,7 +556,7 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
       for parameter in node.child_nodes[1].child_nodes:
         argsType.add(parameter.token.Type.removeT())
       identTable[di[0][1][1]] = IdentInfo(
-        Type: argsType.join("::") & ">>" & di[1],
+        Type: argsType.join(">>") & ">>" & di[1],
         path: blockPath,
         mutable: false,
       )
@@ -726,10 +730,6 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
   # 前置
   # TODO 
   of nkCallExpression:
-    let fn = node.child_nodes[0].makeCodeParts(test)
-    code.add(fn[0])
-    var argsCode: seq[codeParts]
-    var argsType: seq[string]
     # 保留
     # if node.function.kind == nkMapFunction:
     #   code.add((OTHER, "("))
@@ -744,36 +744,55 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
     #   code.addSemicolon()
     #   codeType = ARRAY & "::" & at.funcTypeSplit(">>")[2]
     #   echo codeType
-    code.add((OTHER, "("))
+    var argsCode: seq[seq[codeParts]]
+    var argsType: seq[string]
+    
     for i, arg in node.child_nodes[1].child_nodes:
+      let a = arg.makeCodeParts(test)
+      argsCode.add(a[0].replaceSemicolon(@[(OTHER, "")]))
+      argsType.add(a[1])
+    # TODO
+    let funcName = node.child_nodes[0].token.Literal
+    let iec = identExistenceCheck(funcName)
+    if iec:
+      let ftm = funcTypesMatch(identTable[funcName].Type, argsType)
+      if ftm[0]:
+        code.add((IDENT, funcName))
+        codeType = ftm[2]
+      else:
+        echoErrorMessage(16, test)
+    else:
+      let ccf = conversionCppFunction(funcName, argsType)
+      if ccf[0]:
+        code.add((IDENT, ccf[2]))
+        codeType = ccf[1]
+      else:
+        if ccf[1] == OTHER:
+          echoErrorMessage(13, test)
+        else:
+          echoErrorMessage(2, test)
+    
+    code.add((OTHER, "("))
+    for i, argc in argsCode:
       if i != 0:
         code.add((OTHER, ","))
-      let a = arg.makeCodeParts(test)
-      code.add(a[0].replaceSemicolon(@[(OTHER, "")]))
-      argsCode.add(a[0])
-      argsType.add(a[1])
+      code.add(argc)
     code.add((OTHER, ")"))
     code.addSemicolon()
-    # TODO
-    # let fm = identExistenceCheck(node.function.identValue)
-    let fm = conversionCppFunction(node.child_nodes[0].token.Literal, argsType)
-    if fm[0] == false:
-      echoErrorMessage(2, test)
     # else:
       # 特殊
       # case fm[2]
-      # of "_k_join":
+      # of "ka23::join":
       #   let ats = argsCode.searchCodeParts("@ARRAYLENGTH")
       #   echo argsCode
       #   if ats.len() >= 2:
       #     # 元最悪
       #     code.add(("@ARRAYLENGTH", $(ats[ats.len()-1].Code.parseInt() + ats[ats.len()-2].Code.parseInt())))
-      # of "_k_head":
+      # of "ka23::head":
         
       #   if ats[ats.len()-1].Code.parseInt() == 0:
       #     echoErrorMessage(15, test)
       
-    codeType = fm[1]
 
   # if文
   of nkIfStatement:
