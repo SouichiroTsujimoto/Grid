@@ -26,6 +26,36 @@ proc astShaping*(inp_nodes: seq[Node]): seq[Node] =
           child_nodes: function[0].child_nodes,
         )
         out_nodes.add(new_node)
+    of nkMainStatement:
+      var main_type = Node(
+        kind:        nkIntType,
+        token:       Token(Type: T_INT, Literal: "#int"),
+        child_nodes: @[
+          Node(kind: nkIdent, token: Token(Type: IDENT, Literal: "main"), child_nodes: @[])
+        ],
+      )
+      var main_args = Node(
+        kind:        nkArgs,
+        token:       Token(Type: "(", Literal: "("),
+        child_nodes: @[
+          Node(
+            kind:        nkIntType,
+            token:       Token(Type: T_INT, Literal: "#int"),
+            child_nodes: @[Node(kind: nkIdent, token: Token(Type: IDENT, Literal: "argc"),)],
+          ),
+          Node(
+            kind:        nkCharType,
+            token:       Token(Type: T_CHAR, Literal: "#char"),
+            child_nodes: @[Node(kind: nkIdent, token: Token(Type: IDENT, Literal: "*argv[]"),)],
+          )
+        ],
+      )
+      var new_node = Node(
+        kind:        nkDefineStatement,
+        token:       inp_node.token,
+        child_nodes: @[main_type, main_args] & inp_node.child_nodes.astShaping(),
+      )
+      out_nodes.add(new_node)
     else:
       out_nodes.add(makeNewNode(inp_node))
 

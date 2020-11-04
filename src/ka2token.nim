@@ -50,6 +50,7 @@ const
   NIL*          = "NIL"
   LET*          = "LET"
   MUT*          = "MUT"
+  MAIN*         = "MAIN"
   DEFINE*       = "DEFINE"
   RETURN*       = "RETURN"
   IF*           = "IF"
@@ -80,6 +81,7 @@ let keywords = {
   "Nil"       : NIL,
   "let"       : LET,
   "mut"       : MUT,
+  "main"      : MAIN,
   "def"       : DEFINE,
   "return"    : RETURN,
   "if"        : IF,

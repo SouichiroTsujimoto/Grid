@@ -352,8 +352,9 @@ proc replaceSemicolon(parts: seq[codeParts], obj: seq[codeParts]): seq[codeParts
     return parts
 
 proc addIndent(code: var string, indent: int) =
-  for i in 0..indent:
-    code.add("  ")
+  if indent != 0:
+    for i in 0..indent-1:
+      code.add("  ")
 
 # proc addScopeTable(str: string) =
 #   if scopeTable.len()-1 == nestCount:
@@ -539,12 +540,12 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
 
   # def文
   of nkDefineStatement:
-    code.add((AUTO, "auto"))
     let di = node.child_nodes[0].makeCodeParts(test)
     if identExistenceCheck(di[0][1][1]):
       echoErrorMessage(3, test)
+    echo di
+    code.add((OTHER, di[0][0].Code))
     code.add(di[0][1])
-    code.add((EQUAL, "="))
     if node.child_nodes[1].child_nodes == @[]:
       identTable[di[0][1][1]] = IdentInfo(
         Type: NIL & ">>" & di[1],
@@ -560,10 +561,9 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
         path: blockPath,
         mutable: false,
       )
-    let obp = blockPath
+    var obp = blockPath
     blockPath.add("-0")
     if node.child_nodes[1].child_nodes == @[]:
-      code.add((OTHER, "[]"))
       code.add((OTHER, "()"))
       code.add((OTHER, "{"))
       for statement in node.child_nodes[2].child_nodes:
@@ -578,22 +578,19 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
       code.add((OTHER, "}"))
       code.addSemicolon()
     else:
-      var arg: string = ""
+      code.add((OTHER, "("))
+      blockPath = nextPath()
       for i, parameter in node.child_nodes[1].child_nodes:
+        if i != 0:
+          code.add((OTHER, ","))
         let pr = parameter.makeCodeParts(test)
-        code.add((OTHER, "[" & arg & "]"))
-        code.add((OTHER, "("))
         code.add(pr[0])
-        code.add((OTHER, ")"))
-        arg = parameter.child_nodes[0].token.Literal
-        blockPath = nextPath()
-        identTable[arg] = IdentInfo(
+        identTable[parameter.child_nodes[0].token.Literal] = IdentInfo(
           Type: pr[1],
           path: blockPath,
         )
-        code.add((OTHER, "{"))
-        if i != node.child_nodes[1].child_nodes.len()-1:
-          code.add((RETURN, "return"))
+      code.add((OTHER, ")"))
+      code.add((OTHER, "{"))
       for statement in node.child_nodes[2].child_nodes:
         if statement.kind == nkReturnStatement:
           let st = statement.makeCodeParts(test)
@@ -603,9 +600,8 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
             echoErrorMessage(5, test)
         else:
           code.add(statement.makeCodeParts(test)[0])
-      for _ in node.child_nodes[1].child_nodes:
-        code.add((OTHER, "}"))
-        code.addSemicolon()
+      code.add((OTHER, "}"))
+      code.add((OTHER, "\n"))
     blockPath = obp
     codeType = DEFINE
 

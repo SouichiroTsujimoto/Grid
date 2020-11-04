@@ -79,6 +79,25 @@ proc parseReturnStatement(p: Parser): Node =
   node.child_nodes.add(p.parseExpression(Lowest))
   return node
 
+# main文
+proc parseMainStatement(p: Parser): Node =
+  var node = Node(
+    kind:        nkMainStatement,
+    token:       p.curToken,
+    child_nodes: @[],
+  )
+
+  if p.peekToken.Type != DO:
+    return Node(kind: nkNil)
+  p.shiftToken()
+
+  node.child_nodes.add(p.parseBlockStatement(@[END]))
+  if p.peekToken.Type != END:
+    return Node(kind: nkNil)
+
+  p.shiftToken()
+  return node
+
 # def文
 proc parseDefineStatement(p: Parser): Node =
   var node = Node(
@@ -579,6 +598,7 @@ proc parseStatement(p: Parser): Node =
   case p.curToken.Type
   of LET:    return p.parseLetStatement()
   of MUT:    return p.parseMutStatement()
+  of MAIN:   return p.parseMainStatement()
   of DEFINE: return p.parseDefineStatement()
   of FOR:    return p.parseForStatement()
   of IF:     return p.parseIfStatement()

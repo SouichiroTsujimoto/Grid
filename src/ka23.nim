@@ -6,7 +6,6 @@ var cppCode = """
 #include <algorithm>
 #include "ka2lib/ka2funcs.h"
 
-int main() {
 """
 
 when isMainModule:
@@ -21,7 +20,6 @@ when isMainModule:
   echo showASTs(program)
   for tree in program:
     cppCode.add(makeCppCode(tree, 0, test))
-  cppCode.add("\n}")
 
   let cppFileName = sourceName.split(".")[0] & ".cpp"
   writeCpp(cppFileName, cppCode)
@@ -29,10 +27,9 @@ when isMainModule:
 
 #[
   TODO
-  ・ if文 ✅
-  ・ パイプライン演算子 ✅
-  ・ 【急遽】 負の数実装 ✅
-  ・ plus, minus, multiply, divide関数を作る ✅
+  ・ 変数のスコープ管理がなんかバグってる(ka2cppの563行目辺り)
+  ・ エラーメッセージのテストも作る
+  ・ 関数をちゃんとmain関数の外で定義するように
   ・ 機能を増やす
     ・ ~配列~
       ・ 要素へのアクセス (hoge[0]<- これ) ✅

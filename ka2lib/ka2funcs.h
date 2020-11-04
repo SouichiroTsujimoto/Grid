@@ -162,7 +162,23 @@ namespace ka23 {
   //   return a[0];
   // };
 
+  void print(int a) {
+    std::cout << a << "\n";
+  }
+  void print(float a) {
+    std::cout << a << "\n";
+  }
+  void print(char a) {
+    std::cout << a << "\n";
+  }
   void print(std::string a) {
     std::cout << a << "\n";
+  }
+  void print(bool a) {
+    if (a == true) {
+      std::cout << "true" << "\n";
+    } else {
+      std::cout << "false" << "\n";
+    }
   }
 }

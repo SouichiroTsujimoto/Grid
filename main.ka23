@@ -1,3 +1,4 @@
 def #int a(#int b, #int c) do return b / c end
-
-print(a(4, 2))
+main do
+  print(a(4,2))
+end
