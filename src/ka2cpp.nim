@@ -543,7 +543,7 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
     let di = node.child_nodes[0].makeCodeParts(test)
     if identExistenceCheck(di[0][1][1]):
       echoErrorMessage(3, test)
-    echo di
+    # echo di
     code.add((OTHER, di[0][0].Code))
     code.add(di[0][1])
     if node.child_nodes[1].child_nodes == @[]:

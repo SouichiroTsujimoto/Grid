@@ -1,4 +1,1 @@
-def #int a(#int b, #int c) do return b / c end
-main do
-  print(a(4,2))
-end
+def #bool a(#int b, #bool c) do let #bool d = b == 10 return c == d end
