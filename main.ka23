@@ -1,4 +1,7 @@
-let #array #int x = {1, 2, 3}
+let #array #int x = {1}
 main do
-  print(tail(x) !! 0)
+  print(x |> tail() |> head())
+  print(x |> tail() |> last())
+  print(x |> init() |> head())
+  print(x |> init() |> last())
 end

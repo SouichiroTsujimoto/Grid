@@ -340,24 +340,6 @@ suite "[]":
     check(res.findStr("const std::vector<std::vector<int>> a = { { 1 , 2 } , { 3 , 4 } } ;"))
     check(res.findStr("ka23::print ( a [ 1 ] [ 0 ] ) ;"))
 
-suite "len":
-  test "mut #array #int a = {1, 2} print(len(a))":
-    initTables()
-    let program = "mut #array #int a = {1, 2} print(len(a))".makeAST().astShaping(false, true)[0]
-    var res = ""
-    for tree in program:
-      res.add(makeCppCode(tree, 0, true))
-    check(res.findStr("std::vector<int> a = { 1 , 2 } ;"))
-    check(res.findStr("ka23::print ( ka23::len ( a ) ) ;"))
-  test "mut #array #int a = {1, 2} a |> len() |> print()":
-    initTables()
-    let program = "mut #array #int a = {1, 2} a |> len() |> print()".makeAST().astShaping(false, true)[0]
-    var res = ""
-    for tree in program:
-      res.add(makeCppCode(tree, 0, true))
-    check(res.findStr("std::vector<int> a = { 1 , 2 } ;"))
-    check(res.findStr("ka23::print ( ka23::len ( a ) ) ;"))
-
 # 〜保留〜
 # suite "map":
 #   test "map({1}, + 1)":
@@ -416,3 +398,21 @@ suite "for":
     check(res.findStr("for ( int a : { 1 , 2 , 3 } ) {"))
     check(res.findStr("x = ( x + a ) ;"))
     check(res.findStr("}"))
+
+suite "len":
+  test "mut #array #int a = {1, 2} print(len(a))":
+    initTables()
+    let program = "mut #array #int a = {1, 2} print(len(a))".makeAST().astShaping(false, true)[0]
+    var res = ""
+    for tree in program:
+      res.add(makeCppCode(tree, 0, true))
+    check(res.findStr("std::vector<int> a = { 1 , 2 } ;"))
+    check(res.findStr("ka23::print ( ka23::len ( a ) ) ;"))
+  test "mut #array #int a = {1, 2} a |> len() |> print()":
+    initTables()
+    let program = "mut #array #int a = {1, 2} a |> len() |> print()".makeAST().astShaping(false, true)[0]
+    var res = ""
+    for tree in program:
+      res.add(makeCppCode(tree, 0, true))
+    check(res.findStr("std::vector<int> a = { 1 , 2 } ;"))
+    check(res.findStr("ka23::print ( ka23::len ( a ) ) ;"))

@@ -340,6 +340,30 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
         return (false, OTHER, "")
     else:
       return (false, OTHER, "")
+  of "last":
+    if argsTypeC.len() == 0:
+      return (true, IDENT, "ka23::last")
+    elif argsTypeC.len() == 1:
+      let fmr1 = funcTypesMatch("ARRAY" & "::" & anything_t & ">>" & anything_t, argsTypeC[0])
+      if fmr1[0]:
+        let res_type = fmr1[1].funcTypeSplit("ARRAY::")[2]
+        return (fmr1[0], res_type, "ka23::last")
+      else:
+        return (false, OTHER, "")
+    else:
+      return (false, OTHER, "")
+  of "init":
+    if argsTypeC.len() == 0:
+      return (true, IDENT, "ka23::init")
+    elif argsTypeC.len() == 1:
+      let fmr1 = funcTypesMatch("ARRAY" & "::" & anything_t & ">>" & "ARRAY" & "::" & anything_t, argsTypeC[0])
+      if fmr1[0]:
+        let res_type = fmr1[1]
+        return (fmr1[0], res_type, "ka23::init")
+      else:
+        return (false, OTHER, "")
+    else:
+      return (false, OTHER, "")
   else:
     return (false, NIL, "NULL")
 

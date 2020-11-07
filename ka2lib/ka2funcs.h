@@ -219,4 +219,46 @@ namespace ka23 {
     copy(a.begin()+1, a.end(), b.begin());
     return b;
   }
+
+  int last(std::vector<int> a) {
+    return a.back();
+  }
+  float last(std::vector<float> a) {
+    return a.back();
+  }
+  char last(std::vector<char> a) {
+    return a.back();
+  }
+  std::string last(std::vector<std::string> a) {
+    return a.back();
+  }
+  bool last(std::vector<bool> a) {
+    return a.back();
+  }
+
+  std::vector<int> init(std::vector<int> a) {
+    std::vector<int> b(a.size()-1);
+    copy(a.begin(), a.end()-1, b.begin());
+    return b;
+  }
+  std::vector<float> init(std::vector<float> a) {
+    std::vector<float> b(a.size()-1);
+    copy(a.begin(), a.end()-1, b.begin());
+    return b;
+  }
+  std::vector<char> init(std::vector<char> a) {
+    std::vector<char> b(a.size()-1);
+    copy(a.begin(), a.end()-1, b.begin());
+    return b;
+  }
+  std::vector<std::string> init(std::vector<std::string> a) {
+    std::vector<std::string> b(a.size()-1);
+    copy(a.begin(), a.end()-1, b.begin());
+    return b;
+  }
+  std::vector<bool> init(std::vector<bool> a) {
+    std::vector<bool> b(a.size()-1);
+    copy(a.begin(), a.end()-1, b.begin());
+    return b;
+  }
 }
