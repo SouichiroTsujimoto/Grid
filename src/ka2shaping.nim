@@ -1,24 +1,34 @@
 import ka2token, ka2node, ka2token, ka2error, ka2show
 
-proc makeNewNode(inp_node: Node): Node
+proc makeNewNode(inp_node: Node, main_flag: bool, test: bool): (Node, bool)
 
-proc astShaping*(inp_nodes: seq[Node]): seq[Node] =
+proc astShaping*(inp_nodes: seq[Node], main_flag: bool, test: bool): (seq[Node], bool) =
   if inp_nodes == @[]:
-    return @[]
+    return (@[], main_flag)
   
   var out_nodes: seq[Node]
+  var new_main_flag = main_flag
 
   for inp_node in inp_nodes:
     case inp_node.kind
-    # パイプライン演算子
+    # パイプライン演算子を前置記法の関数の形に変形
     of nkPipeExpression:
       if inp_node.child_nodes.len() != 2:
-        out_nodes.add(makeNewNode(inp_node))
+        var new_node = makeNewNode(inp_node, new_main_flag, test)
+        new_main_flag = new_node[1]
+        out_nodes.add(new_node[0])
       elif inp_node.child_nodes[1].kind != nkCallExpression:
-        out_nodes.add(makeNewNode(inp_node))
+        var new_node = makeNewNode(inp_node, new_main_flag, test)
+        new_main_flag = new_node[1]
+        out_nodes.add(new_node[0])
       else:
-        let element = @[inp_node.child_nodes[0]].astShaping()
-        var function = @[inp_node.child_nodes[1]].astShaping()
+        var res0 = @[inp_node.child_nodes[0]].astShaping(new_main_flag, test)
+        let element = res0[0]
+        new_main_flag = res0[1]
+        var res1 = @[inp_node.child_nodes[1]].astShaping(new_main_flag, test)
+        let function = res1[0]
+        new_main_flag = res1[1]
+
         function[0].child_nodes[1].child_nodes = element & function[0].child_nodes[1].child_nodes
         var new_node = Node(
           kind:        function[0].kind,
@@ -26,7 +36,13 @@ proc astShaping*(inp_nodes: seq[Node]): seq[Node] =
           child_nodes: function[0].child_nodes,
         )
         out_nodes.add(new_node)
+    # main文をdef文の形に変形
     of nkMainStatement:
+      if main_flag:
+        echoErrorMessage(100, test)
+      else:
+        new_main_flag = true
+
       var main_type = Node(
         kind:        nkIntType,
         token:       Token(Type: T_INT, Literal: "#int"),
@@ -50,21 +66,28 @@ proc astShaping*(inp_nodes: seq[Node]): seq[Node] =
           )
         ],
       )
+      var res = inp_node.child_nodes.astShaping(new_main_flag, test)
+      new_main_flag = res[1]
       var new_node = Node(
         kind:        nkDefineStatement,
         token:       inp_node.token,
-        child_nodes: @[main_type, main_args] & inp_node.child_nodes.astShaping(),
+        child_nodes: @[main_type, main_args] & res[0],
       )
       out_nodes.add(new_node)
     else:
-      out_nodes.add(makeNewNode(inp_node))
+      var new_node = makeNewNode(inp_node, new_main_flag, test)
+      new_main_flag = new_node[1]
+      out_nodes.add(new_node[0])
 
-  return out_nodes
+  return (out_nodes, new_main_flag)
 
-proc makeNewNode(inp_node: Node): Node =
+proc makeNewNode(inp_node: Node, main_flag: bool, test: bool): (Node, bool) =
+  var new_main_flag: bool
+  var res = inp_node.child_nodes.astShaping(main_flag, test)
+  new_main_flag = res[1]
   let new_node = Node(
     kind:        inp_node.kind,
     token:       inp_node.token,
-    child_nodes: inp_node.child_nodes.astShaping(),
+    child_nodes: res[0],
   )
-  return new_node
+  return (new_node, new_main_flag)

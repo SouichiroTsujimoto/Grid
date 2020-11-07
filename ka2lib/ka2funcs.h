@@ -158,10 +158,6 @@ namespace ka23 {
     return c;
   }
 
-  // auto head = [](auto a) {
-  //   return a[0];
-  // };
-
   void print(int a) {
     std::cout << a << "\n";
   }
@@ -180,5 +176,47 @@ namespace ka23 {
     } else {
       std::cout << "false" << "\n";
     }
+  }
+
+  int head(std::vector<int> a) {
+    return a[0];
+  }
+  float head(std::vector<float> a) {
+    return a[0];
+  }
+  char head(std::vector<char> a) {
+    return a[0];
+  }
+  std::string head(std::vector<std::string> a) {
+    return a[0];
+  }
+  bool head(std::vector<bool> a) {
+    return a[0];
+  }
+
+  std::vector<int> tail(std::vector<int> a) {
+    std::vector<int> b(a.size()-1);
+    copy(a.begin()+1, a.end(), b.begin());
+    return b;
+  }
+  std::vector<float> tail(std::vector<float> a) {
+    std::vector<float> b(a.size()-1);
+    copy(a.begin()+1, a.end(), b.begin());
+    return b;
+  }
+  std::vector<char> tail(std::vector<char> a) {
+    std::vector<char> b(a.size()-1);
+    copy(a.begin()+1, a.end(), b.begin());
+    return b;
+  }
+  std::vector<std::string> tail(std::vector<std::string> a) {
+    std::vector<std::string> b(a.size()-1);
+    copy(a.begin()+1, a.end(), b.begin());
+    return b;
+  }
+  std::vector<bool> tail(std::vector<bool> a) {
+    std::vector<bool> b(a.size()-1);
+    copy(a.begin()+1, a.end(), b.begin());
+    return b;
   }
 }

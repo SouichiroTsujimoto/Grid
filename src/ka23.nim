@@ -1,4 +1,4 @@
-import  ka2parser, ka2rw, ka2node, ka2cpp, ka2shaping, ka2show
+import  ka2parser, ka2rw, ka2node, ka2cpp, ka2shaping, ka2show, ka2error
 import strutils
 
 var cppCode = """
@@ -14,10 +14,14 @@ when isMainModule:
   let sourceName = "main.ka23"
   let input = sourceName.readSource()
   var program = makeAST(input)
+  var main_flag = false
   let test = false
 
-  program = astShaping(program)
+  (program, main_flag) = astShaping(program, main_flag, test)
   echo showASTs(program)
+  if main_flag == false:
+    echoErrorMessage(101, test)
+    
   for tree in program:
     cppCode.add(makeCppCode(tree, 0, test))
 
@@ -27,9 +31,10 @@ when isMainModule:
 
 #[
   TODO
-  ・ 変数のスコープ管理がなんかバグってる(ka2cppの563行目辺り)
+  ・ 変数のスコープチェックの仕方を変える
   ・ エラーメッセージのテストも作る
   ・ 関数をちゃんとmain関数の外で定義するように ✅
+  ・ 括弧が二重になってるところを直す
   ・ 機能を増やす
     ・ ~配列~
       ・ 要素へのアクセス (hoge[0]<- これ) ✅
@@ -39,6 +44,9 @@ when isMainModule:
     ・ ~変数~
       ・ 型のキャスト
       ・ 複合代入演算子? (+=,-=,*=,/=<- これら)
+    ・ ~IO~
+      ・ println関数
+      ・ 標準入力
     ・ ~その他~
       ・ コメント
       ・ case文

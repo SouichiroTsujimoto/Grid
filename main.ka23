@@ -1,1 +1,4 @@
-def #bool a(#int b, #bool c) do let #bool d = b == 10 return c == d end
+let #array #int x = {1, 2, 3}
+main do
+  print(tail(x) !! 0)
+end

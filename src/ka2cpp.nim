@@ -328,6 +328,18 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
         return (false, OTHER, "")
     else:
       return (false, OTHER, "")
+  of "tail":
+    if argsTypeC.len() == 0:
+      return (true, IDENT, "ka23::tail")
+    elif argsTypeC.len() == 1:
+      let fmr1 = funcTypesMatch("ARRAY" & "::" & anything_t & ">>" & "ARRAY" & "::" & anything_t, argsTypeC[0])
+      if fmr1[0]:
+        let res_type = fmr1[1]
+        return (fmr1[0], res_type, "ka23::tail")
+      else:
+        return (false, OTHER, "")
+    else:
+      return (false, OTHER, "")
   else:
     return (false, NIL, "NULL")
 
@@ -898,12 +910,12 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
   return (code, codeType)
 
 proc makeCppCode*(node: Node, indent: int, test: bool): string =
-  var codeParts = makeCodeParts(node, test)
+  var parts = makeCodeParts(node, test)
   var outCode: seq[string]
   var newLine: string
   var braceCount: int = indent
 
-  for i, part in codeParts[0]:
+  for i, part in parts[0]:
     # echo $i & "回目 : " & part
     # echo part
     if part.Type[0] == '@' or part.Code == "":

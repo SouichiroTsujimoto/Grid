@@ -36,6 +36,10 @@ proc echoErrorMessage*(number: int, test: bool) =
     echo "配列が空です[15]"
   of 16:
     echo "引数の型が正しくありません"
+  of 100:
+    echo "main関数が二度定義されています"
+  of 101:
+    echo "main関数が定義されていません"
   else:
     echo "不明なエラー"
   
