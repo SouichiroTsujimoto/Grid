@@ -261,4 +261,25 @@ namespace ka23 {
     copy(a.begin(), a.end()-1, b.begin());
     return b;
   }
+
+  std::string toString(int a) {
+    return std::to_string(a);
+  }
+  std::string toString(float a) {
+    return std::to_string(a);
+  }
+  std::string toString(char a) {
+    return std::to_string(a);
+  }
+  std::string toString(std::string a) {
+    return a;
+  }
+  std::string toString(bool a) {
+    if (a) {
+      return "true";
+    }
+    else {
+      return "false";
+    }
+  }
 }

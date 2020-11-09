@@ -199,13 +199,19 @@ proc parseNodes(p: Parser, endToken: string): Node =
     p.shiftToken()
     return args
 
+
   p.shiftToken()
   args.child_nodes.add(p.parseExpression(Lowest))
-
   while p.peekToken.Type == COMMA:
     p.shiftToken()
     p.shiftToken()
     args.child_nodes.add(p.parseExpression(Lowest))
+  
+  # echo "---------"
+  # echo p.curToken.Type
+  # echo p.peekToken.Type
+  # echo endToken
+  # echo "---------"
 
   if p.peekToken.Type == endToken:
     p.shiftToken()
@@ -328,8 +334,6 @@ proc parseNilLiteral(p: Parser): Node =
     token: p.curToken,
   )
   return node
-
-#------後で修正する↓------
 
 # int型
 proc parseIntType(p: Parser): Node =

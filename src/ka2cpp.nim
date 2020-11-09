@@ -144,7 +144,7 @@ proc conversionCppType(Type: string): (string, string) =
     else:
       return (NIL, "NULL")
 
-# 型のチェックをしてC++の演算子に変換する
+# 型のチェックをしてC++の演算子に変換する 
 proc conversionCppOperator(fn: string, argsType: seq[string]): (bool, string, string) =
   let anything_t = INT & "|" & FLOAT & "|" & CHAR & "|" & STRING & "|" & BOOL
   let number_t = INT & "|" & FLOAT
@@ -360,6 +360,18 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
       if fmr1[0]:
         let res_type = fmr1[1]
         return (fmr1[0], res_type, "ka23::init")
+      else:
+        return (false, OTHER, "")
+    else:
+      return (false, OTHER, "")
+  of "toString":
+    if argsTypeC.len() == 0:
+      return (true, IDENT, "ka23::toString")
+    elif argsTypeC.len() == 1:
+      let fmr1 = funcTypesMatch(anything_t & ">>" & anything_t, argsTypeC[0])
+      if fmr1[0]:
+        let res_type = STRING
+        return (fmr1[0], res_type, "ka23::toString")
       else:
         return (false, OTHER, "")
     else:

@@ -2,8 +2,6 @@ import  ka2parser, ka2rw, ka2node, ka2cpp, ka2shaping, ka2show, ka2error
 import strutils
 
 var cppCode = """
-#include <iostream>
-#include <algorithm>
 #include "ka2lib/ka2funcs.h"
 
 """

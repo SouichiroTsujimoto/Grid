@@ -1,7 +1,3 @@
-let #array #int x = {1}
 main do
-  print(x |> tail() |> head())
-  print(x |> tail() |> last())
-  print(x |> init() |> head())
-  print(x |> init() |> last())
+  let #string a = toString(10)
 end

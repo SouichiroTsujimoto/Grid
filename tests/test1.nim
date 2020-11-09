@@ -416,3 +416,59 @@ suite "len":
       res.add(makeCppCode(tree, 0, true))
     check(res.findStr("std::vector<int> a = { 1 , 2 } ;"))
     check(res.findStr("ka23::print ( ka23::len ( a ) ) ;"))
+
+suite "head":
+  test "let #array #int x = {1, 2} print(x |> head())":
+    initTables()
+    let program = "let #array #int x = {1, 2} print(x |> head())".makeAST().astShaping(false, true)[0]
+    var res = ""
+    for tree in program:
+      res.add(makeCppCode(tree, 0, true))
+    check(res.findStr("const std::vector<int> x = { 1 , 2 } ;"))
+    check(res.findStr("ka23::print ( ka23::head ( x ) ) ;"))
+
+suite "tail":
+  test "let #array #int x = {1, 2, -3} print((x |> tail()) !! 0)":
+    initTables()
+    let program = "let #array #int x = {1, 2, -3} print((x |> tail()) !! 0)".makeAST().astShaping(false, true)[0]
+    var res = ""
+    for tree in program:
+      res.add(makeCppCode(tree, 0, true))
+    check(res.findStr("const std::vector<int> x = { 1 , 2 , -3 } ;"))
+    check(res.findStr("ka23::print ( ka23::tail ( x ) [ 0 ] ) ;"))
+
+suite "last":
+  test "let #array #int x = {1, 2} print(x |> last())":
+    initTables()
+    let program = "let #array #int x = {1, 2} print(x |> last())".makeAST().astShaping(false, true)[0]
+    var res = ""
+    for tree in program:
+      res.add(makeCppCode(tree, 0, true))
+    check(res.findStr("const std::vector<int> x = { 1 , 2 } ;"))
+    check(res.findStr("ka23::print ( ka23::last ( x ) ) ;"))
+
+suite "init":
+  test "let #array #int x = {1, 2, -3} print((x |> init()) !! 0)":
+    initTables()
+    let program = "let #array #int x = {1, 2, -3} print((x |> init()) !! 0)".makeAST().astShaping(false, true)[0]
+    var res = ""
+    for tree in program:
+      res.add(makeCppCode(tree, 0, true))
+    check(res.findStr("const std::vector<int> x = { 1 , 2 , -3 } ;"))
+    check(res.findStr("ka23::print ( ka23::init ( x ) [ 0 ] ) ;"))
+
+suite "toString":
+  test "let #string a = toString(10)":
+    initTables()
+    let program = "let #string a = toString(10)".makeAST().astShaping(false, true)[0]
+    var res = ""
+    for tree in program:
+      res.add(makeCppCode(tree, 0, true))
+    check(res.findStr("const std::string a = ka23::toString ( 10 ) ;"))
+  test "let #string a = toString(True)":
+    initTables()
+    let program = "let #string a = toString(True)".makeAST().astShaping(false, true)[0]
+    var res = ""
+    for tree in program:
+      res.add(makeCppCode(tree, 0, true))
+    check(res.findStr("const std::string a = ka23::toString ( true ) ;"))

@@ -17,6 +17,7 @@ const
   CPPCODE*      = "CPPCODE"
   ARRAY*        = "ARRAY"
   ELEMENT*      = "ELEMENT"
+  VOID*         = "VOID"
   # 演算子
   EQUAL*        = "="
   CEQUAL*       = ":="
