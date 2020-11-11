@@ -18,7 +18,7 @@ when isMainModule:
   (program, main_flag) = astShaping(program, main_flag, test)
   echo showASTs(program)
   if main_flag == false:
-    echoErrorMessage(101, test)
+    echoErrorMessage("main関数が定義されていません", test)
     
   for tree in program:
     cppCode.add(makeCppCode(tree, 0, test))

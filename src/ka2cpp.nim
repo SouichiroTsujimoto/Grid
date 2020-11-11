@@ -443,7 +443,7 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
   #     code.addSemicolon()
   #     codeType = CPPCODE
   #   else:
-  #     echoErrorMessage(13, test)
+  #     echoErrorMessage("型指定の後に名前が書かれていません"3, test)
   #     quit()
   of nkArrayLiteral:
     if node.child_nodes != @[]:
@@ -459,7 +459,7 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
           code.add((COMMA, ","))
           code.add(elem[0].replaceSemicolon(@[(OTHER, "")]))
         else:
-          echoErrorMessage(0, test)
+          echoErrorMessage("配列内の要素の型が全て同じになっていません", test)
         loopCount += 1
       code.add((RBRACE, "}"))
       code.add(("@ARRAYLENGTH", $loopCount))
@@ -478,35 +478,35 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
       code.add((INT, node.child_nodes[0].token.Literal))
       codeType = INT
     else:
-      echoErrorMessage(1, test)
+      echoErrorMessage("型指定の後に名前が書かれていません", test)
   of nkFloatType:
     if node.child_nodes != @[]:
       code.add(node.token.Type.conversionCppType())
       code.add((FLOAT, node.child_nodes[0].token.Literal))
       codeType = FLOAT
     else:
-      echoErrorMessage(1, test)
+      echoErrorMessage("型指定の後に名前が書かれていません", test)
   of nkCharType:
     if node.child_nodes != @[]:
       code.add(node.token.Type.conversionCppType())
       code.add((CHAR, node.child_nodes[0].token.Literal))
       codeType = CHAR
     else:
-      echoErrorMessage(1, test)
+      echoErrorMessage("型指定の後に名前が書かれていません", test)
   of nkStringType:
     if node.child_nodes != @[]:
       code.add(node.token.Type.conversionCppType())
       code.add((STRING, node.child_nodes[0].token.Literal))
       codeType = STRING
     else:
-      echoErrorMessage(1, test)
+      echoErrorMessage("型指定の後に名前が書かれていません", test)
   of nkBoolType:
     if node.child_nodes != @[]:
       code.add(node.token.Type.conversionCppType())
       code.add((BOOL, node.child_nodes[0].token.Literal))
       codeType = BOOL
     else:
-      echoErrorMessage(1, test)
+      echoErrorMessage("型指定の後に名前が書かれていません", test)
   of nkArrayType:
     if node.child_nodes != @[]:
       code.add(node.token.Type.conversionCppType())
@@ -517,14 +517,14 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
           codeType.add("::")
         codeType.add(tv.removeT())
     else:
-      echoErrorMessage(1, test)
+      echoErrorMessage("型指定の後に名前が書かれていません", test)
   of nkFunctionType:
     if node.child_nodes != @[]:
       code.add((T_FUNCTION, "auto"))
       code.add((FUNCTION, node.child_nodes[0].token.Literal))
       codeType = FUNCTION
     else:
-      echoErrorMessage(1, test)
+      echoErrorMessage("型指定の後に名前が書かれていません", test)
 
   # これいらんくね↓
   # 名前
@@ -550,7 +550,7 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
     # echo li[1] & "___" & lv[1]
     if li[1] == lv[1]:
       if identExistenceCheck(li[0][1][1]):
-        echoErrorMessage(3, test)
+        echoErrorMessage("既に定義されています", test)
       code.add(li[0])
       code.add((OTHER, "="))
       code.add(lv[0].replaceSemicolon(@[(OTHER, "")]))
@@ -563,7 +563,7 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
         mutable: false,
       )
     else:
-      echoErrorMessage(4, test)
+      echoErrorMessage("指定している型と値の型が違います", test)
   
   # mut文
   of nkMutStatement:
@@ -571,7 +571,7 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
     let lv = node.child_nodes[1].makeCodeParts(test)
     if li[1] == lv[1]:
       if identExistenceCheck(li[0][1][1]):
-        echoErrorMessage(3, test)
+        echoErrorMessage("既に定義されています", test)
       code.add(li[0])
       code.add((OTHER, "="))
       code.add(lv[0])
@@ -584,13 +584,13 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
         mutable: true,
       )
     else:
-      echoErrorMessage(4, test)
+      echoErrorMessage("指定している型と値の型が違います", test)
 
   # def文
   of nkDefineStatement:
     let di = node.child_nodes[0].makeCodeParts(test)
     if identExistenceCheck(di[0][1][1]):
-      echoErrorMessage(3, test)
+      echoErrorMessage("既に定義されています", test)
     # echo di
     code.add((OTHER, di[0][0].Code))
     code.add(di[0][1])
@@ -620,7 +620,7 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
           if typeMatch(st[1], di[1])[0]:
             code.add(st[0])
           else:
-            echoErrorMessage(5, test)
+            echoErrorMessage("指定している型と返り値の型が違います", test)
         else:
           code.add(statement.makeCodeParts(test)[0])
       code.add((OTHER, "}"))
@@ -645,7 +645,7 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
           if typeMatch(st[1], di[1])[0]:
             code.add(st[0])
           else:
-            echoErrorMessage(5, test)
+            echoErrorMessage("指定している型と返り値の型が違います", test)
         else:
           code.add(statement.makeCodeParts(test)[0])
       code.add((OTHER, "}"))
@@ -664,7 +664,7 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
       code.addSemicolon()
       codeType = r[1]
     else:
-      echoErrorMessage(6, test)
+      echoErrorMessage("式がありません", test)
   
   # 中置
   of nkInfixExpression:
@@ -672,13 +672,13 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
       l: (seq[codeParts], string)
       r: (seq[codeParts], string)
     if node.child_nodes.len() != 2:
-      echoErrorMessage(7, test)
+      echoErrorMessage("オペランドがありません", test)
     l = node.child_nodes[0].makeCodeParts(test)
     r = node.child_nodes[1].makeCodeParts(test)
     if l[1] == r[1]:
       let oc = node.token.Literal.conversionCppOperator(@[l[1], r[1]])
       if oc[0] == false:
-        echoErrorMessage(8, test)
+        echoErrorMessage("オペランドの型が間違っています", test)
       code.add(((OTHER, "(")))
       code.add(l[0].replaceSemicolon(@[(OTHER, "")]))
       code.add((node.token.Type, oc[2]))
@@ -687,7 +687,7 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
       code.addSemicolon()
       codeType = oc[1]
     else:
-      echoErrorMessage(9, test)
+      echoErrorMessage("オペランドの型がそれぞれ違います", test)
   
   # Generator
   of nkGenerator:
@@ -699,7 +699,7 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
       lt = l[1]
       blockPath.add("-0")
       if identExistenceCheck(l[0][1][1]):
-        echoErrorMessage(3, test)
+        echoErrorMessage("既に定義されています", test)
       identTable[l[0][1][1]] = IdentInfo(
         Type: lt,
         path: blockPath,
@@ -712,13 +712,13 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
       if lt == r[1].funcTypeSplit("ARRAY::")[2]:
         code.add(r[0])
       else:
-        echoErrorMessage(4, test)
+        echoErrorMessage("指定している型と値の型が違います", test)
     else:
-      echoErrorMessage(6, test)
+      echoErrorMessage("式がありません", test)
 
   # パイプライン演算子
   of nkPipeExpression:
-    echoErrorMessage(14, test)
+    echoErrorMessage("対象が関数ではありません", test)
 
   # 配列の要素へのアクセス
   of nkAccessElement:
@@ -736,9 +736,9 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
         code.addSemicolon()
         codeType = ls[1..ls.len()-1].join("::")
       else:
-        echoErrorMessage(8, test)
+        echoErrorMessage("オペランドの型が間違っています", test)
     else:
-      echoErrorMessage(7, test)
+      echoErrorMessage("オペランドがありません", test)
 
   # 代入式
   of nkAssignExpression:
@@ -752,9 +752,9 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
         lmc = l[0][l[0].len()-2].Code
       if identExistenceCheck(lmc):
         if identTable[lmc].mutable == false:
-          echoErrorMessage(11, test)
+          echoErrorMessage("代入しようとしている変数がイミュータブルです", test)
       else:
-        echoErrorMessage(2, test)
+        echoErrorMessage("定義されていない名前です", test)
       code.add(l[0].replaceSemicolon(@[(OTHER, "")]))
       lt = l[1]
 
@@ -764,12 +764,12 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
       identTable[lmc].contents = r[0]
       rt = r[1]
     else:
-      echoErrorMessage(7, test)
+      echoErrorMessage("オペランドがありません", test)
     code.addSemicolon()
     if typeMatch(lt, rt)[0]:
       codeType = lt
     else:
-      echoErrorMessage(9, test)
+      echoErrorMessage("オペランドの型がそれぞれ違います", test)
 
   # 前置
   # TODO 
@@ -804,7 +804,7 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
         code.add((IDENT, funcName))
         codeType = ftm[2]
       else:
-        echoErrorMessage(16, test)
+        echoErrorMessage("引数の型が正しくありません", test)
     else:
       let ccf = conversionCppFunction(funcName, argsType)
       if ccf[0]:
@@ -812,9 +812,9 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
         codeType = ccf[1]
       else:
         if ccf[1] == OTHER:
-          echoErrorMessage(13, test)
+          echoErrorMessage("引数の数が足りていません", test)
         else:
-          echoErrorMessage(2, test)
+          echoErrorMessage("定義されていない名前です", test)
     
     code.add((OTHER, "("))
     for i, argc in argsCode:
@@ -835,7 +835,7 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
       # of "ka23::head":
         
       #   if ats[ats.len()-1].Code.parseInt() == 0:
-      #     echoErrorMessage(15, test)
+      #     echoErrorMessage("型指定の後に名前が書かれていません"5, test)
       
 
   # if文
@@ -915,7 +915,7 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
       code.add((OTHER, ")"))
       code.addSemicolon()
     else:
-      echoErrorMessage(12, test)
+      echoErrorMessage("返り値の型が異なっています", test)
 
   # else式
   of nkElseExpression:

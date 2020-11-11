@@ -39,7 +39,7 @@ proc astShaping*(inp_nodes: seq[Node], main_flag: bool, test: bool): (seq[Node],
     # main文をdef文の形に変形
     of nkMainStatement:
       if main_flag:
-        echoErrorMessage(100, test)
+        echoErrorMessage("main関数が二度定義されています", test)
       else:
         new_main_flag = true
 
