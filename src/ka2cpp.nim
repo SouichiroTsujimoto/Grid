@@ -55,11 +55,9 @@ proc deleteScope(n: int): seq[codeParts] =
   if scopeTable.len()-1 > n:
     var new_scopeTable = initTable[int, seq[string]]()
     for i in 0..n:
-      echo i
       new_scopeTable[i] = scopeTable[i]
-    
-    for i in n..scopeTable.len()-1:
-      echo i
+
+    for i in n+1..scopeTable.len()-1:
       for ident in scopeTable[i]:
         if identTable[ident].delete == true:
           result.add((OTHER, "delete"))
