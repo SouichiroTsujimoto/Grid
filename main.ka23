@@ -1,3 +1,5 @@
 main do
   let #string a = toString(10)
+  let #string a = "aaaaa"
+  print(a)
 end

@@ -10,47 +10,74 @@ type codeParts = tuple
 type IdentInfo* = ref object of RootObj
   Type*:        string
   contents*:    seq[codeParts]
-  path*:        string
+  path:         int
   mutable*:     bool
+  delete*:      bool
 
 var
+  #                      ↓名前    ↓情報
   identTable = initTable[string, IdentInfo]()
-  blockPath = "0"
+  #                      ↓ネストの深さ   ↓そのスコープに含まれる変数
+  scopeTable = initTable[int,          seq[string]]()
+  nesting = 0
 
 proc initTables*() =
   identTable = initTable[string, IdentInfo]()
-  blockPath = "0"
+  scopeTable = initTable[int, seq[string]]()
+  nesting = 0
 
-proc blockPathMatch(target: string): bool =
-  let bps = blockPath.split("-")
-  let tps = target.split("-")
+proc removeT(Type: string): string =
+  if Type[0] == 'T' and Type[1] == '_':
+    return Type[2..Type.len()-1]
+  else:
+    return Type
+
+proc addSemicolon(parts: var seq[codeParts]) =
+  let tail = parts[parts.len()-1]
+  if tail.Type != SEMICOLON:
+    parts.add((SEMICOLON, ";"))
+
+proc addScopeTable(ident: string, n: int) =
+  if scopeTable.contains(n):
+    var flag = false
+    for element in scopeTable[n]:
+      if element == ident:
+        flag = true
+    # まだ登録されていなければ追加する
+    if flag == false:
+      scopeTable[n].add(ident)
+  else:
+    scopeTable[n] = @[ident]
   
-  # # 後で消す
-  # echo tps[0..tps.len()-2]
-  # echo "pathのチェック"
+proc deleteScope(n: int): seq[codeParts] =
+  echo scopeTable
 
-  if tps != @[]:
-    for i, tp in tps[0..tps.len()-2]:
-      if tp != bps[i]:
-        return false
-  
-  return true
+  if scopeTable.len()-1 > n:
+    var new_scopeTable = initTable[int, seq[string]]()
+    for i in 0..n:
+      echo i
+      new_scopeTable[i] = scopeTable[i]
+    
+    for i in n..scopeTable.len()-1:
+      echo i
+      for ident in scopeTable[i]:
+        if identTable[ident].delete == true:
+          result.add((OTHER, "delete"))
+          result.add((identTable[ident].Type, ident))
+          result.addSemicolon()
 
-proc nextPath(): string =
-  let bps = blockPath.split("-")
-  let next = bps[bps.len()-1].parseInt() + 1
-  let res = bps[0..bps.len()-2] & $next
+    scopeTable = new_scopeTable
 
-  return res.join("-")
+  echo scopeTable
 
-proc searchCodeParts(codePartsList: seq[codeParts], target: string): seq[codeParts] =
-  for cp in codePartsList:
-    if cp.Type == target:
-      result.add(cp)
+# proc searchCodeParts(codePartsList: seq[codeParts], target: string): seq[codeParts] =
+#   for cp in codePartsList:
+#     if cp.Type == target:
+#       result.add(cp)
 
 proc identExistenceCheck(ident: string): bool =
   if identTable.contains(ident):
-    if identTable[ident].path.blockPathMatch():
+    if identTable[ident].path <= nesting:
       return true
   
   return false
@@ -379,17 +406,6 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
   else:
     return (false, NIL, "NULL")
 
-proc removeT(Type: string): string =
-  if Type[0] == 'T' and Type[1] == '_':
-    return Type[2..Type.len()-1]
-  else:
-    return Type
-
-proc addSemicolon(parts: var seq[codeParts]) =
-  let tail = parts[parts.len()-1]
-  if tail.Type != SEMICOLON:
-    parts.add((SEMICOLON, ";"))
-
 proc replaceSemicolon(parts: seq[codeParts], obj: seq[codeParts]): seq[codeParts] =
   let tail = parts[parts.len()-1]
   if tail.Type[0] == '@':
@@ -526,12 +542,16 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
     else:
       echoErrorMessage("型指定の後に名前が書かれていません", test)
 
-  # これいらんくね↓
   # 名前
   of nkIdent:
     if identExistenceCheck(node.token.Literal):
-      code.add((IDENT, node.token.Literal))
-      codeType = identTable[node.token.Literal].Type
+      if identTable[node.token.Literal].mutable:
+        code.add((IDENT, node.token.Literal))
+        codeType = identTable[node.token.Literal].Type
+      else:
+        code.add((OTHER, "*"))
+        code.add((IDENT, node.token.Literal))
+        codeType = identTable[node.token.Literal].Type
     else:
       let ic = node.token.Literal.conversionCppFunction(@[])
       code.add((ic[1], ic[2]))
@@ -544,24 +564,34 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
   
   # let文
   of nkLetStatement:
-    code.add((OTHER, "const"))
     let li = node.child_nodes[0].makeCodeParts(test)
     let lv = node.child_nodes[1].makeCodeParts(test)
     # echo li[1] & "___" & lv[1]
     if li[1] == lv[1]:
       if identExistenceCheck(li[0][1][1]):
-        echoErrorMessage("既に定義されています", test)
-      code.add(li[0])
+        code.add((OTHER, "delete"))
+        code.add(li[0][1])
+        code.addSemicolon()
+      code.add(li[0][0])
+      code.add((OTHER, "*"))
+      code.add(li[0][1])
+      code.add((OTHER, "="))
+      code.add((OTHER, "new"))
+      code.add(li[0][0])
+      code.addSemicolon()
+      code.add((OTHER, "*"))
+      code.add(li[0][1])
       code.add((OTHER, "="))
       code.add(lv[0].replaceSemicolon(@[(OTHER, "")]))
       code.addSemicolon()
-      blockPath = nextPath()
       identTable[li[0][1][1]] = IdentInfo(
-        Type: li[1],
+        Type:     li[1],
         contents: lv[0],
-        path: blockPath,
-        mutable: false,
+        path:     nesting,
+        mutable:  false,
+        delete:   true,
       )
+      addScopeTable(li[0][1][1], nesting)
     else:
       echoErrorMessage("指定している型と値の型が違います", test)
   
@@ -576,13 +606,14 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
       code.add((OTHER, "="))
       code.add(lv[0])
       code.addSemicolon()
-      blockPath = nextPath()
       identTable[li[0][1][1]] = IdentInfo(
-        Type: li[1],
+        Type:     li[1],
         contents: lv[0],
-        path: blockPath,
-        mutable: true,
+        path:     nesting,
+        mutable:  true,
+        delete:   false,
       )
+      addScopeTable(li[0][1][1], nesting)
     else:
       echoErrorMessage("指定している型と値の型が違います", test)
 
@@ -596,21 +627,25 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
     code.add(di[0][1])
     if node.child_nodes[1].child_nodes == @[]:
       identTable[di[0][1][1]] = IdentInfo(
-        Type: NIL & ">>" & di[1],
-        path: blockPath,
+        Type:    NIL & ">>" & di[1],
+        path:    nesting,
         mutable: false,
+        delete:  false,
       )
+      addScopeTable(di[0][1][1], nesting)
     else:
       var argsType: seq[string]
       for parameter in node.child_nodes[1].child_nodes:
         argsType.add(parameter.token.Type.removeT())
       identTable[di[0][1][1]] = IdentInfo(
-        Type: argsType.join(">>") & ">>" & di[1],
-        path: blockPath,
+        Type:    argsType.join(">>") & ">>" & di[1],
+        path:    nesting,
         mutable: false,
+        delete:  false,
       )
-    var obp = blockPath
-    blockPath.add("-0")
+      addScopeTable(di[0][1][1], nesting)
+    var origin = nesting
+    nesting = nesting + 1
     if node.child_nodes[1].child_nodes == @[]:
       code.add((OTHER, "()"))
       code.add((OTHER, "{"))
@@ -623,20 +658,20 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
             echoErrorMessage("指定している型と返り値の型が違います", test)
         else:
           code.add(statement.makeCodeParts(test)[0])
-      code.add((OTHER, "}"))
-      code.addSemicolon()
     else:
       code.add((OTHER, "("))
-      blockPath = nextPath()
       for i, parameter in node.child_nodes[1].child_nodes:
         if i != 0:
           code.add((OTHER, ","))
         let pr = parameter.makeCodeParts(test)
         code.add(pr[0])
         identTable[parameter.child_nodes[0].token.Literal] = IdentInfo(
-          Type: pr[1],
-          path: blockPath,
+          Type:    pr[1],
+          path:    nesting,
+          mutable: false,
+          delete:  false,
         )
+        addScopeTable(parameter.child_nodes[0].token.Literal, nesting)
       code.add((OTHER, ")"))
       code.add((OTHER, "{"))
       for statement in node.child_nodes[2].child_nodes:
@@ -648,9 +683,11 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
             echoErrorMessage("指定している型と返り値の型が違います", test)
         else:
           code.add(statement.makeCodeParts(test)[0])
-      code.add((OTHER, "}"))
-      code.add((OTHER, "\n"))
-    blockPath = obp
+    # nestingをリセット
+    nesting = origin
+    code.add(deleteScope(nesting))
+    code.add((OTHER, "}"))
+    code.add((OTHER, "\n"))
     codeType = DEFINE
 
   # return文
@@ -697,12 +734,14 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
       let l = node.child_nodes[0].makeCodeParts(test)
       code.add(l[0])
       lt = l[1]
-      blockPath.add("-0")
+      nesting = nesting + 1
       if identExistenceCheck(l[0][1][1]):
         echoErrorMessage("既に定義されています", test)
       identTable[l[0][1][1]] = IdentInfo(
-        Type: lt,
-        path: blockPath,
+        Type:    lt,
+        path:    nesting,
+        mutable: false,
+        delete:  false,
       )
       codeType = l[1]
       
@@ -926,7 +965,7 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
   # for文
   # TODO
   of nkForStatement:
-    let obp = blockPath
+    let origin = nesting
     code.add((OTHER, "for"))
     code.add((OTHER, "("))
     code.add(node.child_nodes[0].makeCodeParts(test)[0])
@@ -936,9 +975,10 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
     for i, statement in node.child_nodes[1].child_nodes:
       sr = statement.makeCodeParts(test)
       code.add(sr[0])
+    nesting = origin
+    code.add(deleteScope(nesting))
     code.add((OTHER, "}"))
     code.add((OTHER, "\n"))
-    blockPath = obp
     codeType = sr[1]
   else:
     return (code, codeType)
