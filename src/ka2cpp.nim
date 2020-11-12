@@ -50,7 +50,11 @@ proc addScopeTable(ident: string, n: int) =
     scopeTable[n] = @[ident]
   
 proc deleteScope(n: int): seq[codeParts] =
-  echo scopeTable
+  # echo scopeTable
+  # for ident, info in identTable:
+  #   echo ident
+
+  # echo "----------------"
 
   if scopeTable.len()-1 > n:
     var new_scopeTable = initTable[int, seq[string]]()
@@ -63,10 +67,13 @@ proc deleteScope(n: int): seq[codeParts] =
           result.add((OTHER, "delete"))
           result.add((identTable[ident].Type, ident))
           result.addSemicolon()
+        identTable.del(ident)
 
     scopeTable = new_scopeTable
 
-  echo scopeTable
+  # for ident, info in identTable:
+  #   echo ident
+  # echo scopeTable
 
 # proc searchCodeParts(codePartsList: seq[codeParts], target: string): seq[codeParts] =
 #   for cp in codePartsList:

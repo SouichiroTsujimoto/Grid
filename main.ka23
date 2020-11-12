@@ -1,5 +1,4 @@
 main do
-  let #string a = toString(10)
-  let #string a = "aaaaa"
+  let #string a = "Hello"
   print(a)
 end
