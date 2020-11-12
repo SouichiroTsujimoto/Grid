@@ -550,15 +550,17 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
   # 名前
   of nkIdent:
     if identExistenceCheck(node.token.Literal):
-      if identTable[node.token.Literal].mutable:
+      if identTable[node.token.Literal].delete:
+        code.add((OTHER, "*"))
         code.add((IDENT, node.token.Literal))
         codeType = identTable[node.token.Literal].Type
       else:
-        code.add((OTHER, "*"))
         code.add((IDENT, node.token.Literal))
         codeType = identTable[node.token.Literal].Type
     else:
       let ic = node.token.Literal.conversionCppFunction(@[])
+      if ic[1] == NIL:
+        echoErrorMessage("定義されていない名前です", test)
       code.add((ic[1], ic[2]))
       codeType = ic[1]
 
@@ -600,8 +602,8 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
     else:
       echoErrorMessage("指定している型と値の型が違います", test)
   
-  # mut文
-  of nkMutStatement:
+  # var文
+  of nkVarStatement:
     let li = node.child_nodes[0].makeCodeParts(test)
     let lv = node.child_nodes[1].makeCodeParts(test)
     if li[1] == lv[1]:

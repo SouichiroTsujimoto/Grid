@@ -1,4 +1,7 @@
+def #int a(#int b, #int c) do
+  return (b + c) * 2
+end
+
 main do
-  let #string a = "Hello"
-  print(a)
+  print(a(10, 20))
 end

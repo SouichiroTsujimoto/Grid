@@ -50,7 +50,7 @@ const
   FALSE*        = "FALSE"
   NIL*          = "NIL"
   LET*          = "LET"
-  MUT*          = "MUT"
+  VAR*          = "VAR"
   MAIN*         = "MAIN"
   DEFINE*       = "DEFINE"
   RETURN*       = "RETURN"
@@ -81,7 +81,7 @@ let keywords = {
   "False"     : FALSE,
   "Nil"       : NIL,
   "let"       : LET,
-  "mut"       : MUT,
+  "var"       : VAR,
   "main"      : MAIN,
   "def"       : DEFINE,
   "return"    : RETURN,

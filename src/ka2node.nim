@@ -25,7 +25,7 @@ type
     nkGenerator
     nkAssignExpression
     nkLetStatement
-    nkMutStatement
+    nkVarStatement
     nkMainStatement
     nkDefineStatement
     nkReturnStatement

@@ -49,10 +49,10 @@ proc parseLetStatement(p: Parser): Node =
 
   return node
 
-# mut文
-proc parseMutStatement(p: Parser): Node =
+# var文
+proc parseVarStatement(p: Parser): Node =
   var node = Node(
-    kind:        nkMutStatement,
+    kind:        nkVarStatement,
     token:       p.curToken,
     child_nodes: @[],
   )
@@ -601,7 +601,7 @@ proc parseBlockStatement(p: Parser, endTokenTypes: seq[string]): Node =
 proc parseStatement(p: Parser): Node =
   case p.curToken.Type
   of LET:    return p.parseLetStatement()
-  of MUT:    return p.parseMutStatement()
+  of VAR:    return p.parseVarStatement()
   of MAIN:   return p.parseMainStatement()
   of DEFINE: return p.parseDefineStatement()
   of FOR:    return p.parseForStatement()
