@@ -158,41 +158,35 @@ namespace ka23 {
     return c;
   }
 
-  void print(int a) {
-    std::cout << a << "\n";
-  }
-  void print(float a) {
-    std::cout << a << "\n";
-  }
   void print(char a) {
-    std::cout << a << "\n";
+    std::cout << a;
   }
   void print(std::string a) {
-    std::cout << a << "\n";
-  }
-  void print(bool a) {
-    if (a == true) {
-      std::cout << "true" << "\n";
-    } else {
-      std::cout << "false" << "\n";
-    }
+    std::cout << a;
   }
 
-  int head(std::vector<int> a) {
+  void println(char a) {
+    std::cout << a << "\n";
+  }
+  void println(std::string a) {
+    std::cout << a << "\n";
+  }
+
+  int head(int a[]) {
     return a[0];
   }
-  float head(std::vector<float> a) {
-    return a[0];
-  }
-  char head(std::vector<char> a) {
-    return a[0];
-  }
-  std::string head(std::vector<std::string> a) {
-    return a[0];
-  }
-  bool head(std::vector<bool> a) {
-    return a[0];
-  }
+  // float head(std::vector<float> a) {
+  //   return a[0];
+  // }
+  // char head(std::vector<char> a) {
+  //   return a[0];
+  // }
+  // std::string head(std::vector<std::string> a) {
+  //   return a[0];
+  // }
+  // bool head(std::vector<bool> a) {
+  //   return a[0];
+  // }
 
   std::vector<int> tail(std::vector<int> a) {
     std::vector<int> b(a.size()-1);

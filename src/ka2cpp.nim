@@ -259,6 +259,7 @@ proc conversionCppOperator(fn: string, argsType: seq[string]): (bool, string, st
 proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, string) =
   let anything_t = INT & "|" & FLOAT & "|" & CHAR & "|" & STRING & "|" & BOOL
   let number_t = INT & "|" & FLOAT
+  let letter_t = CHAR & "|" & STRING
   var argsTypeC = argsType
   # for _ in [argsTypeC.len()-1..2]:
   #   argsTypeC.add("")
@@ -316,10 +317,22 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
     if argsTypeC.len() == 0:
       return (true, IDENT, "ka23::print")
     elif argsTypeC.len() == 1:
-      let fmr1 = funcTypesMatch(anything_t & ">>" & NIL, argsTypeC[0])
+      let fmr1 = funcTypesMatch(letter_t & ">>" & NIL, argsTypeC[0])
       if fmr1[0]:
         let res_type = NIL
         return (fmr1[0], res_type, "ka23::print")
+      else:
+        return (false, OTHER, "")
+    else:
+      return (false, OTHER, "")
+  of "println":
+    if argsTypeC.len() == 0:
+      return (true, IDENT, "ka23::println")
+    elif argsTypeC.len() == 1:
+      let fmr1 = funcTypesMatch(letter_t & ">>" & NIL, argsTypeC[0])
+      if fmr1[0]:
+        let res_type = NIL
+        return (fmr1[0], res_type, "ka23::println")
       else:
         return (false, OTHER, "")
     else:
@@ -443,7 +456,7 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
     code.add((INT, node.token.Literal))
     codeType = INT
   of nkFloatLiteral:
-    code.add((FLOAT, node.token.Literal))
+    code.add((FLOAT, node.token.Literal & "f"))
     codeType = FLOAT
   of nkBoolLiteral:
     if node.token.Literal == "True":
@@ -858,7 +871,7 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
         codeType = ccf[1]
       else:
         if ccf[1] == OTHER:
-          echoErrorMessage("引数の数が足りていません", test)
+          echoErrorMessage("引数の型が正しくありません", test)
         else:
           echoErrorMessage("定義されていない名前です", test)
     
