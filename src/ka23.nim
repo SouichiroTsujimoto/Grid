@@ -1,4 +1,4 @@
-import  ka2parser, ka2rw, ka2node, ka2cpp, ka2shaping, ka2show, ka2error
+import  ka2parser, ka2rw, ka2node, ka2cpp, ka2shaping, ka2show, ka2error, ka2token
 import strutils
 
 var cppCode = """
@@ -11,17 +11,24 @@ when isMainModule:
   # let sourceName = readLine(stdin)
   let sourceName = "main.ka23"
   let input = sourceName.readSource()
-  var program = makeAST(input)
+  var asts = makeAST(input)
   var main_flag = false
   let test = false
 
-  (program, main_flag) = astShaping(program, main_flag, test)
-  echo showASTs(program)
+  (asts, main_flag) = astShaping(asts, main_flag, test)
+
+  var root = Node(
+    kind:        nkRoot,
+    token:       Token(Type: "", Literal: ""),
+    child_nodes: asts,
+  )
+
+  echo showAST(root, 0)
+
   if main_flag == false:
     echoErrorMessage("main文が記述されていません", test)
     
-  for tree in program:
-    cppCode.add(makeCppCode(tree, 0, test))
+  cppCode.add(makeCppCode(root, 0, test))
 
   let cppFileName = sourceName.split(".")[0] & ".cpp"
   writeCpp(cppFileName, cppCode)
@@ -43,7 +50,7 @@ when isMainModule:
       ・ 型のキャスト
       ・ 複合代入演算子? (+=,-=,*=,/=<- これら)
     ・ ~IO~
-      ・ println関数
+      ・ println関数 ✅
       ・ 標準入力
     ・ ~その他~
       ・ コメント

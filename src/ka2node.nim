@@ -2,6 +2,7 @@ import ka2token
 
 type 
   NodeKind* = enum
+    nkRoot
     nkNil
     nkDo
     nkArgs

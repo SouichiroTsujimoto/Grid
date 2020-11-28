@@ -18,7 +18,7 @@ var
   #                      ↓名前    ↓情報
   identTable = initTable[string, IdentInfo]()
   #                      ↓ネストの深さ   ↓そのスコープに含まれる変数
-  scopeTable = initTable[int,          seq[string]]()
+  scopeTable = initTable[int,         seq[string]]()
   nesting = 0
 
 proc initTables*() =
@@ -255,7 +255,6 @@ proc conversionCppOperator(fn: string, argsType: seq[string]): (bool, string, st
       return (false, "", "!=")
 
 # 型のチェックをしてC++の関数に変換する
-# TODO: funcTypesMatchを大幅に変えたい 明らかに今のじゃダメ
 proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, string) =
   let anything_t = INT & "|" & FLOAT & "|" & CHAR & "|" & STRING & "|" & BOOL
   let number_t = INT & "|" & FLOAT
@@ -451,6 +450,7 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
     codeType: string
   
   case node.kind
+
   # リテラル
   of nkIntLiteral:
     code.add((INT, node.token.Literal))
@@ -573,7 +573,7 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
     else:
       let ic = node.token.Literal.conversionCppFunction(@[])
       if ic[1] == NIL:
-        echoErrorMessage("定義されていない名前です", test)
+        echoErrorMessage("定義されていない名前", test)
       code.add((ic[1], ic[2]))
       codeType = ic[1]
 
@@ -582,10 +582,13 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
   #   code.add((IDENT, "ka23::map"))
   #   codeType = IDENT
   
+  # 
+  
   # let文
   of nkLetStatement:
     let li = node.child_nodes[0].makeCodeParts(test)
     let lv = node.child_nodes[1].makeCodeParts(test)
+    echo li
     # echo li[1] & "___" & lv[1]
     if li[1] == lv[1]:
       if identExistenceCheck(li[0][1][1]):
@@ -1006,10 +1009,16 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
   return (code, codeType)
 
 proc makeCppCode*(node: Node, indent: int, test: bool): string =
-  var parts = makeCodeParts(node, test)
+  var parts: (seq[codeParts], string)
+  for child in node.child_nodes:
+    parts[0].add(makeCodeParts(child, test)[0])
   var outCode: seq[string]
   var newLine: string
   var braceCount: int = indent
+  
+  for d in deleteScope(-1):
+    parts[0].add(d)
+    # echo d
 
   for i, part in parts[0]:
     # echo $i & "回目 : " & part

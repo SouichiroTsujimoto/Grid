@@ -594,7 +594,6 @@ proc parseBlockStatement(p: Parser, endTokenTypes: seq[string]): Node =
       let statement = p.parseStatement()
       if statement != nil:
         bs.child_nodes.add(statement)
-        
   return bs
 
 # 文の処理

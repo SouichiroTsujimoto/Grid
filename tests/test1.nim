@@ -81,83 +81,120 @@ suite "let":
   test "let #int a = 10":
     initTables()
     let program = "let #int a = 10".makeAST().astShaping(false, true)[0]
-    check(makeCppCode(program[0], 0, true).findStr("const int a = 10 ;"))
+    var res = ""
+    for tree in program:
+      res.add(makeCppCode(tree, 0, true))
+    check(res.findStr("int * a = new int ;"))
+    check(res.findStr("* a = 10 ;"))
+    check(res.findStr("delete a ;"))
   test "let #int a = 10 + 10":
     initTables()
     let program = "let #int a = 10 + 10".makeAST().astShaping(false, true)[0]
-    check(makeCppCode(program[0], 0, true).findStr("const int a = ( 10 + 10 ) ;"))
+    var res = ""
+    for tree in program:
+      res.add(makeCppCode(tree, 0, true))
+    check(res.findStr("int * a = new int ;"))
+    check(res.findStr("* a = ( 10 + 10 ) ;"))
+    check(res.findStr("delete a ;"))
   test "let #float a = 1.5":
     initTables()
     let program = "let #float a = 1.5".makeAST().astShaping(false, true)[0]
-    check(makeCppCode(program[0], 0, true).findStr("const float a = 1.5 ;"))
+    var res = ""
+    for tree in program:
+      res.add(makeCppCode(tree, 0, true))
+    check(res.findStr("float * a = new float ;"))
+    check(res.findStr("* a = 1.5f ;"))
+    check(res.findStr("delete a ;"))
   test "let #char a = \'A\'":
     initTables()
     let program = "let #char a = \'A\'".makeAST().astShaping(false, true)[0]
-    check(makeCppCode(program[0], 0, true).findStr("const char a = \'A\' ;"))
+    var res = ""
+    for tree in program:
+      res.add(makeCppCode(tree, 0, true))
+    check(res.findStr("char * a = new char ;"))
+    check(res.findStr("* a = \'A\' ;"))
+    check(res.findStr("delete a ;"))
+
+
   test "let #string a = \"Hello\"":
     initTables()
     let program = "let #string a = \"Hello\"".makeAST().astShaping(false, true)[0]
-    check(makeCppCode(program[0], 0, true).findStr("const std::string a = \"Hello\" ;"))
+    var res = ""
+    for tree in program:
+      res.add(makeCppCode(tree, 0, true))
+    check(res.findStr("std::string * a = new std::string ;"))
+    check(res.findStr("* a = \"Hello\" ;"))
+    check(res.findStr("delete a ;"))
   test "let #bool a = True":
     initTables()
     let program = "let #bool a = True".makeAST().astShaping(false, true)[0]
-    check(makeCppCode(program[0], 0, true).findStr("const bool a = true ;"))
+    var res = ""
+    for tree in program:
+      res.add(makeCppCode(tree, 0, true))
+    check(res.findStr("bool * a = new bool ;"))
+    check(res.findStr("* a = true ;"))
+    check(res.findStr("delete a ;"))
   test "let #bool a = 1 >= 10":
     initTables()
     let program = "let #bool a = 1 >= 10".makeAST().astShaping(false, true)[0]
-    check(makeCppCode(program[0], 0, true).findStr("bool a = ( 1 >= 10 ) ;"))
+    var res = ""
+    for tree in program:
+      res.add(makeCppCode(tree, 0, true))
+    check(res.findStr("bool * a = new bool ;"))
+    check(res.findStr("* a = ( 1 >= 10 ) ;"))
+    check(res.findStr("delete a ;"))
 
-suite "mut":
-  test "mut #int a = 10":
+suite "var":
+  test "var #int a = 10":
     initTables()
-    let program = "mut #int a = 10".makeAST().astShaping(false, true)[0]
+    let program = "var #int a = 10".makeAST().astShaping(false, true)[0]
     check(makeCppCode(program[0], 0, true).findStr("int a = 10 ;"))
-  test "mut #int a = 10 + 10":
+  test "var #int a = 10 + 10":
     initTables()
-    let program = "mut #int a = 10 + 10".makeAST().astShaping(false, true)[0]
+    let program = "var #int a = 10 + 10".makeAST().astShaping(false, true)[0]
     check(makeCppCode(program[0], 0, true).findStr("int a = ( 10 + 10 ) ;"))
-  test "mut #float a = 1.5":
+  test "var #float a = 1.5":
     initTables()
-    let program = "mut #float a = 1.5".makeAST().astShaping(false, true)[0]
-    check(makeCppCode(program[0], 0, true).findStr("float a = 1.5 ;"))
-  test "mut #char a = \'A\'":
+    let program = "var #float a = 1.5".makeAST().astShaping(false, true)[0]
+    check(makeCppCode(program[0], 0, true).findStr("float a = 1.5f ;"))
+  test "var #char a = \'A\'":
     initTables()
-    let program = "mut #char a = \'A\'".makeAST().astShaping(false, true)[0]
+    let program = "var #char a = \'A\'".makeAST().astShaping(false, true)[0]
     check(makeCppCode(program[0], 0, true).findStr("char a = \'A\' ;"))
-  test "mut #string a = \"Hello\"":
+  test "var #string a = \"Hello\"":
     initTables()
-    let program = "mut #string a = \"Hello\"".makeAST().astShaping(false, true)[0]
+    let program = "var #string a = \"Hello\"".makeAST().astShaping(false, true)[0]
     check(makeCppCode(program[0], 0, true).findStr("std::string a = \"Hello\" ;"))
-  test "mut #bool a = True":
+  test "var #bool a = true":
     initTables()
-    let program = "mut #bool a = True".makeAST().astShaping(false, true)[0]
+    let program = "var #bool a = True".makeAST().astShaping(false, true)[0]
     check(makeCppCode(program[0], 0, true).findStr("bool a = true ;"))
-  test "mut #bool a = 1 >= 10":
+  test "var #bool a = 1 >= 10":
     initTables()
-    let program = "mut #bool a = 1 >= 10".makeAST().astShaping(false, true)[0]
+    let program = "var #bool a = 1 >= 10".makeAST().astShaping(false, true)[0]
     check(makeCppCode(program[0], 0, true).findStr("bool a = ( 1 >= 10 ) ;"))
 
 suite ":=":
-  test "mut #int a = 10 a := 20":
+  test "var #int a = 10 a := 20":
     initTables()
-    let program = "mut #int a = 10 a := 20".makeAST().astShaping(false, true)[0]
+    let program = "var #int a = 10 a := 20".makeAST().astShaping(false, true)[0]
     var res = ""
     for tree in program:
       res.add(makeCppCode(tree, 0, true))
     check(res.findStr("int a = 10 ;"))
     check(res.findStr("a = 20 ;"))
-  test "mut #int a = 10 mut #int b = 20 a := b := 20":
+  test "var #int a = 10 var #int b = 20 a := b := 20":
     initTables()
-    let program = "mut #int a = 10 mut #int b = 20 a := b := 20".makeAST().astShaping(false, true)[0]
+    let program = "var #int a = 10 var #int b = 20 a := b := 20".makeAST().astShaping(false, true)[0]
     var res = ""
     for tree in program:
       res.add(makeCppCode(tree, 0, true))
     check(res.findStr("int a = 10 ;"))
     check(res.findStr("int b = 20 ;"))
     check(res.findStr("a = b = 20 ;"))
-  test "mut #int a = 10 mut #int b = 20 mut #int c = 30 a := b := c := 20":
+  test "var #int a = 10 var #int b = 20 var #int c = 30 a := b := c := 20":
     initTables()
-    let program = "mut #int a = 10 mut #int b = 20 mut #int c = 30 a := b := c := 20".makeAST().astShaping(false, true)[0]
+    let program = "var #int a = 10 var #int b = 20 var #int c = 30 a := b := c := 20".makeAST().astShaping(false, true)[0]
     var res = ""
     for tree in program:
       res.add(makeCppCode(tree, 0, true))
@@ -311,14 +348,14 @@ suite "array":
     let program = "let #array #array #int a = {{1, 2}, {1}}".makeAST().astShaping(false, true)[0]
     let res = makeCppCode(program[0], 0, true)
     check(res.findStr("const std::vector<std::vector<int>> a = { { 1 , 2 } , { 1 } } ;"))
-  test "mut #array #array #int a = {{2, 5, 6}, {4, 5}}":
+  test "var #array #array #int a = {{2, 5, 6}, {4, 5}}":
     initTables()
-    let program = "mut #array #array #int a = {{2, 5, 6}, {4, 5}}".makeAST().astShaping(false, true)[0]
+    let program = "var #array #array #int a = {{2, 5, 6}, {4, 5}}".makeAST().astShaping(false, true)[0]
     let res = makeCppCode(program[0], 0, true)
     check(res.findStr("std::vector<std::vector<int>> a = { { 2 , 5 , 6 } , { 4 , 5 } } ;"))
-  test "mut #array #array #array #int a = {{{2}, {5, 6}}, {{4, 1}, {5}}}":
+  test "var #array #array #array #int a = {{{2}, {5, 6}}, {{4, 1}, {5}}}":
     initTables()
-    let program = "mut #array #array #array #int a = {{{2}, {5, 6}}, {{4, 1}, {5}}}".makeAST().astShaping(false, true)[0]
+    let program = "var #array #array #array #int a = {{{2}, {5, 6}}, {{4, 1}, {5}}}".makeAST().astShaping(false, true)[0]
     let res = makeCppCode(program[0], 0, true)
     check(res.findStr("std::vector<std::vector<std::vector<int>>> a = { { { 2 } , { 5 , 6 } } , { { 4 , 1 } , { 5 } } } ;"))
 
@@ -388,9 +425,9 @@ suite "for":
     check(res.findStr("}"))
     check(res.findStr("}"))
     check(res.findStr("}"))
-  test "mut #int x = 0 for #int a <- {1, 2, 3} do x := x + a end":
+  test "var #int x = 0 for #int a <- {1, 2, 3} do x := x + a end":
     initTables()
-    let program = "mut #int x = 0 for #int a <- {1, 2, 3} do x := x + a end".makeAST().astShaping(false, true)[0]
+    let program = "var #int x = 0 for #int a <- {1, 2, 3} do x := x + a end".makeAST().astShaping(false, true)[0]
     var res = ""
     for tree in program:
       res.add(makeCppCode(tree, 0, true))
@@ -400,17 +437,17 @@ suite "for":
     check(res.findStr("}"))
 
 suite "len":
-  test "mut #array #int a = {1, 2} print(len(a))":
+  test "var #array #int a = {1, 2} print(len(a))":
     initTables()
-    let program = "mut #array #int a = {1, 2} print(len(a))".makeAST().astShaping(false, true)[0]
+    let program = "var #array #int a = {1, 2} print(len(a))".makeAST().astShaping(false, true)[0]
     var res = ""
     for tree in program:
       res.add(makeCppCode(tree, 0, true))
     check(res.findStr("std::vector<int> a = { 1 , 2 } ;"))
     check(res.findStr("ka23::print ( ka23::len ( a ) ) ;"))
-  test "mut #array #int a = {1, 2} a |> len() |> print()":
+  test "var #array #int a = {1, 2} a |> len() |> print()":
     initTables()
-    let program = "mut #array #int a = {1, 2} a |> len() |> print()".makeAST().astShaping(false, true)[0]
+    let program = "var #array #int a = {1, 2} a |> len() |> print()".makeAST().astShaping(false, true)[0]
     var res = ""
     for tree in program:
       res.add(makeCppCode(tree, 0, true))
