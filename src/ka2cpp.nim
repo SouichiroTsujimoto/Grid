@@ -588,7 +588,6 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
   of nkLetStatement:
     let li = node.child_nodes[0].makeCodeParts(test)
     let lv = node.child_nodes[1].makeCodeParts(test)
-    echo li
     # echo li[1] & "___" & lv[1]
     if li[1] == lv[1]:
       if identExistenceCheck(li[0][1][1]):

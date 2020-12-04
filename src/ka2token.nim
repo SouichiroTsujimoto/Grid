@@ -93,13 +93,13 @@ let keywords = {
   "end"       : END,
   "map"       : MAP,
   "for"       : FOR,
-  "#int"      : T_INT,
-  "#float"    : T_FLOAT,
-  "#char"     : T_CHAR,
-  "#string"   : T_STRING,
-  "#bool"     : T_BOOL,
-  "#array"    : T_ARRAY,
-  "#function" : T_FUNCTION,
+  "int"      : T_INT,
+  "float"    : T_FLOAT,
+  "char"     : T_CHAR,
+  "string"   : T_STRING,
+  "bool"     : T_BOOL,
+  "array"    : T_ARRAY,
+  "function" : T_FUNCTION,
 }.newTable
 
 proc LookupIdent*(ident: string): string =
