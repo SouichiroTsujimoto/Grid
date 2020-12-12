@@ -44,7 +44,6 @@ const
   RPAREN*       = ")"
   LBRACE*       = "{"
   RBRACE*       = "}"
-  RBANDSC*      = "};"
   # キーワード
   TRUE*         = "TRUE"
   FALSE*        = "FALSE"

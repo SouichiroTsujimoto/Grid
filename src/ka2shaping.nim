@@ -11,6 +11,44 @@ proc astShaping*(inp_nodes: seq[Node], main_flag: bool, test: bool): (seq[Node],
 
   for inp_node in inp_nodes:
     case inp_node.kind
+    # main文が二度記述されていないかチェック
+    of nkMainStatement:
+      if new_main_flag == false:
+        new_main_flag = true
+      else:
+        echoErrorMessage("main文が二度記述されています", test)
+
+      var main_type = Node(
+        kind:        nkIntType,
+        token:       Token(Type: T_INT, Literal: "int"),
+        child_nodes: @[
+          Node(kind: nkIdent, token: Token(Type: IDENT, Literal: "main"), child_nodes: @[])
+        ],
+      )
+      var main_args = Node(
+        kind:        nkArgs,
+        token:       Token(Type: "(", Literal: "("),
+        child_nodes: @[
+          Node(
+            kind:        nkIntType,
+            token:       Token(Type: T_INT, Literal: "int"),
+            child_nodes: @[Node(kind: nkIdent, token: Token(Type: IDENT, Literal: "argc"),)],
+          ),
+          Node(
+            kind:        nkCharType,
+            token:       Token(Type: T_CHAR, Literal: "char"),
+            child_nodes: @[Node(kind: nkIdent, token: Token(Type: IDENT, Literal: "*argv[]"),)],
+          )
+        ],
+      )
+      var res = inp_node.child_nodes.astShaping(new_main_flag, test)
+      new_main_flag = res[1]
+      var new_node = Node(
+        kind:        nkMainStatement,
+        token:       inp_node.token,
+        child_nodes: @[main_type, main_args] & res[0],
+      )
+      out_nodes.add(new_node)
     # パイプライン演算子を前置記法の関数の形に変形
     of nkPipeExpression:
       if inp_node.child_nodes.len() != 2:
@@ -36,44 +74,27 @@ proc astShaping*(inp_nodes: seq[Node], main_flag: bool, test: bool): (seq[Node],
           child_nodes: function[0].child_nodes,
         )
         out_nodes.add(new_node)
-    # main文をdef文の形に変形
-    of nkMainStatement:
-      if main_flag:
-        echoErrorMessage("main文が二度記述されています", test)
-      else:
-        new_main_flag = true
+    # 配列リテラルを一時変数に
+    # of nkArrayLiteral:
+    #   var new_node = Node(
+    #     kind:        nkLetStatement,
+    #     token:       Token(Type: LET, Literal: "let"),
+    #     child_nodes: @[],
+    #   )
 
-      var main_type = Node(
-        kind:        nkIntType,
-        token:       Token(Type: T_INT, Literal: "#int"),
-        child_nodes: @[
-          Node(kind: nkIdent, token: Token(Type: IDENT, Literal: "main"), child_nodes: @[])
-        ],
-      )
-      var main_args = Node(
-        kind:        nkArgs,
-        token:       Token(Type: "(", Literal: "("),
-        child_nodes: @[
-          Node(
-            kind:        nkIntType,
-            token:       Token(Type: T_INT, Literal: "#int"),
-            child_nodes: @[Node(kind: nkIdent, token: Token(Type: IDENT, Literal: "argc"),)],
-          ),
-          Node(
-            kind:        nkCharType,
-            token:       Token(Type: T_CHAR, Literal: "#char"),
-            child_nodes: @[Node(kind: nkIdent, token: Token(Type: IDENT, Literal: "*argv[]"),)],
-          )
-        ],
-      )
-      var res = inp_node.child_nodes.astShaping(new_main_flag, test)
-      new_main_flag = res[1]
-      var new_node = Node(
-        kind:        nkDefineStatement,
-        token:       inp_node.token,
-        child_nodes: @[main_type, main_args] & res[0],
-      )
-      out_nodes.add(new_node)
+    #   new_node.child_nodes.add(Node(
+    #     kind:        nkArrayType,
+    #     token:       Token(Type: T_ARRAY & "T_" & inp_node.child_nodes[0].child_nodes[0].token.Type, Literal: "array"),
+    #     child_nodes: @[Node(
+    #       kind:        nkIdent,
+    #       token:       Token(Type: T_ARRAY, Literal: "array"),
+    #       child_nodes: @[],
+    #     )],
+    #   ))
+
+    # # map関数
+    # of nkMapFunction:
+    #   if inp_node.child_nodes.len() != :
     else:
       var new_node = makeNewNode(inp_node, new_main_flag, test)
       new_main_flag = new_node[1]

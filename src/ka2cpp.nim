@@ -639,8 +639,7 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
     else:
       echoErrorMessage("指定している型と値の型が違います", test)
 
-  # def文
-  of nkDefineStatement:
+  of nkMainStatement:
     let di = node.child_nodes[0].makeCodeParts(test)
     if identExistenceCheck(di[0][1][1]):
       echoErrorMessage("既に定義されています", test)
@@ -709,7 +708,82 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
     nesting = origin
     code.add(deleteScope(nesting))
     code.add((OTHER, "}"))
-    code.add((OTHER, "\n"))
+    codeType = MAIN
+
+  # def文
+  of nkDefineStatement:
+    let di = node.child_nodes[0].makeCodeParts(test)
+    if identExistenceCheck(di[0][1][1]):
+      echoErrorMessage("既に定義されています", test)
+    # echo di
+    code.add((OTHER, "auto"))
+    code.add(di[0][1])
+    if node.child_nodes[1].child_nodes == @[]:
+      identTable[di[0][1][1]] = IdentInfo(
+        Type:    NIL & ">>" & di[1],
+        path:    nesting,
+        mutable: false,
+        delete:  false,
+      )
+      addScopeTable(di[0][1][1], nesting)
+    else:
+      var argsType: seq[string]
+      for parameter in node.child_nodes[1].child_nodes:
+        argsType.add(parameter.token.Type.removeT())
+      identTable[di[0][1][1]] = IdentInfo(
+        Type:    argsType.join(">>") & ">>" & di[1],
+        path:    nesting,
+        mutable: false,
+        delete:  false,
+      )
+      addScopeTable(di[0][1][1], nesting)
+    var origin = nesting
+    nesting = nesting + 1
+    if node.child_nodes[1].child_nodes == @[]:
+      code.add((OTHER, "="))
+      code.add((OTHER, "[]"))
+      code.add((OTHER, "()"))
+      code.add((OTHER, "{"))
+      for statement in node.child_nodes[2].child_nodes:
+        if statement.kind == nkReturnStatement:
+          let st = statement.makeCodeParts(test)
+          if typeMatch(st[1], di[1])[0]:
+            code.add(st[0])
+          else:
+            echoErrorMessage("指定している型と返り値の型が違います", test)
+        else:
+          code.add(statement.makeCodeParts(test)[0])
+    else:
+      code.add((OTHER, "="))
+      code.add((OTHER, "[]"))
+      code.add((OTHER, "("))
+      for i, parameter in node.child_nodes[1].child_nodes:
+        if i != 0:
+          code.add((OTHER, ","))
+        let pr = parameter.makeCodeParts(test)
+        code.add(pr[0])
+        identTable[parameter.child_nodes[0].token.Literal] = IdentInfo(
+          Type:    pr[1],
+          path:    nesting,
+          mutable: false,
+          delete:  false,
+        )
+        addScopeTable(parameter.child_nodes[0].token.Literal, nesting)
+      code.add((OTHER, ")"))
+      code.add((OTHER, "{"))
+      for statement in node.child_nodes[2].child_nodes:
+        if statement.kind == nkReturnStatement:
+          let st = statement.makeCodeParts(test)
+          if typeMatch(st[1], di[1])[0]:
+            code.add(st[0])
+          else:
+            echoErrorMessage("指定している型と返り値の型が違います", test)
+        else:
+          code.add(statement.makeCodeParts(test)[0])
+    # nestingをリセット
+    nesting = origin
+    code.add(deleteScope(nesting))
+    code.add((OTHER, "} ;"))
     codeType = DEFINE
 
   # return文
@@ -958,7 +1032,6 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
         sr = statement.makeCodeParts(test)
         code.add(sr[0])
     code.add((OTHER, "}"))
-    code.add((OTHER, "\n"))
     codeType = sr[1]
   
   # if式
@@ -1000,7 +1073,6 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
     nesting = origin
     code.add(deleteScope(nesting))
     code.add((OTHER, "}"))
-    code.add((OTHER, "\n"))
     codeType = sr[1]
   else:
     return (code, codeType)
@@ -1034,20 +1106,17 @@ proc makeCppCode*(node: Node, indent: int, test: bool): string =
       newLine.add(part.Code)
       var ind = ""
       ind.addIndent(braceCount)
-      if outCode.len() == 0:
-        outCode.add(ind & newLine & "\n")
-      else:
-        outCode.add("\n" & ind & newLine & "\n")
+      outCode.add(ind & newLine & "\n")
       braceCount = braceCount + 1
       newLine = ""
-    elif part.Type == OTHER and part.Code == "}":
+    elif part.Type == OTHER and (part.Code == "}" or part.Code == "} ;"):
       if newLine.split(" ").join("") != "":
         outCode.add(newLine)
       braceCount = braceCount - 1
       newLine = ""
       newLine.addIndent(braceCount)
       newLine.add(part.Code)
-      outCode.add(newLine)
+      outCode.add(newLine & "\n")
       newLine = ""
     elif part.Type == OTHER and part.Code == "\n":
       newLine.add(part.Code)

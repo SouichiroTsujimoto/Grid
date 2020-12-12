@@ -1,5 +1,5 @@
 import strutils
-import ka2token, ka2lexer, ka2node
+import ka2token, ka2lexer, ka2node, ka2error
 
 # パーサクラス
 type Parser = ref object of RootObj
@@ -41,6 +41,7 @@ proc parseLetStatement(p: Parser): Node =
   node.child_nodes.add(p.parseType())
 
   if p.peekToken.Type != EQUAL:
+    echoErrorMessage("初期化されていません", false)
     return node
   
   p.shiftToken()
@@ -60,6 +61,7 @@ proc parseVarStatement(p: Parser): Node =
   node.child_nodes.add(p.parseType())
 
   if p.peekToken.Type != EQUAL:
+    echoErrorMessage("初期化されていません", false)
     return node
   
   p.shiftToken()
@@ -96,6 +98,20 @@ proc parseMainStatement(p: Parser): Node =
     return Node(kind: nkNil)
 
   p.shiftToken()
+  return node
+
+# map関数 【保留】
+proc parseMapFunction(p: Parser): Node =
+  var node = Node(
+    kind:  nkMapFunction,
+    token: p.curToken,
+    child_nodes: @[],
+  )
+  p.shiftToken()
+  node.child_nodes.add(p.parseNodes(RPAREN))
+  if p.curToken.Type != RPAREN:
+    return Node(kind: nkNil)
+
   return node
 
 # def文
@@ -258,13 +274,6 @@ proc parseIdent(p: Parser): Node =
   )
   return node
 
-# # map関数 【保留】
-# proc parseMapFunction(p: Parser): Node =
-#   let node = Node(
-#     kind:  nkMapFunction,
-#     token: p.curToken,
-#   )
-#   return node
 
 # 整数値リテラル
 proc parseIntLiteral(p: Parser): Node =
@@ -602,6 +611,7 @@ proc parseStatement(p: Parser): Node =
   of LET:    return p.parseLetStatement()
   of VAR:    return p.parseVarStatement()
   of MAIN:   return p.parseMainStatement()
+  of MAP:    return p.parseMapFunction()
   of DEFINE: return p.parseDefineStatement()
   of FOR:    return p.parseForStatement()
   of IF:     return p.parseIfStatement()
