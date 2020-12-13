@@ -74,23 +74,6 @@ proc astShaping*(inp_nodes: seq[Node], main_flag: bool, test: bool): (seq[Node],
           child_nodes: function[0].child_nodes,
         )
         out_nodes.add(new_node)
-    # 配列リテラルを一時変数に
-    # of nkArrayLiteral:
-    #   var new_node = Node(
-    #     kind:        nkLetStatement,
-    #     token:       Token(Type: LET, Literal: "let"),
-    #     child_nodes: @[],
-    #   )
-
-    #   new_node.child_nodes.add(Node(
-    #     kind:        nkArrayType,
-    #     token:       Token(Type: T_ARRAY & "T_" & inp_node.child_nodes[0].child_nodes[0].token.Type, Literal: "array"),
-    #     child_nodes: @[Node(
-    #       kind:        nkIdent,
-    #       token:       Token(Type: T_ARRAY, Literal: "array"),
-    #       child_nodes: @[],
-    #     )],
-    #   ))
 
     # # map関数
     # of nkMapFunction:

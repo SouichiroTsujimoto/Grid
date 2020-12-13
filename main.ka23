@@ -3,5 +3,5 @@ main do
     print(toString(x))
     return x
   end
-  let array int n = {1, 2, 3}
+  {1, 2, 3} |> head() |> toString() |> print()
 end

@@ -213,7 +213,7 @@ namespace ka23 {
     copy(a.begin()+1, a.end(), b.begin());
     return b;
   }
-  std::vector<int> tail(std::inital<int> a) {
+  std::vector<int> tail(std::initializer_list<int> a) {
     std::vector<int> b(a.size()-1);
     copy(a.begin()+1, a.end(), b.begin());
     return b;
@@ -223,7 +223,17 @@ namespace ka23 {
     copy(a.begin()+1, a.end(), b.begin());
     return b;
   }
+  std::vector<float> tail(std::initializer_list<float> a) {
+    std::vector<float> b(a.size()-1);
+    copy(a.begin()+1, a.end(), b.begin());
+    return b;
+  }
   std::vector<char> tail(std::vector<char> a) {
+    std::vector<char> b(a.size()-1);
+    copy(a.begin()+1, a.end(), b.begin());
+    return b;
+  }
+  std::vector<char> tail(std::initializer_list<char> a) {
     std::vector<char> b(a.size()-1);
     copy(a.begin()+1, a.end(), b.begin());
     return b;
@@ -233,7 +243,17 @@ namespace ka23 {
     copy(a.begin()+1, a.end(), b.begin());
     return b;
   }
+  std::vector<std::string> tail(std::initializer_list<std::string> a) {
+    std::vector<std::string> b(a.size()-1);
+    copy(a.begin()+1, a.end(), b.begin());
+    return b;
+  }
   std::vector<bool> tail(std::vector<bool> a) {
+    std::vector<bool> b(a.size()-1);
+    copy(a.begin()+1, a.end(), b.begin());
+    return b;
+  }
+  std::vector<bool> tail(std::initializer_list<bool> a) {
     std::vector<bool> b(a.size()-1);
     copy(a.begin()+1, a.end(), b.begin());
     return b;
@@ -242,20 +262,45 @@ namespace ka23 {
   int last(std::vector<int> a) {
     return a.back();
   }
+  int last(std::initializer_list<int> a) {
+    std::vector<int> b = a;
+    return b.back();
+  }
   float last(std::vector<float> a) {
     return a.back();
+  }
+  float last(std::initializer_list<float> a) {
+    std::vector<float> b = a;
+    return b.back();
   }
   char last(std::vector<char> a) {
     return a.back();
   }
+  char last(std::initializer_list<char> a) {
+    std::vector<char> b = a;
+    return b.back();
+  }
   std::string last(std::vector<std::string> a) {
     return a.back();
+  }
+  std::string last(std::initializer_list<std::string> a) {
+    std::vector<std::string> b = a;
+    return b.back();
   }
   bool last(std::vector<bool> a) {
     return a.back();
   }
+  bool last(std::initializer_list<bool> a) {
+    std::vector<bool> b = a;
+    return b.back();
+  }
 
   std::vector<int> init(std::vector<int> a) {
+    std::vector<int> b(a.size()-1);
+    copy(a.begin(), a.end()-1, b.begin());
+    return b;
+  }
+  std::vector<int> init(std::initializer_list<int> a) {
     std::vector<int> b(a.size()-1);
     copy(a.begin(), a.end()-1, b.begin());
     return b;
@@ -265,7 +310,17 @@ namespace ka23 {
     copy(a.begin(), a.end()-1, b.begin());
     return b;
   }
+  std::vector<float> init(std::initializer_list<float> a) {
+    std::vector<float> b(a.size()-1);
+    copy(a.begin(), a.end()-1, b.begin());
+    return b;
+  }
   std::vector<char> init(std::vector<char> a) {
+    std::vector<char> b(a.size()-1);
+    copy(a.begin(), a.end()-1, b.begin());
+    return b;
+  }
+  std::vector<char> init(std::initializer_list<char> a) {
     std::vector<char> b(a.size()-1);
     copy(a.begin(), a.end()-1, b.begin());
     return b;
@@ -275,7 +330,17 @@ namespace ka23 {
     copy(a.begin(), a.end()-1, b.begin());
     return b;
   }
+  std::vector<std::string> init(std::initializer_list<std::string> a) {
+    std::vector<std::string> b(a.size()-1);
+    copy(a.begin(), a.end()-1, b.begin());
+    return b;
+  }
   std::vector<bool> init(std::vector<bool> a) {
+    std::vector<bool> b(a.size()-1);
+    copy(a.begin(), a.end()-1, b.begin());
+    return b;
+  }
+  std::vector<bool> init(std::initializer_list<bool> a) {
     std::vector<bool> b(a.size()-1);
     copy(a.begin(), a.end()-1, b.begin());
     return b;

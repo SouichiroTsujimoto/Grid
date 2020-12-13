@@ -5,8 +5,5 @@ int main ( int argc , char *argv[] ) {
     ka23::print ( ka23::toString ( x ) ) ;
     return ( x ) ;
   } ;
-  std::vector<int> * n = new std::vector<int> ;
-  * n = { 1 , 2 , 3 } ;
-  std::cout << ka23::tail({1, 2, 3})[0] << std::endl;
-  delete n ;
+  ka23::print ( ka23::toString ( ka23::head ( { 1 , 2 , 3 } ) ) ) ;
 }
