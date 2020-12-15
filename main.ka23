@@ -1,9 +1,9 @@
 main do
-  def char add(char x, int y) do
+  def int add(int x, int y) do
     return x
   end
 
-  map({1, 2, 3}, add('a'))
+  map({1, 2, 3}, add(1))
 
   var array int n = {10}
 end

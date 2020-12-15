@@ -998,7 +998,7 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
         else:  
           echoErrorMessage("第二引数の関数の引数が正しくありません", test)
       
-    if func_result_type.split("::") == array_type_split[1..array_type_split.len()-1]:
+    if func_result_type.split("::") != array_type_split[1..array_type_split.len()-1]:
       echoErrorMessage("第二引数の関数の返り値が正しくありません", test)
 
     fn.child_nodes[1].child_nodes.add(Node(
