@@ -1,7 +1,9 @@
 main do
-  def int a(int x) do
-    print(toString(x))
+  def char add(char x, int y) do
     return x
   end
-  {1, 2, 3} |> head() |> toString() |> print()
+
+  map({1, 2, 3}, add('a'))
+
+  var array int n = {10}
 end

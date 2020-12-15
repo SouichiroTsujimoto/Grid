@@ -61,7 +61,6 @@ proc parseVarStatement(p: Parser): Node =
   node.child_nodes.add(p.parseType())
 
   if p.peekToken.Type != EQUAL:
-    echoErrorMessage("初期化されていません", false)
     return node
   
   p.shiftToken()
@@ -100,7 +99,7 @@ proc parseMainStatement(p: Parser): Node =
   p.shiftToken()
   return node
 
-# map関数 【保留】
+# map関数
 proc parseMapFunction(p: Parser): Node =
   var node = Node(
     kind:  nkMapFunction,
@@ -543,7 +542,7 @@ proc parseExpression(p: Parser, precedence: Precedence): Node =
   of IFEX       : left = p.parseIfExpression()
   of RETURN     : left = p.parseReturnStatement()
   of IDENT      : left = p.parseIdent()
-  # of MAP        : left = p.parseMapFunction()
+  of MAP        : left = p.parseMapFunction()
   of INT        : left = p.parseIntLiteral()
   of FLOAT      : left = p.parseFloatLiteral()
   of CHAR       : left = p.parseCharLiteral()

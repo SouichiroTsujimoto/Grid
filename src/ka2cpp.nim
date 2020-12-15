@@ -129,6 +129,7 @@ proc funcTypeSplit(funcType: string, target: string): (bool, string, string) =
   
   return (true, fnTs[0], fnTs[1])
 
+# [0] -> マッチしたかどうか [1] -> マッチした型 [2] -> 返り値の型
 proc funcTypesMatch(funcType: string, argType: string): (bool, string, string) =
   var fnTs = funcType.funcTypeSplit(">>")
   let res = typeMatch(fnTs[1], argType)
@@ -576,13 +577,6 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
         echoErrorMessage("定義されていない名前", test)
       code.add((ic[1], ic[2]))
       codeType = ic[1]
-
-  # 【】
-  # of nkMapFunction:
-  #   code.add((IDENT, "ka23::map"))
-  #   codeType = IDENT
-  
-  # 
   
   # let文
   of nkLetStatement:
@@ -619,25 +613,43 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
   
   # var文
   of nkVarStatement:
-    let li = node.child_nodes[0].makeCodeParts(test)
-    let lv = node.child_nodes[1].makeCodeParts(test)
-    if li[1] == lv[1]:
+    if node.child_nodes.len() == 1:
+      let li = node.child_nodes[0].makeCodeParts(test)
       if identExistenceCheck(li[0][1][1]):
         echoErrorMessage("既に定義されています", test)
-      code.add(li[0])
-      code.add((OTHER, "="))
-      code.add(lv[0])
-      code.addSemicolon()
-      identTable[li[0][1][1]] = IdentInfo(
-        Type:     li[1],
-        contents: lv[0],
-        path:     nesting,
-        mutable:  true,
-        delete:   false,
-      )
-      addScopeTable(li[0][1][1], nesting)
+      else:
+        code.add(li[0])
+        code.addSemicolon()
+        identTable[li[0][1][1]] = IdentInfo(
+          Type:     li[1],
+          contents: @[],
+          path:     nesting,
+          mutable:  true,
+          delete:   false,
+        )
+        addScopeTable(li[0][1][1], nesting)
+    elif node.child_nodes.len() == 2:
+      let li = node.child_nodes[0].makeCodeParts(test)
+      let lv = node.child_nodes[1].makeCodeParts(test)
+      if li[1] == lv[1]:
+        if identExistenceCheck(li[0][1][1]):
+          echoErrorMessage("既に定義されています", test)
+        code.add(li[0])
+        code.add((OTHER, "="))
+        code.add(lv[0])
+        code.addSemicolon()
+        identTable[li[0][1][1]] = IdentInfo(
+          Type:     li[1],
+          contents: lv[0],
+          path:     nesting,
+          mutable:  true,
+          delete:   false,
+        )
+        addScopeTable(li[0][1][1], nesting)
+      else:
+        echoErrorMessage("指定している型と値の型が違います", test)
     else:
-      echoErrorMessage("指定している型と値の型が違います", test)
+      echoErrorMessage("不明なエラー", test)
 
   of nkMainStatement:
     let di = node.child_nodes[0].makeCodeParts(test)
@@ -909,20 +921,6 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
   # 前置
   # TODO 
   of nkCallExpression:
-    # 保留
-    # if node.function.kind == nkMapFunction:
-    #   code.add((OTHER, "("))
-    #   var at: string
-    #   for i, arg in node.args:
-    #     let a = arg.makeCodeParts(test)
-    #     if i != 0:
-    #       code.add((OTHER, ","))
-    #       at = a[1]
-    #     code.add(a[0].replaceSemicolon(@[(OTHER, "")]))
-    #   code.add((OTHER, ")"))
-    #   code.addSemicolon()
-    #   codeType = ARRAY & "::" & at.funcTypeSplit(">>")[2]
-    #   echo codeType
     var argsCode: seq[seq[codeParts]]
     var argsType: seq[string]
     
@@ -930,7 +928,6 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
       let a = arg.makeCodeParts(test)
       argsCode.add(a[0].replaceSemicolon(@[(OTHER, "")]))
       argsType.add(a[1])
-    # TODO
     let funcName = node.child_nodes[0].token.Literal
     let iec = identExistenceCheck(funcName)
     if iec:
@@ -958,20 +955,93 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
       code.add(argc)
     code.add((OTHER, ")"))
     code.addSemicolon()
-    # else:
-      # 特殊
-      # case fm[2]
-      # of "ka23::join":
-      #   let ats = argsCode.searchCodeParts("@ARRAYLENGTH")
-      #   echo argsCode
-      #   if ats.len() >= 2:
-      #     # 元最悪
-      #     code.add(("@ARRAYLENGTH", $(ats[ats.len()-1].Code.parseInt() + ats[ats.len()-2].Code.parseInt())))
-      # of "ka23::head":
-        
-      #   if ats[ats.len()-1].Code.parseInt() == 0:
-      #     echoErrorMessage("型指定の後に名前が書かれていません"5, test)
+
+  # map関数
+  of nkMapFunction:
+    if node.child_nodes[0].child_nodes.len() != 2:
+      echoErrorMessage("引数の数が合いません", test)
+    elif node.child_nodes[0].child_nodes[1].kind != nkCallExpression:
+      echoErrorMessage("第二引数が正しくありません", test)
+
+    let func_name = node.child_nodes[0].child_nodes[1].child_nodes[0].token.Literal
+    var cpp_func_name = ""
+    var func_result_type = ""
+    var captcha_func_name = ""
+    let array_CandT = node.child_nodes[0].child_nodes[0].makeCodeParts(test)
+    let array_content = array_CandT[0]
+    let array_type = array_CandT[1]
+    let array_type_split = array_type.split("::")
+    var fn = node.child_nodes[0].child_nodes[1]
+    var func_arg_types: seq[string]
+    for nodes in fn.child_nodes[1].child_nodes:
+      func_arg_types.add(nodes.token.Type)
+
+    if array_type_split[0] != ARRAY:
+      echoErrorMessage("第一引数の型が正しくありません", test)
+    
+    let ccf = conversionCppFunction(func_name, func_arg_types & array_type_split[1..array_type_split.len()-1])
+    if ccf[0]:
+      cpp_func_name = ccf[2]
+      func_result_type = ccf[1]
+    else:
+      if identExistenceCheck(func_name) == false:
+        if ccf[1] == NIL:
+          echoErrorMessage("存在しない関数です", test)
+        else:
+          echoErrorMessage("第二引数の関数の引数が正しくありません", test)
+      else:
+        let ftm = funcTypesMatch(identTable[func_name].Type, func_arg_types & array_type_split[1..array_type_split.len()-1])
+        if ftm[0]:
+          cpp_func_name = func_name
+          func_result_type = ftm[2]
+          captcha_func_name = func_name
+        else:  
+          echoErrorMessage("第二引数の関数の引数が正しくありません", test)
       
+    if func_result_type.split("::") == array_type_split[1..array_type_split.len()-1]:
+      echoErrorMessage("第二引数の関数の返り値が正しくありません", test)
+
+    fn.child_nodes[1].child_nodes.add(Node(
+      kind:        nkIdent,
+      token:       Token(Type: IDENT, Literal: "i"),
+      child_nodes: @[],
+    ))
+    code.add((IDENT, "ka23::map"))
+    code.add((OTHER, "("))
+    code.add(array_content)
+    code.add((OTHER, ","))
+    code.add((OTHER, "["))
+    code.add((OTHER, captcha_func_name))
+    code.add((OTHER, "]"))
+    code.add((OTHER, "("))
+    let ident = Node(
+      kind:        nkVarStatement,
+      token:       Token(Type: VAR, Literal: "var"),
+      child_nodes: @[Node(
+        kind:        nkArrayType,
+        token:       Token(Type: "T_" & array_type_split[1..array_type_split.len()-1].join("::T_"), Literal:"{"),
+        child_nodes: @[Node(
+          kind:        nkIdent,
+          token:       Token(Type: IDENT, Literal: "i"),
+          child_nodes: @[],
+        )],
+      )],
+    )
+    code.add(ident.makeCodeParts(test)[0].replaceSemicolon(@[(OTHER, "")]))
+    code.add((OTHER, ")"))
+    code.add((LBRACE, "{"))
+    code.add((OTHER, "return"))
+    code.add((OTHER, cpp_func_name))
+    code.add((OTHER, "("))
+    for i, arg in fn.child_nodes[1].child_nodes:
+      if i != 0:
+        code.add((OTHER, ","))
+      code.add(arg.makeCodeParts(test)[0].replaceSemicolon(@[(OTHER, "")]))
+    code.add((OTHER, ")"))
+    code.add((OTHER, ";"))
+    code.add((RBRACE, "}"))
+    code.add((OTHER, ")"))
+    code.addSemicolon()
 
   # if文
   of nkIfStatement:
