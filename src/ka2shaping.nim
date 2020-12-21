@@ -74,26 +74,6 @@ proc astShaping*(inp_nodes: seq[Node], main_flag: bool, test: bool): (seq[Node],
           child_nodes: function[0].child_nodes,
         )
         out_nodes.add(new_node)
-    # # map関数
-    # of nkMapFunction:
-    #   if inp_node.child_nodes[0].child_nodes.len() == 2:
-    #     echo inp_node.child_nodes[0].child_nodes[0].child_nodes[0].child_nodes[0].token.Type
-    #     var new_node = Node(
-    #       kind:        nkForStatement,
-    #       token:       Token(Type: FOR, Literal: "for"),
-    #       child_nodes: @[Node(
-    #         kind:        nkGenerator,
-    #         token:       Token(Type: ARROW, Literal: "<-"),
-    #         child_nodes: @[Node(
-    #           kind:        nkIntType,
-    #           token:       Token(Type: T_INT, Literal: "int"),
-    #           child_nodes: @[],
-    #         )],
-    #       )],
-    #     )
-    #     out_nodes.add(new_node)
-    #   else:
-    #     # エラーーーーーー
     else:
       var new_node = makeNewNode(inp_node, new_main_flag, test)
       new_main_flag = new_node[1]

@@ -874,8 +874,7 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
       let r = node.child_nodes[1].makeCodeParts(test)
       let rv = r[0].replaceSemicolon(@[(OTHER, "")])
       let ls = l[1].split("::")
-      # TODO 元最悪
-      if r[1] == INT and l[0][0].Type == IDENT and ls[0] == ARRAY:
+      if r[1] == INT and ls[0] == ARRAY:
         code.add(l[0].replaceSemicolon(@[(OTHER, "")]))
         code.add((OTHER, "["))
         code.add(rv)

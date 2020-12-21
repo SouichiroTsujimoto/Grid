@@ -533,7 +533,7 @@ proc parseType(p: Parser): Node =
   of T_BOOL     : return p.parseBoolType()
   of T_ARRAY    : return p.parseArrayType()
   of T_FUNCTION : return p.parseFunctionType()
-  else          : return nil
+  else          : echoErrorMessage("存在しない型です", false)
 
 # 式の処理
 proc parseExpression(p: Parser, precedence: Precedence): Node =

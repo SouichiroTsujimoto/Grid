@@ -1,9 +1,3 @@
 main do
-  def int add(int x, int y) do
-    return x
-  end
-
-  map({1, 2, 3}, add(1))
-
-  var array int n = {10}
+  let array int a = {1, 2}
 end
