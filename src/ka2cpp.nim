@@ -94,20 +94,21 @@ proc typeMatch(type1: string, type2: string): (bool, string) =
     typeList1: seq[seq[string]]
     typeList2: seq[seq[string]]
 
-  for t1s in type1.split(">>"):
+  for t1s in type1.split("+"):
     typeList1.add(@[t1s.split("|")])
-  for t2s in type2.split(">>"):
+  for t2s in type2.split("+"):
     typeList2.add(@[t2s.split("|")])
 
   # echo $typeList1 & "________" & $typeList2
 
   var
-    typeFlow: string
+    typeFlow: seq[string]
     typeCandidacies: seq[string]
 
+  if typeList1.len() != typeList2.len():
+    return (false, "")
+
   for i, t1ss in typeList1:
-    if typeList2.len() <= i:
-      return (false, "")
     for t2ss in typeList2[i]:
       for t1sss in t1ss:
         if t1sss == t2ss:
@@ -118,7 +119,7 @@ proc typeMatch(type1: string, type2: string): (bool, string) =
     else:
       return (false, "")
 
-  return (true, typeFlow)
+  return (true, typeFlow.join("+"))
 
 proc funcTypeSplit(funcType: string, target: string): (bool, string, string) =
   var fnTs = funcType.split(target)
@@ -131,13 +132,10 @@ proc funcTypeSplit(funcType: string, target: string): (bool, string, string) =
 
 # [0] -> マッチしたかどうか [1] -> マッチした型 [2] -> 返り値の型
 proc funcTypesMatch(funcType: string, argType: string): (bool, string, string) =
-  var fnTs = funcType.funcTypeSplit(">>")
-  let res = typeMatch(fnTs[1], argType)
+  var (b, flow, res) = funcType.funcTypeSplit("->")
+  var match = typeMatch(flow, argType)
   
-  if fnTs[0] == false or res[0] == false or argType == "":
-    return (false, "", fnTs[1])
-  
-  return (res[0], res[1], fnTs[2])
+  return (match[0], match[1], res)
 
 proc funcTypesMatch(funcType: string, argsType: seq[string]): (bool, string, string) =
   var res: (bool, string, string)
@@ -151,7 +149,7 @@ proc funcTypesMatch(funcType: string, argsType: seq[string]): (bool, string, str
     else:
       return (false, passedFuncType, nextFuncType)
   
-  if nextFuncType.contains(">>"):
+  if nextFuncType.contains("+"):
     return (false, passedFuncType, nextFuncType)
   else:
     return (true, passedFuncType, nextFuncType)
@@ -185,75 +183,45 @@ proc conversionCppOperator(fn: string, argsType: seq[string]): (bool, string, st
 
   case fn
   of PLUS:
-    let fmr1 = funcTypesMatch(number_t & ">>" & number_t & ">>" & number_t, argsTypeC[0])
-    if fmr1[0]:
-      let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
-      return (fmr2[0], fmr2[1], "+")
-    else:
-      return (false, "", "+")
+    let fmr1 = funcTypesMatch(number_t & "+" & number_t & "->" & number_t, argsType.join("+"))
+    let res_type = fmr1[1].split("+")[0]
+    return (fmr1[0], res_type, "+")
   of MINUS:
-    let fmr1 = funcTypesMatch(number_t & ">>" & number_t & ">>" & number_t, argsTypeC[0])
-    if fmr1[0]:
-      let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
-      return (fmr2[0], fmr2[1], "-")
-    else:
-      return (false, "", "-")
+    let fmr1 = funcTypesMatch(number_t & "+" & number_t & "->" & number_t, argsType.join("+"))
+    let res_type = fmr1[1].split("+")[0]
+    return (fmr1[0], res_type, "-")
   of ASTERISC:
-    let fmr1 = funcTypesMatch(number_t & ">>" & number_t & ">>" & number_t, argsTypeC[0])
-    if fmr1[0]:
-      let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
-      return (fmr2[0], fmr2[1], "*")
-    else:
-      return (false, "", "*")
+    let fmr1 = funcTypesMatch(number_t & "+" & number_t & "->" & number_t, argsType.join("+"))
+    let res_type = fmr1[1].split("+")[0]
+    return (fmr1[0], res_type, "*")
   of SLASH:
-    let fmr1 = funcTypesMatch(number_t & ">>" & number_t & ">>" & number_t, argsTypeC[0])
-    if fmr1[0]:
-      let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
-      return (fmr2[0], fmr2[1], "/")
-    else:
-      return (false, "", "/")
+    let fmr1 = funcTypesMatch(number_t & "+" & number_t & "->" & number_t, argsType.join("+"))
+    let res_type = fmr1[1].split("+")[0]
+    return (fmr1[0], res_type, "/")
   of LT:
-    let fmr1 = funcTypesMatch(anything_t & ">>" & anything_t & ">>" & BOOL, argsTypeC[0])
-    if fmr1[0]:
-      let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
-      return (fmr2[0], BOOL, "<")
-    else:
-      return (false, "", "<")
+    let fmr1 = funcTypesMatch(anything_t & "+" & anything_t & "->" & BOOL, argsType.join("+"))
+    let res_type = BOOL
+    return (fmr1[0], res_type, "<")
   of GT:
-    let fmr1 = funcTypesMatch(anything_t & ">>" & anything_t & ">>" & BOOL, argsTypeC[0])
-    if fmr1[0]:
-      let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
-      return (fmr2[0], BOOL, ">")
-    else:
-      return (false, "", ">")
+    let fmr1 = funcTypesMatch(anything_t & "+" & anything_t & "->" & BOOL, argsType.join("+"))
+    let res_type = BOOL
+    return (fmr1[0], res_type, ">")
   of LE:
-    let fmr1 = funcTypesMatch(anything_t & ">>" & anything_t & ">>" & BOOL, argsTypeC[0])
-    if fmr1[0]:
-      let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
-      return (fmr2[0], BOOL, "<=")
-    else:
-      return (false, "", "<=")
+    let fmr1 = funcTypesMatch(anything_t & "+" & anything_t & "->" & BOOL, argsType.join("+"))
+    let res_type = BOOL
+    return (fmr1[0], res_type, "<=")
   of GE:
-    let fmr1 = funcTypesMatch(anything_t & ">>" & anything_t & ">>" & BOOL, argsTypeC[0])
-    if fmr1[0]:
-      let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
-      return (fmr2[0], BOOL, ">=")
-    else:
-      return (false, "", ">=")
+    let fmr1 = funcTypesMatch(anything_t & "+" & anything_t & "->" & BOOL, argsType.join("+"))
+    let res_type = BOOL
+    return (fmr1[0], res_type, ">=")
   of EE:
-    let fmr1 = funcTypesMatch(anything_t & ">>" & anything_t & ">>" & BOOL, argsTypeC[0])
-    if fmr1[0]:
-      let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
-      return (fmr2[0], BOOL, "==")
-    else:
-      return (false, "", "==")
+    let fmr1 = funcTypesMatch(anything_t & "+" & anything_t & "->" & BOOL, argsType.join("+"))
+    let res_type = BOOL
+    return (fmr1[0], res_type, "==")
   of NE:
-    let fmr1 = funcTypesMatch(anything_t & ">>" & anything_t & ">>" & BOOL, argsTypeC[0])
-    if fmr1[0]:
-      let fmr2 = funcTypesMatch(fmr1[2], argsTypeC[1])
-      return (fmr2[0], BOOL, "!=")
-    else:
-      return (false, "", "!=")
+    let fmr1 = funcTypesMatch(anything_t & "+" & anything_t & "->" & BOOL, argsType.join("+"))
+    let res_type = BOOL
+    return (fmr1[0], res_type, "!=")
 
 # 型のチェックをしてC++の関数に変換する
 proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, string) =
@@ -268,9 +236,9 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
     if argsTypeC.len() == 0:
       return (true, IDENT, "ka23::plus")
     elif argsTypeC.len() == 2:
-      let fmr1 = funcTypesMatch(number_t & ">>" & number_t & ">>" & number_t, @[argsTypeC[0], argsTypeC[1]])
+      let fmr1 = funcTypesMatch(number_t & "+" & number_t & "->" & number_t, argsType.join("+"))
       if fmr1[0]:
-        let res_type = fmr1[1]
+        let res_type = fmr1[1].split("+")[0]
         return (fmr1[0], res_type, "ka23::plus")
       else:
         return (false, OTHER, "")
@@ -280,10 +248,9 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
     if argsTypeC.len() == 0:
       return (true, IDENT, "ka23::minu")
     elif argsTypeC.len() == 2:
-      # echo (number_t & ">>" & number_t & ">>" & number_t, @[argsTypeC[0], argsTypeC[1]])
-      let fmr1 = funcTypesMatch(number_t & ">>" & number_t & ">>" & number_t, @[argsTypeC[0], argsTypeC[1]])
+      let fmr1 = funcTypesMatch(number_t & "+" & number_t & "->" & number_t, argsType.join("+"))
       if fmr1[0]:
-        let res_type = fmr1[1]
+        let res_type = fmr1[1].split("+")[0]
         return (fmr1[0], res_type, "ka23::minu")
       else:
         return (false, OTHER, "")
@@ -293,9 +260,9 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
     if argsTypeC.len() == 0:
       return (true, IDENT, "ka23::mult")
     elif argsTypeC.len() == 2:
-      let fmr1 = funcTypesMatch(number_t & ">>" & number_t & ">>" & number_t, @[argsTypeC[0], argsTypeC[1]])
+      let fmr1 = funcTypesMatch(number_t & "+" & number_t & "->" & number_t, argsType.join("+"))
       if fmr1[0]:
-        let res_type = fmr1[1]
+        let res_type = fmr1[1].split("+")[0]
         return (fmr1[0], res_type, "ka23::mult")
       else:
         return (false, OTHER, "")
@@ -305,9 +272,9 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
     if argsTypeC.len() == 0:
       return (true, IDENT, "ka23::divi")
     elif argsTypeC.len() == 2:
-      let fmr1 = funcTypesMatch(number_t & ">>" & number_t & ">>" & number_t, @[argsTypeC[0], argsTypeC[1]])
+      let fmr1 = funcTypesMatch(number_t & "+" & number_t & "->" & number_t, argsType.join("+"))
       if fmr1[0]:
-        let res_type = fmr1[1]
+        let res_type = fmr1[1].split("+")[0]
         return (fmr1[0], res_type, "ka23::divi")
       else:
         return (false, OTHER, "")
@@ -317,7 +284,7 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
     if argsTypeC.len() == 0:
       return (true, IDENT, "ka23::print")
     elif argsTypeC.len() == 1:
-      let fmr1 = funcTypesMatch(letter_t & ">>" & NIL, argsTypeC[0])
+      let fmr1 = funcTypesMatch(letter_t & "->" & NIL, argsType.join("+"))
       if fmr1[0]:
         let res_type = NIL
         return (fmr1[0], res_type, "ka23::print")
@@ -329,7 +296,7 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
     if argsTypeC.len() == 0:
       return (true, IDENT, "ka23::println")
     elif argsTypeC.len() == 1:
-      let fmr1 = funcTypesMatch(letter_t & ">>" & NIL, argsTypeC[0])
+      let fmr1 = funcTypesMatch(letter_t & "->" & NIL, argsType.join("+"))
       if fmr1[0]:
         let res_type = NIL
         return (fmr1[0], res_type, "ka23::println")
@@ -341,7 +308,7 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
     if argsTypeC.len() == 0:
       return (true, IDENT, "ka23::len")
     elif argsTypeC.len() == 1:
-      let fmr1 = funcTypesMatch(ARRAY & "::" & anything_t & ">>" & INT, argsTypeC[0])
+      let fmr1 = funcTypesMatch(ARRAY & "::" & anything_t & "->" & INT, argsType.join("+"))
       if fmr1[0]:
         let res_type = INT
         return (fmr1[0], res_type, "ka23::len")
@@ -353,9 +320,9 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
     if argsTypeC.len() == 0:
       return (true, IDENT, "ka23::join")
     elif argsTypeC.len() == 2:
-      let fmr1 = funcTypesMatch("ARRAY" & "::" & anything_t & ">>" & "ARRAY" & "::" & anything_t & ">>" & "ARRAY" & "::" & anything_t, @[argsTypeC[0], argsTypeC[1]])
+      let fmr1 = funcTypesMatch("ARRAY" & "::" & anything_t & "+" & "ARRAY" & "::" & anything_t & "->" & "ARRAY" & "::" & anything_t, argsType.join("+"))
       if fmr1[0]:
-        let res_type = fmr1[1]
+        let res_type = fmr1[1].split("+")[0]
         return (fmr1[0], res_type, "ka23::join")
       else:
         return (false, OTHER, "")
@@ -365,7 +332,7 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
     if argsTypeC.len() == 0:
       return (true, IDENT, "ka23::join")
     elif argsTypeC.len() == 1:
-      let fmr1 = funcTypesMatch("ARRAY" & "::" & anything_t & ">>" & anything_t, argsTypeC[0])
+      let fmr1 = funcTypesMatch("ARRAY" & "::" & anything_t & "->" & anything_t, argsType.join("+"))
       if fmr1[0]:
         let res_type = fmr1[1].funcTypeSplit("ARRAY::")[2]
         return (fmr1[0], res_type, "ka23::head")
@@ -377,7 +344,7 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
     if argsTypeC.len() == 0:
       return (true, IDENT, "ka23::tail")
     elif argsTypeC.len() == 1:
-      let fmr1 = funcTypesMatch("ARRAY" & "::" & anything_t & ">>" & "ARRAY" & "::" & anything_t, argsTypeC[0])
+      let fmr1 = funcTypesMatch("ARRAY" & "::" & anything_t & "->" & "ARRAY" & "::" & anything_t, argsType.join("+"))
       if fmr1[0]:
         let res_type = fmr1[1]
         return (fmr1[0], res_type, "ka23::tail")
@@ -389,7 +356,7 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
     if argsTypeC.len() == 0:
       return (true, IDENT, "ka23::last")
     elif argsTypeC.len() == 1:
-      let fmr1 = funcTypesMatch("ARRAY" & "::" & anything_t & ">>" & anything_t, argsTypeC[0])
+      let fmr1 = funcTypesMatch("ARRAY" & "::" & anything_t & "->" & anything_t, argsType.join("+"))
       if fmr1[0]:
         let res_type = fmr1[1].funcTypeSplit("ARRAY::")[2]
         return (fmr1[0], res_type, "ka23::last")
@@ -401,7 +368,7 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
     if argsTypeC.len() == 0:
       return (true, IDENT, "ka23::init")
     elif argsTypeC.len() == 1:
-      let fmr1 = funcTypesMatch("ARRAY" & "::" & anything_t & ">>" & "ARRAY" & "::" & anything_t, argsTypeC[0])
+      let fmr1 = funcTypesMatch("ARRAY" & "::" & anything_t & "->" & "ARRAY" & "::" & anything_t, argsType.join("+"))
       if fmr1[0]:
         let res_type = fmr1[1]
         return (fmr1[0], res_type, "ka23::init")
@@ -413,7 +380,7 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
     if argsTypeC.len() == 0:
       return (true, IDENT, "ka23::toString")
     elif argsTypeC.len() == 1:
-      let fmr1 = funcTypesMatch(anything_t & ">>" & anything_t, argsTypeC[0])
+      let fmr1 = funcTypesMatch(anything_t & "->" & anything_t, argsType.join("+"))
       if fmr1[0]:
         let res_type = STRING
         return (fmr1[0], res_type, "ka23::toString")
@@ -423,12 +390,11 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
       return (false, OTHER, "")
   of "at":
     if argsTypeC.len() == 0:
-      return (true, IDENT, "ka23::divi")
+      return (true, IDENT, "ka23::at")
     elif argsTypeC.len() == 2:
-      echo @[argsTypeC[0], argsTypeC[1]]
-      let fmr1 = funcTypesMatch("ARRAY" & "::" & anything_t & ">>" & number_t & ">>" & anything_t, @[argsTypeC[0], argsTypeC[1]])
+      let fmr1 = funcTypesMatch("ARRAY" & "::" & anything_t & "+" & number_t & "->" & anything_t, argsType.join("+"))
       if fmr1[0]:
-        let res_type = fmr1[1]
+        let res_type = fmr1[1].split("+")[0]
         return (fmr1[0], res_type, "ka23::at")
       else:
         return (false, OTHER, "")
@@ -673,7 +639,7 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
     code.add(di[0][1])
     if node.child_nodes[1].child_nodes == @[]:
       identTable[di[0][1][1]] = IdentInfo(
-        Type:    NIL & ">>" & di[1],
+        Type:    NIL & "+" & di[1],
         path:    nesting,
         mutable: false,
         delete:  false,
@@ -684,7 +650,7 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
       for parameter in node.child_nodes[1].child_nodes:
         argsType.add(parameter.token.Type.removeT())
       identTable[di[0][1][1]] = IdentInfo(
-        Type:    argsType.join(">>") & ">>" & di[1],
+        Type:    argsType.join("+") & "+" & di[1],
         path:    nesting,
         mutable: false,
         delete:  false,
@@ -745,7 +711,7 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
     code.add(di[0][1])
     if node.child_nodes[1].child_nodes == @[]:
       identTable[di[0][1][1]] = IdentInfo(
-        Type:    NIL & ">>" & di[1],
+        Type:    NIL & "+" & di[1],
         path:    nesting,
         mutable: false,
         delete:  false,
@@ -756,7 +722,7 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
       for parameter in node.child_nodes[1].child_nodes:
         argsType.add(parameter.token.Type.removeT())
       identTable[di[0][1][1]] = IdentInfo(
-        Type:    argsType.join(">>") & ">>" & di[1],
+        Type:    argsType.join("+") & "+" & di[1],
         path:    nesting,
         mutable: false,
         delete:  false,
@@ -1009,9 +975,6 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
           echoErrorMessage("存在しない関数です", test)
         else:
           echoErrorMessage("第二引数の関数の引数が正しくありません", test)
-        
-        cpp_func_name = func_name
-        func_result_type = ccf[1]
       else:
         let ftm = funcTypesMatch(identTable[func_name].Type, array_type_split[1..array_type_split.len()-1] & func_arg_types)
         if ftm[0]:
@@ -1020,7 +983,7 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
           captcha_func_name = func_name
         else:  
           echoErrorMessage("第二引数の関数の引数が正しくありません", test)
-      
+
     if func_result_type.split("::") != array_type_split[1..array_type_split.len()-1]:
       echoErrorMessage("第二引数の関数の返り値が正しくありません", test)
 
