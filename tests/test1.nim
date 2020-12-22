@@ -388,3 +388,16 @@ suite "toString":
     let program = "let string a = toString(True)".makeProgram()
     check(program.findStr("std::string * a = new std::string ;"))
     check(program.findStr("* a = ka23::toString ( true ) ;"))
+
+suite "map":
+  test "map({1, 2, 3}, plus(1))":
+    initTables()
+    let program = "map({1, 2, 3}, plus(1))".makeProgram()
+    check(program.findStr("ka23::map ( { 1 , 2 , 3 } , [ ] ( int i ) { return ka23::plus ( i , 1 ) ; } ) ;"))
+  test "let array int a = {1, 2, 3} map(a, plus(1))":
+    initTables()
+    let program = "let array int a = {1, 2, 3} map(a, plus(1))".makeProgram()
+    check(program.findStr("std::vector<int> * a = new std::vector<int> ;"))
+    check(program.findStr("* a = { 1 , 2 , 3 } ;"))
+    check(program.findStr("ka23::map ( * a , [ ] ( int i ) { return ka23::plus ( i , 1 ) ; } ) ;"))
+    check(program.findStr("delete a ;"))

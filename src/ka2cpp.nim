@@ -971,14 +971,22 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
     let array_type = array_CandT[1]
     let array_type_split = array_type.split("::")
     var fn = node.child_nodes[0].child_nodes[1]
+    
     var func_arg_types: seq[string]
     for nodes in fn.child_nodes[1].child_nodes:
       func_arg_types.add(nodes.token.Type)
 
     if array_type_split[0] != ARRAY:
       echoErrorMessage("第一引数の型が正しくありません", test)
-    
-    let ccf = conversionCppFunction(func_name, func_arg_types & array_type_split[1..array_type_split.len()-1])
+
+    let i_node = Node(
+      kind:        nkIdent,
+      token:       Token(Type: IDENT, Literal: "i"),
+      child_nodes: @[],
+    )
+    fn.child_nodes[1].child_nodes = @[i_node] & fn.child_nodes[1].child_nodes
+
+    let ccf = conversionCppFunction(func_name, array_type_split[1..array_type_split.len()-1] & func_arg_types)
     if ccf[0]:
       cpp_func_name = ccf[2]
       func_result_type = ccf[1]
@@ -988,8 +996,11 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
           echoErrorMessage("存在しない関数です", test)
         else:
           echoErrorMessage("第二引数の関数の引数が正しくありません", test)
+        
+        cpp_func_name = func_name
+        func_result_type = ccf[1]
       else:
-        let ftm = funcTypesMatch(identTable[func_name].Type, func_arg_types & array_type_split[1..array_type_split.len()-1])
+        let ftm = funcTypesMatch(identTable[func_name].Type, array_type_split[1..array_type_split.len()-1] & func_arg_types)
         if ftm[0]:
           cpp_func_name = func_name
           func_result_type = ftm[2]
@@ -1000,11 +1011,6 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
     if func_result_type.split("::") != array_type_split[1..array_type_split.len()-1]:
       echoErrorMessage("第二引数の関数の返り値が正しくありません", test)
 
-    fn.child_nodes[1].child_nodes.add(Node(
-      kind:        nkIdent,
-      token:       Token(Type: IDENT, Literal: "i"),
-      child_nodes: @[],
-    ))
     code.add((IDENT, "ka23::map"))
     code.add((OTHER, "("))
     code.add(array_content)

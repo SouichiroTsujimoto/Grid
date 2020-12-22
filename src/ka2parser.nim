@@ -525,6 +525,7 @@ proc parseGroupedExpression(p: Parser): Node =
     return nil
 
 proc parseType(p: Parser): Node =
+  # echo p.curToken.Type
   case p.curToken.Type
   of T_INT      : return p.parseIntType()
   of T_FLOAT    : return p.parseFloatType()
@@ -555,9 +556,9 @@ proc parseExpression(p: Parser, precedence: Precedence): Node =
   of LBRACE     : left = p.parseArrayLiteral()
   else          : left = p.parseType()
 
-  while precedence < p.peekToken.tokenPrecedence() and p.peekToken.Type != EOF or left == nil:
-    if left != nil:
-      p.shiftToken()
+  while precedence < p.peekToken.tokenPrecedence() and p.peekToken.Type != EOF:
+    p.shiftToken()
+
     case p.curToken.Type
     of PLUS, MINUS, ASTERISC, SLASH, LT, GT, LE, GE, EE, NE:
       left = p.parseInfixExpression(left)
