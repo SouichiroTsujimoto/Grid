@@ -421,6 +421,19 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
         return (false, OTHER, "")
     else:
       return (false, OTHER, "")
+  of "at":
+    if argsTypeC.len() == 0:
+      return (true, IDENT, "ka23::divi")
+    elif argsTypeC.len() == 2:
+      echo @[argsTypeC[0], argsTypeC[1]]
+      let fmr1 = funcTypesMatch("ARRAY" & "::" & anything_t & ">>" & number_t & ">>" & anything_t, @[argsTypeC[0], argsTypeC[1]])
+      if fmr1[0]:
+        let res_type = fmr1[1]
+        return (fmr1[0], res_type, "ka23::at")
+      else:
+        return (false, OTHER, "")
+    else:
+      return (false, OTHER, "")
   else:
     return (false, NIL, "NULL")
 

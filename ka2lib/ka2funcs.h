@@ -105,25 +105,59 @@ namespace ka23 {
     return a != b;
   }
 
-  // len関数 TODO: 多次元配列に対応させる
   int len(std::vector<int> a) {
+    return (int)a.size();
+  }
+  int len(std::initializer_list<int> a) {
     return (int)a.size();
   }
   int len(std::vector<float> a) {
     return (int)a.size();
   }
+  int len(std::initializer_list<float> a) {
+    return (int)a.size();
+  }
   int len(std::vector<char> a) {
+    return (int)a.size();
+  }
+  int len(std::initializer_list<char> a) {
     return (int)a.size();
   }
   int len(std::vector<std::string> a) {
     return (int)a.size();
   }
+  int len(std::initializer_list<std::string> a) {
+    return (int)a.size();
+  }
   int len(std::vector<bool> a) {
     return (int)a.size();
   }
+  int len(std::initializer_list<bool> a) {
+    return (int)a.size();
+  }
 
-  // join関数 TODO: 多次元配列に対応させる
   std::vector<int> join(std::vector<int> a, std::vector<int> b) {
+    std::vector<int> c;
+    c.reserve(a.size() + b.size());
+    c.insert(c.end(), a.begin(), a.end());
+    c.insert(c.end(), b.begin(), b.end());
+    return c;
+  }
+  std::vector<int> join(std::initializer_list<int> a, std::vector<int> b) {
+    std::vector<int> c;
+    c.reserve(a.size() + b.size());
+    c.insert(c.end(), a.begin(), a.end());
+    c.insert(c.end(), b.begin(), b.end());
+    return c;
+  }
+  std::vector<int> join(std::vector<int> a, std::initializer_list<int> b) {
+    std::vector<int> c;
+    c.reserve(a.size() + b.size());
+    c.insert(c.end(), a.begin(), a.end());
+    c.insert(c.end(), b.begin(), b.end());
+    return c;
+  }
+  std::vector<int> join(std::initializer_list<int> a, std::initializer_list<int> b) {
     std::vector<int> c;
     c.reserve(a.size() + b.size());
     c.insert(c.end(), a.begin(), a.end());
@@ -137,7 +171,49 @@ namespace ka23 {
     c.insert(c.end(), b.begin(), b.end());
     return c;
   }
+  std::vector<float> join(std::initializer_list<float> a, std::vector<float> b) {
+    std::vector<float> c;
+    c.reserve(a.size() + b.size());
+    c.insert(c.end(), a.begin(), a.end());
+    c.insert(c.end(), b.begin(), b.end());
+    return c;
+  }
+  std::vector<float> join(std::vector<float> a, std::initializer_list<float> b) {
+    std::vector<float> c;
+    c.reserve(a.size() + b.size());
+    c.insert(c.end(), a.begin(), a.end());
+    c.insert(c.end(), b.begin(), b.end());
+    return c;
+  }
+  std::vector<float> join(std::initializer_list<float> a, std::initializer_list<float> b) {
+    std::vector<float> c;
+    c.reserve(a.size() + b.size());
+    c.insert(c.end(), a.begin(), a.end());
+    c.insert(c.end(), b.begin(), b.end());
+    return c;
+  }
   std::vector<char> join(std::vector<char> a, std::vector<char> b) {
+    std::vector<char> c;
+    c.reserve(a.size() + b.size());
+    c.insert(c.end(), a.begin(), a.end());
+    c.insert(c.end(), b.begin(), b.end());
+    return c;
+  }
+  std::vector<char> join(std::initializer_list<char> a, std::vector<char> b) {
+    std::vector<char> c;
+    c.reserve(a.size() + b.size());
+    c.insert(c.end(), a.begin(), a.end());
+    c.insert(c.end(), b.begin(), b.end());
+    return c;
+  }
+  std::vector<char> join(std::vector<char> a, std::initializer_list<char> b) {
+    std::vector<char> c;
+    c.reserve(a.size() + b.size());
+    c.insert(c.end(), a.begin(), a.end());
+    c.insert(c.end(), b.begin(), b.end());
+    return c;
+  }
+  std::vector<char> join(std::initializer_list<char> a, std::initializer_list<char> b) {
     std::vector<char> c;
     c.reserve(a.size() + b.size());
     c.insert(c.end(), a.begin(), a.end());
@@ -151,7 +227,49 @@ namespace ka23 {
     c.insert(c.end(), b.begin(), b.end());
     return c;
   }
+  std::vector<std::string> join(std::initializer_list<std::string> a, std::vector<std::string> b) {
+    std::vector<std::string> c;
+    c.reserve(a.size() + b.size());
+    c.insert(c.end(), a.begin(), a.end());
+    c.insert(c.end(), b.begin(), b.end());
+    return c;
+  }
+  std::vector<std::string> join(std::vector<std::string> a, std::initializer_list<std::string> b) {
+    std::vector<std::string> c;
+    c.reserve(a.size() + b.size());
+    c.insert(c.end(), a.begin(), a.end());
+    c.insert(c.end(), b.begin(), b.end());
+    return c;
+  }
+  std::vector<std::string> join(std::initializer_list<std::string> a, std::initializer_list<std::string> b) {
+    std::vector<std::string> c;
+    c.reserve(a.size() + b.size());
+    c.insert(c.end(), a.begin(), a.end());
+    c.insert(c.end(), b.begin(), b.end());
+    return c;
+  }
   std::vector<bool> join(std::vector<bool> a, std::vector<bool> b) {
+    std::vector<bool> c;
+    c.reserve(a.size() + b.size());
+    c.insert(c.end(), a.begin(), a.end());
+    c.insert(c.end(), b.begin(), b.end());
+    return c;
+  }
+  std::vector<bool> join(std::initializer_list<bool> a, std::vector<bool> b) {
+    std::vector<bool> c;
+    c.reserve(a.size() + b.size());
+    c.insert(c.end(), a.begin(), a.end());
+    c.insert(c.end(), b.begin(), b.end());
+    return c;
+  }
+  std::vector<bool> join(std::vector<bool> a, std::initializer_list<bool> b) {
+    std::vector<bool> c;
+    c.reserve(a.size() + b.size());
+    c.insert(c.end(), a.begin(), a.end());
+    c.insert(c.end(), b.begin(), b.end());
+    return c;
+  }
+  std::vector<bool> join(std::initializer_list<bool> a, std::initializer_list<bool> b) {
     std::vector<bool> c;
     c.reserve(a.size() + b.size());
     c.insert(c.end(), a.begin(), a.end());
@@ -437,6 +555,42 @@ namespace ka23 {
       c.push_back(b(d));
     }
     return c;
+  }
+
+  int at(std::vector<int> a, int b) {
+    return a[b];
+  }
+  int at(std::initializer_list<int> a, int b) {
+    std::vector<int> c = a;
+    return c[b];
+  }
+  float at(std::vector<float> a, int b) {
+    return a[b];
+  }
+  float at(std::initializer_list<float> a, int b) {
+    std::vector<float> c = a;
+    return c[b];
+  }
+  char at(std::vector<char> a, int b) {
+    return a[b];
+  }
+  char at(std::initializer_list<char> a, int b) {
+    std::vector<char> c = a;
+    return c[b];
+  }
+  std::string at(std::vector<std::string> a, int b) {
+    return a[b];
+  }
+  std::string at(std::initializer_list<std::string> a, int b) {
+    std::vector<std::string> c = a;
+    return c[b];
+  }
+  bool at(std::vector<bool> a, int b) {
+    return a[b];
+  }
+  bool at(std::initializer_list<bool> a, int b) {
+    std::vector<bool> c = a;
+    return c[b];
   }
 
 }
