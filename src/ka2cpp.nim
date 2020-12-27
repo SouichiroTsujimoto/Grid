@@ -87,29 +87,44 @@ proc identExistenceCheck(ident: string): bool =
   
   return false
 
-proc typeMatch(type1: string, type2: string): (bool, string) =
-  # echo type1 & "___" & type2
-
+proc arrayingTypes(types: string): seq[seq[string]] =
   var
-    typeList1: seq[seq[string]]
-    typeList2: seq[seq[string]]
+    add_type = ""
+    bracket_count = 0
+    array1: seq[string]
+    string1: string
 
-  for t1s in type1.split("+"):
-    typeList1.add(@[t1s.split("|")])
-  for t2s in type2.split("+"):
-    typeList2.add(@[t2s.split("|")])
+  for t1s in types.split("+"):
+    for t1ss in t1s.split("|"):
+      add_type = t1ss
+      if add_type.contains("["):
+        bracket_count = bracket_count + 1
+        add_type = t1ss.split("[")[1]
+      if add_type.contains("]"):
+        bracket_count = bracket_count - 1
+        add_type = t1ss.split("[")[0]
+      
+      if bracket_count != 0:
+        for _ in @[0..bracket_count]:
+          string1.add("ARRAY::")
+      array1.add(string1 & add_type)
+      string1 = ""
+    result.add(array1)
 
-  # echo $typeList1 & "________" & $typeList2
+proc typeMatch(type1: string, type2: string): (bool, string) =
+  var
+    typeArray1: seq[seq[string]] = arrayingTypes(type1)
+    typeArray2: seq[seq[string]] = arrayingTypes(type2)
 
   var
     typeFlow: seq[string]
     typeCandidacies: seq[string]
 
-  if typeList1.len() != typeList2.len():
+  if typeArray1.len() != typeArray2.len():
     return (false, "")
 
-  for i, t1ss in typeList1:
-    for t2ss in typeList2[i]:
+  for i, t1ss in typeArray1:
+    for t2ss in typeArray2[i]:
       for t1sss in t1ss:
         if t1sss == t2ss:
           typeCandidacies.add(t1sss)
@@ -132,7 +147,7 @@ proc funcTypeSplit(funcType: string, target: string): (bool, string, string) =
 
 # [0] -> マッチしたかどうか [1] -> マッチした型 [2] -> 返り値の型
 proc funcTypesMatch(funcType: string, argType: string): (bool, string, string) =
-  var (b, flow, res) = funcType.funcTypeSplit("->")
+  var (_, flow, res) = funcType.funcTypeSplit("->")
   var match = typeMatch(flow, argType)
   
   return (match[0], match[1], res)
@@ -308,7 +323,7 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
     if argsTypeC.len() == 0:
       return (true, IDENT, "ka23::len")
     elif argsTypeC.len() == 1:
-      let fmr1 = funcTypesMatch(ARRAY & "::" & anything_t & "->" & INT, argsType.join("+"))
+      let fmr1 = funcTypesMatch(ARRAY & "[" & anything_t & "]" & "->" & INT, argsType.join("+"))
       if fmr1[0]:
         let res_type = INT
         return (fmr1[0], res_type, "ka23::len")
@@ -320,7 +335,7 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
     if argsTypeC.len() == 0:
       return (true, IDENT, "ka23::join")
     elif argsTypeC.len() == 2:
-      let fmr1 = funcTypesMatch("ARRAY" & "::" & anything_t & "+" & "ARRAY" & "::" & anything_t & "->" & "ARRAY" & "::" & anything_t, argsType.join("+"))
+      let fmr1 = funcTypesMatch("ARRAY" & "[" & anything_t & "]" & "+" & "ARRAY" & "[" & anything_t & "]" & "->" & "ARRAY" & "[" & anything_t & "]", argsType.join("+"))
       if fmr1[0]:
         let res_type = fmr1[1].split("+")[0]
         return (fmr1[0], res_type, "ka23::join")
@@ -707,11 +722,11 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
     if identExistenceCheck(di[0][1][1]):
       echoErrorMessage("既に定義されています", test)
     # echo di
-    code.add((OTHER, "auto"))
+    code.add(di[0][0])
     code.add(di[0][1])
     if node.child_nodes[1].child_nodes == @[]:
       identTable[di[0][1][1]] = IdentInfo(
-        Type:    NIL & "+" & di[1],
+        Type:    NIL & "->" & di[1],
         path:    nesting,
         mutable: false,
         delete:  false,
@@ -722,7 +737,7 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
       for parameter in node.child_nodes[1].child_nodes:
         argsType.add(parameter.token.Type.removeT())
       identTable[di[0][1][1]] = IdentInfo(
-        Type:    argsType.join("+") & "+" & di[1],
+        Type:    argsType.join("+") & "->" & di[1],
         path:    nesting,
         mutable: false,
         delete:  false,
@@ -731,8 +746,6 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
     var origin = nesting
     nesting = nesting + 1
     if node.child_nodes[1].child_nodes == @[]:
-      code.add((OTHER, "="))
-      code.add((OTHER, "[]"))
       code.add((OTHER, "()"))
       code.add((OTHER, "{"))
       for statement in node.child_nodes[2].child_nodes:
@@ -745,8 +758,6 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
         else:
           code.add(statement.makeCodeParts(test)[0])
     else:
-      code.add((OTHER, "="))
-      code.add((OTHER, "[]"))
       code.add((OTHER, "("))
       for i, parameter in node.child_nodes[1].child_nodes:
         if i != 0:
@@ -774,7 +785,7 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
     # nestingをリセット
     nesting = origin
     code.add(deleteScope(nesting))
-    code.add((OTHER, "} ;"))
+    code.add((OTHER, "}"))
     codeType = DEFINE
 
   # return文
@@ -944,7 +955,6 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
     let func_name = node.child_nodes[0].child_nodes[1].child_nodes[0].token.Literal
     var cpp_func_name = ""
     var func_result_type = ""
-    var captcha_func_name = ""
     let array_CandT = node.child_nodes[0].child_nodes[0].makeCodeParts(test)
     let array_content = array_CandT[0]
     let array_type = array_CandT[1]
@@ -980,7 +990,6 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
         if ftm[0]:
           cpp_func_name = func_name
           func_result_type = ftm[2]
-          captcha_func_name = func_name
         else:  
           echoErrorMessage("第二引数の関数の引数が正しくありません", test)
 
@@ -991,9 +1000,7 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
     code.add((OTHER, "("))
     code.add(array_content)
     code.add((OTHER, ","))
-    code.add((OTHER, "["))
-    code.add((OTHER, captcha_func_name))
-    code.add((OTHER, "]"))
+    code.add((OTHER, "[]"))
     code.add((OTHER, "("))
     let ident = Node(
       kind:        nkVarStatement,
