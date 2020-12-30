@@ -172,24 +172,24 @@ suite "def":
   test "def int a(int b) do return b * 2 end":
     initTables()
     let program = "def int a(int b) do return b * 2 end".makeProgram()
-    check(program.findStr("auto a = [] ( int b ) {"))
+    check(program.findStr("int a ( int b ) {"))
     check(program.findStr("return ( ( b * 2 ) ) ;"))
-    check(program.findStr("} ;"))
+    check(program.findStr("}"))
   test "def int a(int b, int c) do return b / c end":
     initTables()
     let program = "def int a(int b, int c) do return b / c end".makeProgram()
-    check(program.findStr("auto a = [] ( int b , int c ) {"))
+    check(program.findStr("int a ( int b , int c ) {"))
     check(program.findStr("return ( ( b / c ) ) ;"))
-    check(program.findStr("} ;"))
+    check(program.findStr("}"))
   test "def bool a(int b, bool c) do let bool d = b == 10 return c == d end":
     initTables()
     let program = "def bool a(int b, bool c) do let bool d = b == 10 return c == d end".makeProgram()
-    check(program.findStr("auto a = [] ( int b , bool c ) {"))
+    check(program.findStr("bool a ( int b , bool c ) {"))
     check(program.findStr("bool * d = new bool ;"))
     check(program.findStr("* d = ( b == 10 ) ;"))
     check(program.findStr("return ( ( c == * d ) ) ;"))
     check(program.findStr("delete d ;"))
-    check(program.findStr("} ;"))
+    check(program.findStr("}"))
 
 suite "if":
   test "if 1 + 1 <= 3 do print(\"OK\") end":
@@ -393,11 +393,11 @@ suite "map":
   test "map({1, 2, 3}, plus(1))":
     initTables()
     let program = "map({1, 2, 3}, plus(1))".makeProgram()
-    check(program.findStr("ka23::map ( { 1 , 2 , 3 } , [ ] ( int i ) { return ka23::plus ( i , 1 ) ; } ) ;"))
+    check(program.findStr("ka23::map ( { 1 , 2 , 3 } , [] ( int i ) { return ka23::plus ( i , 1 ) ; } ) ;"))
   test "let array int a = {1, 2, 3} map(a, plus(1))":
     initTables()
     let program = "let array int a = {1, 2, 3} map(a, plus(1))".makeProgram()
     check(program.findStr("std::vector<int> * a = new std::vector<int> ;"))
     check(program.findStr("* a = { 1 , 2 , 3 } ;"))
-    check(program.findStr("ka23::map ( * a , [ ] ( int i ) { return ka23::plus ( i , 1 ) ; } ) ;"))
+    check(program.findStr("ka23::map ( * a , [] ( int i ) { return ka23::plus ( i , 1 ) ; } ) ;"))
     check(program.findStr("delete a ;"))
