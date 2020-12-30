@@ -1,9 +1,12 @@
 #include "ka2lib/ka2funcs.h"
 
-std::string pnr ( std::string a ) {
-  ka23::println ( a ) ;
-  return ( a ) ;
+int a = 10 ;
+
+int hoge ( int n ) {
+  return ( ( n + a ) ) ;
 }
 int main ( int argc , char *argv[] ) {
-  ka23::map ( { "あ" , "い" , "う" } , [] ( std::string i ) { return pnr ( i ) ; } ) ;
+  ka23::println ( ka23::toString ( hoge ( 30 ) ) ) ;
+  ka23::println ( ka23::toString ( hoge ( 30 ) ) ) ;
 }
+delete a ;

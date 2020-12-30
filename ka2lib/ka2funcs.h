@@ -593,4 +593,10 @@ namespace ka23 {
     return c[b];
   }
 
+  std::string readln () {
+    std::string a = "";
+    std::cin >> a;
+    return a;
+  }
+
 }

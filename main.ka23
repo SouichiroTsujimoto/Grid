@@ -1,8 +1,10 @@
-def string pnr(string a) do
-  println(a)
-  return a
+let int a = 10
+
+def int hoge(int n) do
+  return n + a
 end
 
 main do
-  map({"あ", "い", "う"}, pnr())
+  hoge(30) |> toString() |> println()
+  hoge(30) |> toString() |> println()
 end

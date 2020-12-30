@@ -347,7 +347,7 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
     if argsTypeC.len() == 0:
       return (true, IDENT, "ka23::join")
     elif argsTypeC.len() == 1:
-      let fmr1 = funcTypesMatch("ARRAY" & "::" & anything_t & "->" & anything_t, argsType.join("+"))
+      let fmr1 = funcTypesMatch("ARRAY" & "[" & anything_t & "]" & "->" & anything_t, argsType.join("+"))
       if fmr1[0]:
         let res_type = fmr1[1].funcTypeSplit("ARRAY::")[2]
         return (fmr1[0], res_type, "ka23::head")
@@ -359,7 +359,7 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
     if argsTypeC.len() == 0:
       return (true, IDENT, "ka23::tail")
     elif argsTypeC.len() == 1:
-      let fmr1 = funcTypesMatch("ARRAY" & "::" & anything_t & "->" & "ARRAY" & "::" & anything_t, argsType.join("+"))
+      let fmr1 = funcTypesMatch("ARRAY" & "[" & anything_t & "]" & "->" & "ARRAY" & "::" & anything_t, argsType.join("+"))
       if fmr1[0]:
         let res_type = fmr1[1]
         return (fmr1[0], res_type, "ka23::tail")
@@ -371,7 +371,7 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
     if argsTypeC.len() == 0:
       return (true, IDENT, "ka23::last")
     elif argsTypeC.len() == 1:
-      let fmr1 = funcTypesMatch("ARRAY" & "::" & anything_t & "->" & anything_t, argsType.join("+"))
+      let fmr1 = funcTypesMatch("ARRAY" & "[" & anything_t & "]" & "->" & anything_t, argsType.join("+"))
       if fmr1[0]:
         let res_type = fmr1[1].funcTypeSplit("ARRAY::")[2]
         return (fmr1[0], res_type, "ka23::last")
@@ -383,7 +383,7 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
     if argsTypeC.len() == 0:
       return (true, IDENT, "ka23::init")
     elif argsTypeC.len() == 1:
-      let fmr1 = funcTypesMatch("ARRAY" & "::" & anything_t & "->" & "ARRAY" & "::" & anything_t, argsType.join("+"))
+      let fmr1 = funcTypesMatch("ARRAY" & "[" & anything_t & "]" & "->" & "ARRAY" & "::" & anything_t, argsType.join("+"))
       if fmr1[0]:
         let res_type = fmr1[1]
         return (fmr1[0], res_type, "ka23::init")
@@ -407,12 +407,18 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
     if argsTypeC.len() == 0:
       return (true, IDENT, "ka23::at")
     elif argsTypeC.len() == 2:
-      let fmr1 = funcTypesMatch("ARRAY" & "::" & anything_t & "+" & number_t & "->" & anything_t, argsType.join("+"))
+      let fmr1 = funcTypesMatch("ARRAY" & "[" & anything_t & "]" & "+" & number_t & "->" & anything_t, argsType.join("+"))
       if fmr1[0]:
         let res_type = fmr1[1].split("+")[0]
         return (fmr1[0], res_type, "ka23::at")
       else:
         return (false, OTHER, "")
+    else:
+      return (false, OTHER, "")
+  of "readln":
+    if argsTypeC.len() == 0:
+      let res_type = STRING
+      return (true, res_type, "ka23::readln")
     else:
       return (false, OTHER, "")
   else:
