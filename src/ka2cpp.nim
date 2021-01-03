@@ -506,8 +506,10 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
     codeType = NIL
   of nkIntType:
     if node.child_nodes.len() == 1:
-      code.add(node.token.Type.conversionCppType())
+      var type_name = node.token.Type.conversionCppType()
+      code.add(type_name)
       code.add((INT, node.child_nodes[0].token.Literal))
+      codeType = type_name[0].removeT()
     elif node.child_nodes.len() == 2:
       var type_name = node.token.Type.conversionCppType()
       var var_name = node.child_nodes[0].token.Literal
@@ -529,15 +531,17 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
           used:     false,
         )
         addScopeTable(var_name, nesting)
-        codeType = type_name[1]
+        codeType = type_name[0].removeT()
       else:
         echoErrorMessage("指定している型と値の型が違います", test)
     else:
       echoErrorMessage("不明なエラー", test)
   of nkFloatType:
     if node.child_nodes.len() == 1:
-      code.add(node.token.Type.conversionCppType())
+      var type_name = node.token.Type.conversionCppType()
+      code.add(type_name)
       code.add((FLOAT, node.child_nodes[0].token.Literal))
+      codeType = type_name[0].removeT()
     elif node.child_nodes.len() == 2:
       var type_name = node.token.Type.conversionCppType()
       var var_name = node.child_nodes[0].token.Literal
@@ -559,15 +563,17 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
           used:     false,
         )
         addScopeTable(var_name, nesting)
-        codeType = type_name[1]
+        codeType = type_name[0].removeT()
       else:
         echoErrorMessage("指定している型と値の型が違います", test)
     else:
       echoErrorMessage("不明なエラー", test)
   of nkCharType:
     if node.child_nodes.len() == 1:
-      code.add(node.token.Type.conversionCppType())
+      var type_name = node.token.Type.conversionCppType()
+      code.add(type_name)
       code.add((CHAR, node.child_nodes[0].token.Literal))
+      codeType = type_name[0].removeT()
     elif node.child_nodes.len() == 2:
       var type_name = node.token.Type.conversionCppType()
       var var_name = node.child_nodes[0].token.Literal
@@ -589,15 +595,17 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
           used:     false,
         )
         addScopeTable(var_name, nesting)
-        codeType = type_name[1]
+        codeType = type_name[0].removeT()
       else:
         echoErrorMessage("指定している型と値の型が違います", test)
     else:
       echoErrorMessage("不明なエラー", test)
   of nkStringType:
     if node.child_nodes.len() == 1:
-      code.add(node.token.Type.conversionCppType())
+      var type_name = node.token.Type.conversionCppType()
+      code.add(type_name)
       code.add((STRING, node.child_nodes[0].token.Literal))
+      codeType = type_name[0].removeT()
     elif node.child_nodes.len() == 2:
       var type_name = node.token.Type.conversionCppType()
       var var_name = node.child_nodes[0].token.Literal
@@ -619,15 +627,17 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
           used:     false,
         )
         addScopeTable(var_name, nesting)
-        codeType = type_name[1]
+        codeType = type_name[0].removeT()
       else:
         echoErrorMessage("指定している型と値の型が違います", test)
     else:
       echoErrorMessage("不明なエラー", test)
   of nkBoolType:
     if node.child_nodes.len() == 1:
-      code.add(node.token.Type.conversionCppType())
+      var type_name = node.token.Type.conversionCppType()
+      code.add(type_name)
       code.add((BOOL, node.child_nodes[0].token.Literal))
+      codeType = type_name[0].removeT()
     elif node.child_nodes.len() == 2:
       var type_name = node.token.Type.conversionCppType()
       var var_name = node.child_nodes[0].token.Literal
@@ -649,15 +659,21 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
           used:     false,
         )
         addScopeTable(var_name, nesting)
-        codeType = type_name[1]
+        codeType = type_name[0].removeT()
       else:
         echoErrorMessage("指定している型と値の型が違います", test)
     else:
       echoErrorMessage("不明なエラー", test)
   of nkArrayType:
     if node.child_nodes.len() == 1:
+      # ARRAYだけ特殊
       code.add(node.token.Type.conversionCppType())
       code.add((ARRAY, node.child_nodes[0].token.Literal))
+      let types = node.token.Type.split("::")
+      for i, tv in types:
+        if i != 0:
+          codeType.add("::")
+        codeType.add(tv.removeT())
     elif node.child_nodes.len() == 2:
       var type_name = node.token.Type.conversionCppType()
       var var_name = node.child_nodes[0].token.Literal
@@ -672,7 +688,7 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
             codeType.add("::")
           codeType.add(tv.removeT())
         code.add((OTHER, "const"))
-        code.add((T_ARRAY, codeType))
+        code.add(type_name)
         code.add((FLOAT, var_name))
         code.add((OTHER, "="))
         code.add(value[0])
