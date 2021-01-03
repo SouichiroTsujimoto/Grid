@@ -681,17 +681,12 @@ proc parseStatement(p: Parser): Node =
   case p.curToken.Type
   # of LET:    return p.parseLetStatement()
   # of VAR:    return p.parseVarStatement()
-  of MAIN:   return p.parseMainStatement()
-  of MAP:    return p.parseMapFunction()
-  of DEFINE: return p.parseDefineStatement()
-  of FOR:    return p.parseForStatement()
-  of IF:     return p.parseIfStatement()
-  of INT:    return p.parseIntType(true)
-  of FLOAT:  return p.parseFloatType(true)
-  of CHAR:   return p.parseCharType(true)
-  of STRING: return p.parseStringType(true)
-  of BOOL:   return p.parseBoolType(true)
-  else:      return p.parseExpressionStatement()
+  of MAIN:     return p.parseMainStatement()
+  of MAP:      return p.parseMapFunction()
+  of DEFINE:   return p.parseDefineStatement()
+  of FOR:      return p.parseForStatement()
+  of IF:       return p.parseIfStatement()
+  else:        return p.parseExpressionStatement()
 
 # ASTを作る
 proc makeAST*(input: string): seq[Node] =
