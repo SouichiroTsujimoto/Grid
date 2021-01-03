@@ -140,14 +140,6 @@ proc nextToken*(l: Lexer): Token =
       tok = Token(Type: PIPE, Literal: literal)
     else:
       echo "エラ〜〜〜 : '|'"
-  of ':':
-    if l.peekChar() == '=':
-      let ch = l.ch
-      l.nextChar()
-      let literal = $ch & $l.ch
-      tok = Token(Type: CEQUAL, Literal: literal)
-    else:
-      tok = Token(Type: COLON, Literal: $l.ch)
   of '-' :
     if l.peekChar().isDigit():
       l.nextChar()
@@ -166,6 +158,7 @@ proc nextToken*(l: Lexer): Token =
   of ',' : tok = Token(Type: COMMA, Literal: $l.ch)
   of '{' : tok = Token(Type: LBRACE, Literal: $l.ch)
   of '}' : tok = Token(Type: RBRACE, Literal: $l.ch)
+  of ':' : tok = Token(Type: COLON, Literal: $l.ch)
   else:
     if l.ch == '\'':
       let lit = l.readChar()

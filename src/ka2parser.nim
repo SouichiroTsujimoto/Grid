@@ -62,7 +62,7 @@ proc parseVarStatement(p: Parser): Node =
 
   if p.peekToken.Type != EQUAL:
     return node
-  
+
   p.shiftToken()
   p.shiftToken()
   node.child_nodes.add(p.parseExpression(Lowest))
@@ -346,12 +346,25 @@ proc parseNilLiteral(p: Parser): Node =
 # int型
 proc parseIntType(p: Parser): Node =
   var node = Node(
-    kind:  nkIntType,
-    token: p.curToken,
+    kind:        nkIntType,
+    token:       p.curToken,
+    child_nodes: @[],
   )
-  if p.peekToken.Type == IDENT:
-    p.shiftToken()
-    node.child_nodes.add(p.parseIdent())
+  if p.peekToken.Type != IDENT:
+    echoErrorMessage("変数名がありません", false)
+    return node
+
+  p.shiftToken()
+  node.child_nodes.add(p.parseIdent())
+  
+  if p.peekToken.Type != EQUAL:
+    echoErrorMessage("初期化されていません", false)
+    return node
+  
+  p.shiftToken()
+  p.shiftToken()
+  node.child_nodes.add(p.parseExpression(Lowest))
+
   return node
 
 # float型
@@ -360,9 +373,21 @@ proc parseFloatType(p: Parser): Node =
     kind:  nkFloatType,
     token: p.curToken,
   )
-  if p.peekToken.Type == IDENT:
-    p.shiftToken()
-    node.child_nodes.add(p.parseIdent())
+  if p.peekToken.Type != IDENT:
+    echoErrorMessage("変数名がありません", false)
+    return node
+
+  p.shiftToken()
+  node.child_nodes.add(p.parseIdent())
+  
+  if p.peekToken.Type != EQUAL:
+    echoErrorMessage("初期化されていません", false)
+    return node
+  
+  p.shiftToken()
+  p.shiftToken()
+  node.child_nodes.add(p.parseExpression(Lowest))
+
   return node
 
 # char型
@@ -371,9 +396,21 @@ proc parseCharType(p: Parser): Node =
     kind:  nkCharType,
     token: p.curToken,
   )
-  if p.peekToken.Type == IDENT:
-    p.shiftToken()
-    node.child_nodes.add(p.parseIdent())
+  if p.peekToken.Type != IDENT:
+    echoErrorMessage("変数名がありません", false)
+    return node
+
+  p.shiftToken()
+  node.child_nodes.add(p.parseIdent())
+  
+  if p.peekToken.Type != EQUAL:
+    echoErrorMessage("初期化されていません", false)
+    return node
+  
+  p.shiftToken()
+  p.shiftToken()
+  node.child_nodes.add(p.parseExpression(Lowest))
+
   return node
 
 # string型
@@ -382,9 +419,21 @@ proc parseStringType(p: Parser): Node =
     kind:  nkStringType,
     token: p.curToken,
   )
-  if p.peekToken.Type == IDENT:
-    p.shiftToken()
-    node.child_nodes.add(p.parseIdent())
+  if p.peekToken.Type != IDENT:
+    echoErrorMessage("変数名がありません", false)
+    return node
+
+  p.shiftToken()
+  node.child_nodes.add(p.parseIdent())
+  
+  if p.peekToken.Type != EQUAL:
+    echoErrorMessage("初期化されていません", false)
+    return node
+  
+  p.shiftToken()
+  p.shiftToken()
+  node.child_nodes.add(p.parseExpression(Lowest))
+
   return node
 
 # bool型
@@ -393,9 +442,21 @@ proc parseBoolType(p: Parser): Node =
     kind:  nkBoolType,
     token: p.curToken,
   )
-  if p.peekToken.Type == IDENT:
-    p.shiftToken()
-    node.child_nodes.add(p.parseIdent())
+  if p.peekToken.Type != IDENT:
+    echoErrorMessage("変数名がありません", false)
+    return node
+
+  p.shiftToken()
+  node.child_nodes.add(p.parseIdent())
+  
+  if p.peekToken.Type != EQUAL:
+    echoErrorMessage("初期化されていません", false)
+    return node
+  
+  p.shiftToken()
+  p.shiftToken()
+  node.child_nodes.add(p.parseExpression(Lowest))
+
   return node
 
 # array型
@@ -404,25 +465,17 @@ proc parseArrayType(p: Parser): Node =
     kind:  nkArrayType,
     token: p.curToken,
   )
+
+  # array型だけ特殊
   if p.peekToken.Type == IDENT:
-    p.shiftToken()
-    node.child_nodes.add(p.parseIdent())
+    echoErrorMessage("型が間違っています", false)
+    return node
   else:
     p.shiftToken()
     let ppa = p.parseType()
     node.child_nodes.add(ppa.child_nodes)
     node.token.Type = "T_ARRAY" & "::" & ppa.token.Type
-  return node
-
-# function型
-proc parseFunctionType(p: Parser): Node =
-  let node = Node(
-    kind:  nkFunctionType,
-    token: p.curToken,
-  )
-  if p.peekToken.Type == IDENT:
-    p.shiftToken()
-    node.child_nodes.add(p.parseIdent())
+  
   return node
 
 #------ここまで------
@@ -525,7 +578,6 @@ proc parseGroupedExpression(p: Parser): Node =
     return nil
 
 proc parseType(p: Parser): Node =
-  # echo p.curToken.Type
   case p.curToken.Type
   of T_INT      : return p.parseIntType()
   of T_FLOAT    : return p.parseFloatType()
@@ -533,7 +585,6 @@ proc parseType(p: Parser): Node =
   of T_STRING   : return p.parseStringType()
   of T_BOOL     : return p.parseBoolType()
   of T_ARRAY    : return p.parseArrayType()
-  of T_FUNCTION : return p.parseFunctionType()
   else          : echoErrorMessage("存在しない型です", false)
 
 # 式の処理
@@ -564,7 +615,7 @@ proc parseExpression(p: Parser, precedence: Precedence): Node =
       left = p.parseInfixExpression(left)
     of ARROW:
       left = p.parseGenerator(left)
-    of CEQUAL:
+    of EQUAL:
       left = p.parseAssignExpression(left)
     of LPAREN:
       left = p.parseCallExpression(left)
@@ -608,13 +659,18 @@ proc parseBlockStatement(p: Parser, endTokenTypes: seq[string]): Node =
 # 文の処理
 proc parseStatement(p: Parser): Node =
   case p.curToken.Type
-  of LET:    return p.parseLetStatement()
-  of VAR:    return p.parseVarStatement()
+  # of LET:    return p.parseLetStatement()
+  # of VAR:    return p.parseVarStatement()
   of MAIN:   return p.parseMainStatement()
   of MAP:    return p.parseMapFunction()
   of DEFINE: return p.parseDefineStatement()
   of FOR:    return p.parseForStatement()
   of IF:     return p.parseIfStatement()
+  of INT:    return p.parseIntType()
+  of FLOAT:  return p.parseFloatType()
+  of CHAR:   return p.parseCharType()
+  of STRING: return p.parseStringType()
+  of BOOL:   return p.parseBoolType()
   else:      return p.parseExpressionStatement()
 
 # ASTを作る
