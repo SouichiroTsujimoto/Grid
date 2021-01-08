@@ -150,9 +150,23 @@ proc nextToken*(l: Lexer): Token =
         return Token(Type: INT, Literal: "-" & lit)
     else:
       tok = Token(Type: MINUS, Literal: $l.ch)
+  of '/' :
+    if l.peekChar() == '*':
+      let ch = l.ch
+      l.nextChar()
+      let literal = $ch & $l.ch
+      tok = Token(Type: COMMENTBEGIN, Literal: literal)
+    else:
+      tok = Token(Type: SLASH, Literal: $l.ch)
+  of '*' :
+    if l.peekChar() == '/':
+      let ch = l.ch
+      l.nextChar()
+      let literal = $ch & $l.ch
+      tok = Token(Type: COMMENTEND, Literal: literal)
+    else:
+      tok = Token(Type: ASTERISC, Literal: $l.ch)
   of '+' : tok = Token(Type: PLUS, Literal: $l.ch)
-  of '*' : tok = Token(Type: ASTERISC, Literal: $l.ch)
-  of '/' : tok = Token(Type: SLASH, Literal: $l.ch)
   of '(' : tok = Token(Type: LPAREN, Literal: $l.ch)
   of ')' : tok = Token(Type: RPAREN, Literal: $l.ch)
   of ',' : tok = Token(Type: COMMA, Literal: $l.ch)

@@ -5,6 +5,7 @@ type
     nkRoot
     nkNil
     nkDo
+    nkComment
     nkArgs
     nkIdent
     nkNilLiteral

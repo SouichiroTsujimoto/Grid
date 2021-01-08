@@ -80,6 +80,23 @@ proc parseReturnStatement(p: Parser): Node =
   node.child_nodes.add(p.parseExpression(Lowest))
   return node
 
+proc parseComment(p: Parser): Node =
+  var node = Node(
+    kind:        nkComment,
+    token:       p.curToken,
+    child_nodes: @[],
+  )
+
+  p.shiftToken()
+
+  while p.curToken.Type != COMMENTEND:
+    if p.curToken.Type == END:
+      echoErrorMessage("コメントが閉じられませんでした", false)
+    else:
+      p.shiftToken()
+
+  return node
+
 # main文
 proc parseMainStatement(p: Parser): Node =
   var node = Node(
@@ -681,12 +698,13 @@ proc parseStatement(p: Parser): Node =
   case p.curToken.Type
   # of LET:    return p.parseLetStatement()
   # of VAR:    return p.parseVarStatement()
-  of MAIN:     return p.parseMainStatement()
-  of MAP:      return p.parseMapFunction()
-  of DEFINE:   return p.parseDefineStatement()
-  of FOR:      return p.parseForStatement()
-  of IF:       return p.parseIfStatement()
-  else:        return p.parseExpressionStatement()
+  of COMMENTBEGIN: return p.parseComment()
+  of MAIN:         return p.parseMainStatement()
+  of MAP:          return p.parseMapFunction()
+  of DEFINE:       return p.parseDefineStatement()
+  of FOR:          return p.parseForStatement()
+  of IF:           return p.parseIfStatement()
+  else:            return p.parseExpressionStatement()
 
 # ASTを作る
 proc makeAST*(input: string): seq[Node] =

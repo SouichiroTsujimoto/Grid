@@ -39,6 +39,9 @@ const
   COMMA*        = ","
   COLON*        = ":"
   SEMICOLON*    = ";"
+  # コメント
+  COMMENTBEGIN* = "/*"
+  COMMENTEND*   = "*/"
   # 括弧
   LPAREN*       = "("
   RPAREN*       = ")"

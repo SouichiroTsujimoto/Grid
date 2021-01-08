@@ -706,6 +706,10 @@ proc makeCodeParts(node: Node, test: bool): (seq[codeParts], string) =
     else:
       echoErrorMessage("不明なエラー", test)
 
+  # コメント
+  of nkComment:
+    codeType = COMMENTBEGIN
+
   # 名前
   of nkIdent:
     if identExistenceCheck(node.token.Literal):
