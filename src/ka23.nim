@@ -6,34 +6,69 @@ var cppCode = """
 
 """
 
+type Lang = enum
+  JP
+  EN
+
 when isMainModule:
-  var sourceName: string
-  if os.paramCount() == 0:
+  var
+    sourceName: string
+    options: seq[string]
+    main_flag = false
+    test = false
+    ast = false
+    lang: Lang = JP
+
+  # コマンドライン引数の処理
+  for param in os.commandLineParams():
+    if param[0] == '-':
+      options.add(param[1..param.len()-1])
+    elif sourceName == "":
+      sourceName = param
+    else:
+      echoErrorMessage("無効なコマンドライン引数が含まれています", false, -1)
+  
+  # オプション
+  for option in options:
+    case option
+    of "ast":
+      ast = true
+    of "en":
+      lang = EN
+    of "jp":
+      lang = JP
+    else:
+      echoErrorMessage("無効なオプションが含まれています", false, -1)
+
+  # ソースファイル
+  if sourceName == "":
     echo "ファイル名を入力してください"
     sourceName = readLine(stdin)
-  elif os.paramCount() == 1:
+  else:
     sourceName = os.commandLineParams()[0]
-  var input = sourceName.readSource()
-  var asts = makeAST(input)
-  var main_flag = false
-  var test = false
+
+  # AST作成してC++を出力
+  var
+    input = sourceName.readSource()
+    asts = makeAST(input)
 
   (asts, main_flag) = astShaping(asts, main_flag, test)
-
   var root = Node(
     kind:        nkRoot,
     token:       Token(Type: "", Literal: ""),
     child_nodes: asts,
   )
 
-  echo showAST(root, 0)
+  if ast:
+    echo showAST(root, 0)
 
   if main_flag == false:
     echoErrorMessage("main文が記述されていません", test, -1)
-    
+  
   cppCode.add(makeCppCode(root, 0, test))
 
   let cppFileName = sourceName.split(".")[0] & ".cpp"
+  
   writeCpp(cppFileName, cppCode)
 
 
@@ -62,7 +97,11 @@ when isMainModule:
       ・ filter関数
       ・ エスケープ文字
   ・ エラーメッセージに行番号を付ける ✅
-  ・ エラーメッセージを英語化できるようにする
+  
+  ・ ＜エラーメッセージを英語化できるようにする＞
+  ・ テストの更新
+  
+  ・ ka2funcsを自動生成 ✅
   ・ 最適化オプション
   ・ エラーメッセージをちゃんと作る 🔺
   ・ 構文エラーを検出できるようにする 

@@ -965,7 +965,6 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
   
   # Generator
   of nkGenerator:
-    # TODO: 型のチェック
     var lt: string
     if node.child_nodes.len() == 2:
       let l = node.child_nodes[0].makeCodeParts(test, dost)
@@ -1047,7 +1046,6 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
       echoErrorMessage("オペランドの型がそれぞれ違います", test, node.token.Line)
 
   # 前置
-  # TODO 
   of nkCallExpression:
     if dost == false:
       echoErrorMessage("文の外で関数を呼び出すことはできません", test, node.token.Line)
@@ -1265,7 +1263,6 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
     codeType = sr[1]
 
   # for文
-  # TODO
   of nkForStatement:
     var new_dost = true
     let origin = nesting
