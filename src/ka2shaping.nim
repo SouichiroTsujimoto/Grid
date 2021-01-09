@@ -16,7 +16,7 @@ proc astShaping*(inp_nodes: seq[Node], main_flag: bool, test: bool): (seq[Node],
       if new_main_flag == false:
         new_main_flag = true
       else:
-        echoErrorMessage("main文が二度記述されています", test)
+        echoErrorMessage("main文が二度記述されています", test, -1)
 
       var main_type = Node(
         kind:        nkIntType,

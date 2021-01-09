@@ -1,8 +1,9 @@
 import tables
 
 type Token* = ref object of RootObj
-  Type*: string
+  Type*   : string
   Literal*: string
+  Line*   : int
 
 const
   ILLEGAL*      = "ILLEGAL"

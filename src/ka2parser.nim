@@ -41,7 +41,7 @@ proc shiftToken(p: Parser) =
 #   node.child_nodes.add(p.parseType())
 
 #   if p.peekToken.Type != EQUAL:
-#     echoErrorMessage("初期化されていません", false)
+#     echoErrorMessage("初期化されていません", false, p.curToken.Line)
 #     return node
   
 #   p.shiftToken()
@@ -91,7 +91,7 @@ proc parseComment(p: Parser): Node =
 
   while p.curToken.Type != COMMENTEND:
     if p.curToken.Type == END:
-      echoErrorMessage("コメントが閉じられませんでした", false)
+      echoErrorMessage("コメントが閉じられませんでした", false, p.curToken.Line)
     else:
       p.shiftToken()
 
@@ -368,7 +368,7 @@ proc parseIntType(p: Parser, init: bool): Node =
     child_nodes: @[],
   )
   if p.peekToken.Type != IDENT:
-    echoErrorMessage("変数名がありません", false)
+    echoErrorMessage("変数名がありません", false, p.curToken.Line)
     return node
 
   p.shiftToken()
@@ -378,7 +378,7 @@ proc parseIntType(p: Parser, init: bool): Node =
     return node
   
   if p.peekToken.Type != EQUAL:
-    echoErrorMessage("初期化されていません", false)
+    echoErrorMessage("初期化されていません", false, p.curToken.Line)
     return node
   
   p.shiftToken()
@@ -395,7 +395,7 @@ proc parseFloatType(p: Parser, init: bool): Node =
     child_nodes: @[],
   )
   if p.peekToken.Type != IDENT:
-    echoErrorMessage("変数名がありません", false)
+    echoErrorMessage("変数名がありません", false, p.curToken.Line)
     return node
 
   p.shiftToken()
@@ -405,7 +405,7 @@ proc parseFloatType(p: Parser, init: bool): Node =
     return node
   
   if p.peekToken.Type != EQUAL:
-    echoErrorMessage("初期化されていません", false)
+    echoErrorMessage("初期化されていません", false, p.curToken.Line)
     return node
   
   p.shiftToken()
@@ -422,7 +422,7 @@ proc parseCharType(p: Parser, init: bool): Node =
     child_nodes: @[],
   )
   if p.peekToken.Type != IDENT:
-    echoErrorMessage("変数名がありません", false)
+    echoErrorMessage("変数名がありません", false, p.curToken.Line)
     return node
 
   p.shiftToken()
@@ -432,7 +432,7 @@ proc parseCharType(p: Parser, init: bool): Node =
     return node
   
   if p.peekToken.Type != EQUAL:
-    echoErrorMessage("初期化されていません", false)
+    echoErrorMessage("初期化されていません", false, p.curToken.Line)
     return node
   
   p.shiftToken()
@@ -449,7 +449,7 @@ proc parseStringType(p: Parser, init: bool): Node =
     child_nodes: @[],
   )
   if p.peekToken.Type != IDENT:
-    echoErrorMessage("変数名がありません", false)
+    echoErrorMessage("変数名がありません", false, p.curToken.Line)
     return node
 
   p.shiftToken()
@@ -459,7 +459,7 @@ proc parseStringType(p: Parser, init: bool): Node =
     return node
   
   if p.peekToken.Type != EQUAL:
-    echoErrorMessage("初期化されていません", false)
+    echoErrorMessage("初期化されていません", false, p.curToken.Line)
     return node
   
   p.shiftToken()
@@ -476,7 +476,7 @@ proc parseBoolType(p: Parser, init: bool): Node =
     child_nodes: @[],
   )
   if p.peekToken.Type != IDENT:
-    echoErrorMessage("変数名がありません", false)
+    echoErrorMessage("変数名がありません", false, p.curToken.Line)
     return node
 
   p.shiftToken()
@@ -486,7 +486,7 @@ proc parseBoolType(p: Parser, init: bool): Node =
     return node
   
   if p.peekToken.Type != EQUAL:
-    echoErrorMessage("初期化されていません", false)
+    echoErrorMessage("初期化されていません", false, p.curToken.Line)
     return node
   
   p.shiftToken()
@@ -505,7 +505,7 @@ proc parseArrayType(p: Parser, init: bool): Node =
 
   # array型だけ特殊
   if p.peekToken.Type == IDENT:
-    echoErrorMessage("型が間違っています", false)
+    echoErrorMessage("型が間違っています", false, p.curToken.Line)
     return node
   else:
     p.shiftToken()
@@ -622,7 +622,7 @@ proc parseType(p: Parser, init: bool): Node =
   of T_STRING   : return p.parseStringType(init)
   of T_BOOL     : return p.parseBoolType(init)
   of T_ARRAY    : return p.parseArrayType(init)
-  else          : echoErrorMessage("存在しない型です", false)
+  else          : echoErrorMessage("存在しない型です", false, p.curToken.Line)
 
 # 式の処理
 proc parseExpression(p: Parser, precedence: Precedence): Node =

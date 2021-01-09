@@ -1,10 +1,14 @@
 import ka2token
 
 type Lexer* = ref object of RootObj
-  input: string
-  position: int
+  input:        string
+  position:     int
+  line:         int
   readPosition: int
-  ch: char
+  ch:           char
+
+proc nextLine(l: Lexer) =
+  l.line = l.line + 1
 
 proc nextChar(l: Lexer) =
   if l.readPosition >= len(l.input):
@@ -21,7 +25,7 @@ proc peekChar(l: Lexer): char =
     return l.input[l.readPosition]
 
 proc newLexer*(input: string): Lexer =
-  var l = Lexer(input: input)
+  var l = Lexer(input: input, line: 1)
   l.nextChar()
   return l
 
@@ -82,7 +86,7 @@ proc readCppCode(l: Lexer): string =
   return cppCode
 
 proc skipWhitespace(l: Lexer) =
-  while (l.ch == ' ' or l.ch == '\t' or l.ch == '\n') and l.input.len() > l.position:
+  while (l.ch == ' ' or l.ch == '\t') and l.input.len() > l.position:
     l.nextChar()
 
 proc nextToken*(l: Lexer): Token =
@@ -95,49 +99,49 @@ proc nextToken*(l: Lexer): Token =
       let ch = l.ch
       l.nextChar()
       let literal = $ch & $l.ch
-      tok = Token(Type: EE, Literal: literal)
+      tok = Token(Type: EE, Literal: literal, Line: l.line)
     else:
-      tok = Token(Type: EQUAL, Literal: $l.ch)
+      tok = Token(Type: EQUAL, Literal: $l.ch, Line: l.line)
   of '!': 
     if l.peekChar() == '=':
       let ch = l.ch
       l.nextChar()
       let literal = $ch & $l.ch
-      tok = Token(Type: NE, Literal: literal)
+      tok = Token(Type: NE, Literal: literal, Line: l.line)
     elif l.peekChar() == '!':
       let ch = l.ch
       l.nextChar()
       let literal = $ch & $l.ch
-      tok = Token(Type: INDEX, Literal: literal)
+      tok = Token(Type: INDEX, Literal: literal, Line: l.line)
     else:
-      tok = Token(Type: NOT, Literal: $l.ch)
+      tok = Token(Type: NOT, Literal: $l.ch, Line: l.line)
   of '<':
     if l.peekChar() == '=':
       let ch = l.ch
       l.nextChar()
       let literal = $ch & $l.ch
-      tok = Token(Type: LE, Literal: literal)
+      tok = Token(Type: LE, Literal: literal, Line: l.line)
     elif l.peekChar() == '-':
       let ch = l.ch
       l.nextChar()
       let literal = $ch & $l.ch
-      tok = Token(Type: ARROW, Literal: literal)
+      tok = Token(Type: ARROW, Literal: literal, Line: l.line)
     else:
-      tok = Token(Type: LT, Literal: $l.ch)
+      tok = Token(Type: LT, Literal: $l.ch, Line: l.line)
   of '>':
     if l.peekChar() == '=':
       let ch = l.ch
       l.nextChar()
       let literal = $ch & $l.ch
-      tok = Token(Type: GE, Literal: literal)
+      tok = Token(Type: GE, Literal: literal, Line: l.line)
     else:
-      tok = Token(Type: GT, Literal: $l.ch)
+      tok = Token(Type: GT, Literal: $l.ch, Line: l.line)
   of '|':
     if l.peekChar() == '>':
       let ch = l.ch
       l.nextChar()
       let literal = $ch & $l.ch
-      tok = Token(Type: PIPE, Literal: literal)
+      tok = Token(Type: PIPE, Literal: literal, Line: l.line)
     else:
       echo "エラ〜〜〜 : '|'"
   of '-' :
@@ -145,59 +149,63 @@ proc nextToken*(l: Lexer): Token =
       l.nextChar()
       let (lit, decimal) = l.readNumber
       if decimal:
-        return Token(Type: FLOAT, Literal: "-" & lit)
+        return Token(Type: FLOAT, Literal: "-" & lit, Line: l.line)
       else:
-        return Token(Type: INT, Literal: "-" & lit)
+        return Token(Type: INT, Literal: "-" & lit, Line: l.line)
     else:
-      tok = Token(Type: MINUS, Literal: $l.ch)
+      tok = Token(Type: MINUS, Literal: $l.ch, Line: l.line)
   of '/' :
     if l.peekChar() == '*':
       let ch = l.ch
       l.nextChar()
       let literal = $ch & $l.ch
-      tok = Token(Type: COMMENTBEGIN, Literal: literal)
+      tok = Token(Type: COMMENTBEGIN, Literal: literal, Line: l.line)
     else:
-      tok = Token(Type: SLASH, Literal: $l.ch)
+      tok = Token(Type: SLASH, Literal: $l.ch, Line: l.line)
   of '*' :
     if l.peekChar() == '/':
       let ch = l.ch
       l.nextChar()
       let literal = $ch & $l.ch
-      tok = Token(Type: COMMENTEND, Literal: literal)
+      tok = Token(Type: COMMENTEND, Literal: literal, Line: l.line)
     else:
-      tok = Token(Type: ASTERISC, Literal: $l.ch)
-  of '+' : tok = Token(Type: PLUS, Literal: $l.ch)
-  of '(' : tok = Token(Type: LPAREN, Literal: $l.ch)
-  of ')' : tok = Token(Type: RPAREN, Literal: $l.ch)
-  of ',' : tok = Token(Type: COMMA, Literal: $l.ch)
-  of '{' : tok = Token(Type: LBRACE, Literal: $l.ch)
-  of '}' : tok = Token(Type: RBRACE, Literal: $l.ch)
-  of ':' : tok = Token(Type: COLON, Literal: $l.ch)
+      tok = Token(Type: ASTERISC, Literal: $l.ch, Line: l.line)
+  of '+' : tok = Token(Type: PLUS, Literal: $l.ch, Line: l.line)
+  of '(' : tok = Token(Type: LPAREN, Literal: $l.ch, Line: l.line)
+  of ')' : tok = Token(Type: RPAREN, Literal: $l.ch, Line: l.line)
+  of ',' : tok = Token(Type: COMMA, Literal: $l.ch, Line: l.line)
+  of '{' : tok = Token(Type: LBRACE, Literal: $l.ch, Line: l.line)
+  of '}' : tok = Token(Type: RBRACE, Literal: $l.ch, Line: l.line)
+  of ':' : tok = Token(Type: COLON, Literal: $l.ch, Line: l.line)
   else:
-    if l.ch == '\'':
+    if l.ch == '\n':
+      l.nextLine()
+      l.nextChar()
+      return l.nextToken()
+    elif l.ch == '\'':
       let lit = l.readChar()
-      return Token(Type: CHAR, Literal: lit)
+      return Token(Type: CHAR, Literal: lit, Line: l.line)
     elif l.ch == '\"':
       let lit = l.readString()
-      return Token(Type: STRING, Literal: lit)
+      return Token(Type: STRING, Literal: lit, Line: l.line)
     elif l.ch.isStringHead():
       let lit = l.readIdent()
       let typ = LookupIdent(lit)
-      return Token(Type: typ, Literal: lit)
+      return Token(Type: typ, Literal: lit, Line: l.line)
     elif l.ch.isDigit():
       let (lit, decimal) = l.readNumber
       if decimal:
-        return Token(Type: FLOAT, Literal: lit)
+        return Token(Type: FLOAT, Literal: lit, Line: l.line)
       else:
-        return Token(Type: INT, Literal: lit)
+        return Token(Type: INT, Literal: lit, Line: l.line)
     elif l.ch.isLetter():
       echo "エラ〜〜〜 : '_'から始まっています"
       quit()
     else:
       if l.input.len()-1 <= l.position:
-        tok = Token(Type: EOF, Literal: $l.ch)
+        tok = Token(Type: EOF, Literal: $l.ch, Line: l.line)
       else:
-        tok = Token(Type: ILLEGAL, Literal: $l.ch)
+        tok = Token(Type: ILLEGAL, Literal: $l.ch, Line: l.line)
   
   l.nextChar()
   return tok

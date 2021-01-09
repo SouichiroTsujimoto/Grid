@@ -1,9 +1,7 @@
 def int a(int b) do
   return b + 10
 end
-/*
-a(20)
-*/
+
 main do
   println("Hello")
 end
