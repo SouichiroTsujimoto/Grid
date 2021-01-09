@@ -1,10 +1,3 @@
-// 〜保留〜
-// #define map(a, b, c)({ \
-//   std::vector<c> _result;\
-//   _result.reserve(a.size());\
-//   std::transform(std::begin(a), std::end(a), std::back_inserter(_result), b);\
-//   _result;\
-// })
 #include <iostream>
 #include <string>
 #include <vector>
