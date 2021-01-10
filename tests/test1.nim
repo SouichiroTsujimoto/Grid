@@ -98,16 +98,71 @@ suite "float":
     let program = "float a = 36.5 / 0.5".makeProgram()
     check(program.findStr("const float a = ( 36.5f / 0.5f ) ;"))
   
+suite "minus":
+  test "float a = -36.5 / -0.5":
+    initTables()
+    let program = "float a = -36.5 / -0.5".makeProgram()
+    check(program.findStr("const float a = ( -36.5f / -0.5f ) ;"))
+  test "int a = -10 - (10--30)":
+    initTables()
+    let program = "int a = -10 - (10--30)".makeProgram()
+    check(program.findStr("const int a = ( -10 - ( 10 - -30 ) ) ;"))
+
 suite "char":
   test "char a = 'a'":
     initTables()
     let program = "char a = 'a'".makeProgram()
-    check(program.findStr("const float a = ( 10.2f - 5.2f ) ;"))
+    check(program.findStr("const char a = 'a' ;"))
+  test "char a = '\t'":
+    initTables()
+    let program = "char a = '\t'".makeProgram()
+    check(program.findStr("const char a = '\t' ;"))
 
-suite "minus":
+suite "char":
+  test "char a = 'a'":
+    initTables()
+    let program = "char a = 'a'".makeProgram()
+    check(program.findStr("const char a = 'a' ;"))
+  test "char a = '\t'":
+    initTables()
+    let program = "char a = '\t'".makeProgram()
+    check(program.findStr("const char a = '\t' ;"))
 
+suite "string":
+  test "string a = \"Hello\"":
+    initTables()
+    let program = "string a = \"Hello\"".makeProgram()
+    check(program.findStr("const std::string a = \"Hello\" ;"))
+  test "string a = \"hoge\thoge\"":
+    initTables()
+    let program = "string a = \"hoge\thoge\"".makeProgram()
+    check(program.findStr("const std::string a = \"hoge\thoge\" ;"))
+  test "string a = toString(1)":
+    initTables()
+    let program = "string a = toString(1)".makeProgram()
+    check(program.findStr("const std::string a = ka23::toString ( 1 ) ;"))
 
-# suite "let":
+suite "bool":
+  test "bool a = True":
+    initTables()
+    let program = "bool a = True".makeProgram()
+    check(program.findStr("const bool a = true ;"))
+  test "bool a = 1 == 2":
+    initTables()
+    let program = "bool a = 1 == 2".makeProgram()
+    check(program.findStr("const bool a = ( 1 == 2 ) ;"))
+
+suite "array":
+  test "array bool a = {True, False, False}":
+    initTables()
+    let program = "array bool a = {True, False, False}".makeProgram()
+    check(program.findStr("const std::vector<bool> a = {true, false, false} ;"))
+  test "array int a = map({1, 2, 3}, mult(10))":
+    initTables()
+    let program = "array int a = map({1, 2, 3}, mult(10))".makeProgram()
+    check(program.findStr("const std::vector<int> a = ka23::map ( { 1 , 2 , 3 } , [] ( int _i ) { return ka23::mult ( _i , 10 ) ; } ) ;"))
+
+# suite "let": 
 #   test "let int a = 10":
 #     initTables()
 #     let program = "let int a = 10".makeProgram()

@@ -29,8 +29,11 @@ proc newLexer*(input: string): Lexer =
   l.nextChar()
   return l
 
+proc isStringHead(ch: char): bool =
+  return ('a' <= ch and ch <= 'z') or ('A' <= ch and ch <= 'Z')
+
 proc isLetter(ch: char): bool =
-  return ('a' <= ch and ch <= 'z') or ('A' <= ch and ch <= 'Z') or ch == '_' or ch == '#'
+  return ('a' <= ch and ch <= 'z') or ('A' <= ch and ch <= 'Z') or ('0' <= ch and ch <= '9') or ch == '_' or ch == '#'
 
 proc isDigit(ch: char): bool =
   return '0' <= ch and ch <= '9'
@@ -211,16 +214,18 @@ proc nextToken*(l: Lexer): Token =
     elif l.ch == '\"':
       let lit = l.readString()
       return Token(Type: STRING, Literal: lit, Line: l.line)
-    elif l.ch.isLetter():
-      let lit = l.readIdent()
-      let typ = LookupIdent(lit)
-      return Token(Type: typ, Literal: lit, Line: l.line)
     elif l.ch.isDigit():
       let (lit, decimal) = l.readNumber
       if decimal:
         return Token(Type: FLOAT, Literal: lit, Line: l.line)
       else:
         return Token(Type: INT, Literal: lit, Line: l.line)
+    elif l.ch.isStringHead():
+      let lit = l.readIdent()
+      let typ = LookupIdent(lit)
+      return Token(Type: typ, Literal: lit, Line: l.line)
+    elif l.ch.isLetter():
+      echoErrorMessage("名前の一文字目に使用できる文字はa-zもしくはA-Zのみです", false, l.line)
     else:
       if l.input.len()-1 <= l.position:
         tok = Token(Type: EOF, Literal: $l.ch, Line: l.line)

@@ -416,6 +416,9 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
     return (false, NIL, "NULL")
 
 proc replaceSemicolon(parts: seq[codeParts], obj: seq[codeParts]): seq[codeParts] =
+  if parts.len() == 0:
+    return parts
+
   let tail = parts[parts.len()-1]
   if tail.Type[0] == '@':
     return replaceSemicolon(parts[0..parts.len()-2], @[parts[parts.len()-1]] & obj)
@@ -698,18 +701,13 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
   # 名前
   of nkIdent:
     if identExistenceCheck(node.token.Literal):
-      if identTable[node.token.Literal].mutable:
-        code.add((OTHER, "*"))
-        code.add((IDENT, node.token.Literal))
-        codeType = identTable[node.token.Literal].Type
-        identTable[node.token.Literal].used = true
-      else:
-        code.add((IDENT, node.token.Literal))
-        codeType = identTable[node.token.Literal].Type
+      code.add((IDENT, node.token.Literal))
+      codeType = identTable[node.token.Literal].Type
+      identTable[node.token.Literal].used = true
     else:
       let ic = node.token.Literal.conversionCppFunction(@[])
       if ic[1] == NIL:
-        echoErrorMessage("定義されていない名前", test, node.token.Line)
+        echoErrorMessage("定義されていない名前です", test, node.token.Line)
       code.add((ic[1], ic[2]))
       codeType = ic[1]
   
@@ -1114,9 +1112,12 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
 
     let i_node = Node(
       kind:        nkIdent,
-      token:       Token(Type: IDENT, Literal: "i"),
+      token:       Token(Type: IDENT, Literal: "_i", Line: node.token.Line),
       child_nodes: @[],
     )
+    var original_nesting = nesting
+    nesting = nesting + 1
+    
     fn.child_nodes[1].child_nodes = @[i_node] & fn.child_nodes[1].child_nodes
 
     let ccf = conversionCppFunction(func_name, array_type_split[1..array_type_split.len()-1] & func_arg_types)
@@ -1147,17 +1148,19 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
     code.add((OTHER, "[]"))
     code.add((OTHER, "("))
     let ident = Node(
-      kind:        nkVarStatement,
-      token:       Token(Type: VAR, Literal: "var"),
+      kind:        nkArrayType,
+      token:       Token(Type: "T_" & array_type_split[1..array_type_split.len()-1].join("::T_"), Literal:"{"),
       child_nodes: @[Node(
-        kind:        nkArrayType,
-        token:       Token(Type: "T_" & array_type_split[1..array_type_split.len()-1].join("::T_"), Literal:"{"),
-        child_nodes: @[Node(
-          kind:        nkIdent,
-          token:       Token(Type: IDENT, Literal: "i"),
-          child_nodes: @[],
-        )],
+        kind:        nkIdent,
+        token:       Token(Type: IDENT, Literal: "_i"),
+        child_nodes: @[],
       )],
+    )
+    identTable["_i"] = IdentInfo(
+      Type:     array_type_split[1..array_type_split.len()-1].join("::"),
+      path:     nesting,
+      mutable:  false,
+      used:     false,
     )
     code.add(ident.makeCodeParts(test, dost)[0].replaceSemicolon(@[(OTHER, "")]))
     code.add((OTHER, ")"))
@@ -1174,6 +1177,10 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
     code.add((RBRACE, "}"))
     code.add((OTHER, ")"))
     code.addSemicolon()
+
+    nesting = original_nesting
+    code.add(deleteScope(nesting, test))
+    codeType = array_type
 
   # if文
   of nkIfStatement:
