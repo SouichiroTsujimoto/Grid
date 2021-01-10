@@ -83,9 +83,29 @@ suite "int":
     initTables()
     let program = "int a = 10 + 20 * 30".makeProgram()
     check(program.findStr("const int a = ( 10 + ( 20 * 30 ) ) ;"))
+  test "int a = 10 - (10-30)":
+    initTables()
+    let program = "int a = 10 - (10-30)".makeProgram()
+    check(program.findStr("const int a = ( 10 - ( 10 - 30 ) ) ;"))
 
 suite "float":
+  test "float a = 10.2 - 5.2":
+    initTables()
+    let program = "float a = 10.2 - 5.2".makeProgram()
+    check(program.findStr("const float a = ( 10.2f - 5.2f ) ;"))
+  test "float a = 36.5 / 0.5":
+    initTables()
+    let program = "float a = 36.5 / 0.5".makeProgram()
+    check(program.findStr("const float a = ( 36.5f / 0.5f ) ;"))
   
+suite "char":
+  test "char a = 'a'":
+    initTables()
+    let program = "char a = 'a'".makeProgram()
+    check(program.findStr("const float a = ( 10.2f - 5.2f ) ;"))
+
+suite "minus":
+
 
 # suite "let":
 #   test "let int a = 10":

@@ -1,4 +1,4 @@
-import ka2token
+import ka2token, ka2error
 
 type Lexer* = ref object of RootObj
   input:        string
@@ -18,19 +18,16 @@ proc nextChar(l: Lexer) =
   l.position = l.readPosition
   l.readPosition += 1
 
-proc peekChar(l: Lexer): char =
+proc peekChar(l: Lexer): (char, bool) =
   if l.readPosition >= len(l.input):
-    return ' '
+    return (' ', false)
   else:
-    return l.input[l.readPosition]
+    return (l.input[l.readPosition], true)
 
 proc newLexer*(input: string): Lexer =
   var l = Lexer(input: input, line: 1)
   l.nextChar()
   return l
-
-proc isStringHead(ch: char): bool =
-  return ('a' <= ch and ch <= 'z') or ('A' <= ch and ch <= 'Z') or ch == '#'
 
 proc isLetter(ch: char): bool =
   return ('a' <= ch and ch <= 'z') or ('A' <= ch and ch <= 'Z') or ch == '_' or ch == '#'
@@ -58,32 +55,40 @@ proc readNumber(l: Lexer): (string, bool) =
 
 proc readChar(l: Lexer): string =
   l.nextChar()
-  if l.ch != '\'':
-    let c = $l.ch
-    l.nextChar()
+  var c = $l.ch
+  l.nextChar()
+  if l.ch == '\'' and c != "\\":
     l.nextChar()
     return c
-  else:
+  elif c == "\\":
+    c = c & $l.ch
     l.nextChar()
-    return ""
+    if l.ch == '\'':
+      l.nextChar()
+      return c
+    else:
+      echoErrorMessage("文字リテラルの文字が多すぎます", false, l.line)
+  else:
+    echoErrorMessage("文字リテラルの文字が多すぎます", false, l.line)
 
 proc readString(l: Lexer): string =
   l.nextChar()
+  if l.ch == '\"':
+    l.nextChar()
+    return ""
+
   var str: string
-  while l.ch != '\"':
+  while l.ch == '\\' or l.peekChar()[0] != '\"':
+    if l.peekChar()[1] == false:
+      echoErrorMessage("文字列リテラルが閉じられていません", false, l.line)
     str.add(l.ch)
     l.nextChar()
-  l.nextChar()
-  return str
+  str.add(l.ch)
 
-proc readCppCode(l: Lexer): string =
   l.nextChar()
-  var cppCode: string
-  while l.ch != '}':
-    cppCode.add(l.ch)
-    l.nextChar()
   l.nextChar()
-  return cppCode
+
+  return str
 
 proc skipWhitespace(l: Lexer) =
   while (l.ch == ' ' or l.ch == '\t') and l.input.len() > l.position:
@@ -95,7 +100,7 @@ proc nextToken*(l: Lexer): Token =
 
   case l.ch
   of '=':
-    if l.peekChar() == '=':
+    if l.peekChar()[0] == '=':
       let ch = l.ch
       l.nextChar()
       let literal = $ch & $l.ch
@@ -103,12 +108,12 @@ proc nextToken*(l: Lexer): Token =
     else:
       tok = Token(Type: EQUAL, Literal: $l.ch, Line: l.line)
   of '!': 
-    if l.peekChar() == '=':
+    if l.peekChar()[0] == '=':
       let ch = l.ch
       l.nextChar()
       let literal = $ch & $l.ch
       tok = Token(Type: NE, Literal: literal, Line: l.line)
-    elif l.peekChar() == '!':
+    elif l.peekChar()[0] == '!':
       let ch = l.ch
       l.nextChar()
       let literal = $ch & $l.ch
@@ -116,12 +121,12 @@ proc nextToken*(l: Lexer): Token =
     else:
       tok = Token(Type: NOT, Literal: $l.ch, Line: l.line)
   of '<':
-    if l.peekChar() == '=':
+    if l.peekChar()[0] == '=':
       let ch = l.ch
       l.nextChar()
       let literal = $ch & $l.ch
       tok = Token(Type: LE, Literal: literal, Line: l.line)
-    elif l.peekChar() == '-':
+    elif l.peekChar()[0] == '-':
       let ch = l.ch
       l.nextChar()
       let literal = $ch & $l.ch
@@ -129,7 +134,7 @@ proc nextToken*(l: Lexer): Token =
     else:
       tok = Token(Type: LT, Literal: $l.ch, Line: l.line)
   of '>':
-    if l.peekChar() == '=':
+    if l.peekChar()[0] == '=':
       let ch = l.ch
       l.nextChar()
       let literal = $ch & $l.ch
@@ -137,7 +142,7 @@ proc nextToken*(l: Lexer): Token =
     else:
       tok = Token(Type: GT, Literal: $l.ch, Line: l.line)
   of '|':
-    if l.peekChar() == '>':
+    if l.peekChar()[0] == '>':
       let ch = l.ch
       l.nextChar()
       let literal = $ch & $l.ch
@@ -156,7 +161,7 @@ proc nextToken*(l: Lexer): Token =
     # else:
     #   tok = Token(Type: MINUS, Literal: $l.ch, Line: l.line)
   of '/' :
-    if l.peekChar() == '*':
+    if l.peekChar()[0] == '*':
       let ch = l.ch
       l.nextChar()
       let literal = $ch & $l.ch
@@ -164,7 +169,7 @@ proc nextToken*(l: Lexer): Token =
     else:
       tok = Token(Type: SLASH, Literal: $l.ch, Line: l.line)
   of '*' :
-    if l.peekChar() == '/':
+    if l.peekChar()[0] == '/':
       let ch = l.ch
       l.nextChar()
       let literal = $ch & $l.ch
@@ -189,7 +194,7 @@ proc nextToken*(l: Lexer): Token =
     elif l.ch == '\"':
       let lit = l.readString()
       return Token(Type: STRING, Literal: lit, Line: l.line)
-    elif l.ch.isStringHead():
+    elif l.ch.isLetter():
       let lit = l.readIdent()
       let typ = LookupIdent(lit)
       return Token(Type: typ, Literal: lit, Line: l.line)
@@ -199,9 +204,6 @@ proc nextToken*(l: Lexer): Token =
         return Token(Type: FLOAT, Literal: lit, Line: l.line)
       else:
         return Token(Type: INT, Literal: lit, Line: l.line)
-    elif l.ch.isLetter():
-      echo "エラ〜〜〜 : '_'から始まっています"
-      quit()
     else:
       if l.input.len()-1 <= l.position:
         tok = Token(Type: EOF, Literal: $l.ch, Line: l.line)

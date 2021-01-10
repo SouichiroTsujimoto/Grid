@@ -1,5 +1,6 @@
 main do
-  int a = 10+-10*-30
+  string a = "\"Hello\""
+  println(a)
   /*
   for int a <- {1, 2, 3} do
     a |> toString() |> println()

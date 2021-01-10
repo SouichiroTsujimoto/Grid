@@ -79,9 +79,14 @@
 
 
 
-[変数の型]
+[型]
 int
 float
 char
 string
 bool
+
+[コンパイラオプション]
+-ast    : 生成したASTを画面に出力
+-en     : 未実装
+-jp     : 未実装
