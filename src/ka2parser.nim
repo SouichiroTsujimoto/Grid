@@ -90,7 +90,7 @@ proc parseComment(p: Parser): Node =
   p.shiftToken()
 
   while p.curToken.Type != COMMENTEND:
-    if p.curToken.Type == END:
+    if p.curToken.Type == EOF:
       echoErrorMessage("コメントが閉じられませんでした", false, p.curToken.Line)
     else:
       p.shiftToken()
@@ -305,6 +305,21 @@ proc parseFloatLiteral(p: Parser): Node =
     kind:  nkFloatLiteral,
     token: p.curToken,
   )
+  return node
+
+proc parseMinusNum(p: Parser): Node =
+  var node = Node(
+    token: Token(Type: p.peekToken.Type, Literal: "-" & p.peekToken.Literal),
+  )
+  if p.peekToken.Type == INT:
+    node.kind = nkIntLiteral
+  elif p.peekToken.Type == FLOAT:
+    node.kind = nkFloatLiteral
+  else:
+    echoErrorMessage("無効な値です", false, p.curToken.Line)
+  
+  p.shiftToken()
+    
   return node
 
 # 文字リテラル
@@ -596,9 +611,16 @@ proc parseForStatement(p: Parser): Node =
     child_nodes: @[],
   )
   p.shiftToken()
-  node.child_nodes.add(p.parseExpression(Lowest))
+  var left = p.parseType(false)
+  
+  if p.peekToken.Type != ARROW:
+    echoErrorMessage("\"<-\"が見つかりません", false, p.curToken.Line)
+  p.shiftToken()
+
+  node.child_nodes.add(p.parseGenerator(left))
+  
   if p.peekToken.Type != DO:
-    return Node(kind: nkNil)
+    echoErrorMessage("\"do\"が見つかりません", false, p.curToken.Line)
   p.shiftToken()
   node.child_nodes.add(p.parseBlockStatement(@[END]))
   p.shiftToken()
@@ -636,6 +658,7 @@ proc parseExpression(p: Parser, precedence: Precedence): Node =
   of FLOAT      : left = p.parseFloatLiteral()
   of CHAR       : left = p.parseCharLiteral()
   of STRING     : left = p.parseStringLiteral()
+  of MINUS      : left = p.parseMinusNum()
   # of CPPCODE    : left = p.parseCppCode()
   of TRUE       : left = p.parseBoolLiteral()
   of FALSE      : left = p.parseBoolLiteral()
@@ -650,8 +673,8 @@ proc parseExpression(p: Parser, precedence: Precedence): Node =
     case p.curToken.Type
     of PLUS, MINUS, ASTERISC, SLASH, LT, GT, LE, GE, EE, NE:
       left = p.parseInfixExpression(left)
-    of ARROW:
-      left = p.parseGenerator(left)
+    # of ARROW:
+    #   left = p.parseGenerator(left)
     of EQUAL:
       left = p.parseAssignExpression(left)
     of LPAREN:

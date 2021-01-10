@@ -145,15 +145,16 @@ proc nextToken*(l: Lexer): Token =
     else:
       echo "エラ〜〜〜 : '|'"
   of '-' :
-    if l.peekChar().isDigit():
-      l.nextChar()
-      let (lit, decimal) = l.readNumber
-      if decimal:
-        return Token(Type: FLOAT, Literal: "-" & lit, Line: l.line)
-      else:
-        return Token(Type: INT, Literal: "-" & lit, Line: l.line)
-    else:
-      tok = Token(Type: MINUS, Literal: $l.ch, Line: l.line)
+    tok = Token(Type: MINUS, Literal: $l.ch, Line: l.line)
+    # if l.peekChar().isDigit():
+    #   l.nextChar()
+    #   let (lit, decimal) = l.readNumber
+    #   if decimal:
+    #     return Token(Type: FLOAT, Literal: "-" & lit, Line: l.line)
+    #   else:
+    #     return Token(Type: INT, Literal: "-" & lit, Line: l.line)
+    # else:
+    #   tok = Token(Type: MINUS, Literal: $l.ch, Line: l.line)
   of '/' :
     if l.peekChar() == '*':
       let ch = l.ch

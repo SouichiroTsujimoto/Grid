@@ -1,7 +1,8 @@
-def int a(int b) do
-  return b + 10
-end
-
 main do
-  println("Hello")
+  int a = 10+-10*-30
+  /*
+  for int a <- {1, 2, 3} do
+    a |> toString() |> println()
+  end
+  */
 end

@@ -74,79 +74,92 @@ suite "|>":
     let program = "(3 |> plus(10)) + (1 |> plus(1)) |> toString() |> print()".makeProgram()
     check(program.findStr("ka23::print ( ka23::toString ( ( ka23::plus ( 3 , 10 ) + ka23::plus ( 1 , 1 ) ) ) ) ;"))
 
-suite "let":
-  test "let int a = 10":
+suite "int":
+  test "int a = 10":
     initTables()
-    let program = "let int a = 10".makeProgram()
-    check(program.findStr("int * a = new int ;"))
-    check(program.findStr("* a = 10 ;"))
-    check(program.findStr("delete a ;"))
-  test "let int a = 10 + 10":
+    let program = "int a = 10".makeProgram()
+    check(program.findStr("const int a = 10 ;"))
+  test "int a = 10 + 20 * 30":
     initTables()
-    let program = "let int a = 10 + 10".makeProgram()
-    check(program.findStr("int * a = new int ;"))
-    check(program.findStr("* a = ( 10 + 10 ) ;"))
-    check(program.findStr("delete a ;"))
-  test "let float a = 1.5":
-    initTables()
-    let program = "let float a = 1.5".makeProgram()
-    check(program.findStr("float * a = new float ;"))
-    check(program.findStr("* a = 1.5f ;"))
-    check(program.findStr("delete a ;"))
-  test "let char a = \'A\'":
-    initTables()
-    let program = "let char a = \'A\'".makeProgram()
-    check(program.findStr("char * a = new char ;"))
-    check(program.findStr("* a = \'A\' ;"))
-    check(program.findStr("delete a ;"))
-  test "let string a = \"Hello\"":
-    initTables()
-    let program = "let string a = \"Hello\"".makeProgram()
-    check(program.findStr("std::string * a = new std::string ;"))
-    check(program.findStr("* a = \"Hello\" ;"))
-    check(program.findStr("delete a ;"))
-  test "let bool a = True":
-    initTables()
-    let program = "let bool a = True".makeProgram()
-    check(program.findStr("bool * a = new bool ;"))
-    check(program.findStr("* a = true ;"))
-    check(program.findStr("delete a ;"))
-  test "let bool a = 1 >= 10":
-    initTables()
-    let program = "let bool a = 1 >= 10".makeProgram()
-    check(program.findStr("bool * a = new bool ;"))
-    check(program.findStr("* a = ( 1 >= 10 ) ;"))
-    check(program.findStr("delete a ;"))
+    let program = "int a = 10 + 20 * 30".makeProgram()
+    check(program.findStr("const int a = ( 10 + ( 20 * 30 ) ) ;"))
 
-suite "var":
-  test "var int a = 10":
-    initTables()
-    let program = "var int a = 10".makeProgram()
-    check(program.findStr("int a = 10 ;"))
-  test "var int a = 10 + 10":
-    initTables()
-    let program = "var int a = 10 + 10".makeProgram()
-    check(program.findStr("int a = ( 10 + 10 ) ;"))
-  test "var float a = 1.5":
-    initTables()
-    let program = "var float a = 1.5".makeProgram()
-    check(program.findStr("float a = 1.5f ;"))
-  test "var char a = \'A\'":
-    initTables()
-    let program = "var char a = \'A\'".makeProgram()
-    check(program.findStr("char a = \'A\' ;"))
-  test "var string a = \"Hello\"":
-    initTables()
-    let program = "var string a = \"Hello\"".makeProgram()
-    check(program.findStr("std::string a = \"Hello\" ;"))
-  test "var bool a = True":
-    initTables()
-    let program = "var bool a = True".makeProgram()
-    check(program.findStr("bool a = true ;"))
-  test "var bool a = 1 >= 10":
-    initTables()
-    let program = "var bool a = 1 >= 10".makeProgram()
-    check(program.findStr("bool a = ( 1 >= 10 ) ;"))
+suite "float":
+  
+
+# suite "let":
+#   test "let int a = 10":
+#     initTables()
+#     let program = "let int a = 10".makeProgram()
+#     check(program.findStr("int * a = new int ;"))
+#     check(program.findStr("* a = 10 ;"))
+#     check(program.findStr("delete a ;"))
+#   test "let int a = 10 + 10":
+#     initTables()
+#     let program = "let int a = 10 + 10".makeProgram()
+#     check(program.findStr("int * a = new int ;"))
+#     check(program.findStr("* a = ( 10 + 10 ) ;"))
+#     check(program.findStr("delete a ;"))
+#   test "let float a = 1.5":
+#     initTables()
+#     let program = "let float a = 1.5".makeProgram()
+#     check(program.findStr("float * a = new float ;"))
+#     check(program.findStr("* a = 1.5f ;"))
+#     check(program.findStr("delete a ;"))
+#   test "let char a = \'A\'":
+#     initTables()
+#     let program = "let char a = \'A\'".makeProgram()
+#     check(program.findStr("char * a = new char ;"))
+#     check(program.findStr("* a = \'A\' ;"))
+#     check(program.findStr("delete a ;"))
+#   test "let string a = \"Hello\"":
+#     initTables()
+#     let program = "let string a = \"Hello\"".makeProgram()
+#     check(program.findStr("std::string * a = new std::string ;"))
+#     check(program.findStr("* a = \"Hello\" ;"))
+#     check(program.findStr("delete a ;"))
+#   test "let bool a = True":
+#     initTables()
+#     let program = "let bool a = True".makeProgram()
+#     check(program.findStr("bool * a = new bool ;"))
+#     check(program.findStr("* a = true ;"))
+#     check(program.findStr("delete a ;"))
+#   test "let bool a = 1 >= 10":
+#     initTables()
+#     let program = "let bool a = 1 >= 10".makeProgram()
+#     check(program.findStr("bool * a = new bool ;"))
+#     check(program.findStr("* a = ( 1 >= 10 ) ;"))
+#     check(program.findStr("delete a ;"))
+
+# suite "var":
+#   test "var int a = 10":
+#     initTables()
+#     let program = "var int a = 10".makeProgram()
+#     check(program.findStr("int a = 10 ;"))
+#   test "var int a = 10 + 10":
+#     initTables()
+#     let program = "var int a = 10 + 10".makeProgram()
+#     check(program.findStr("int a = ( 10 + 10 ) ;"))
+#   test "var float a = 1.5":
+#     initTables()
+#     let program = "var float a = 1.5".makeProgram()
+#     check(program.findStr("float a = 1.5f ;"))
+#   test "var char a = \'A\'":
+#     initTables()
+#     let program = "var char a = \'A\'".makeProgram()
+#     check(program.findStr("char a = \'A\' ;"))
+#   test "var string a = \"Hello\"":
+#     initTables()
+#     let program = "var string a = \"Hello\"".makeProgram()
+#     check(program.findStr("std::string a = \"Hello\" ;"))
+#   test "var bool a = True":
+#     initTables()
+#     let program = "var bool a = True".makeProgram()
+#     check(program.findStr("bool a = true ;"))
+#   test "var bool a = 1 >= 10":
+#     initTables()
+#     let program = "var bool a = 1 >= 10".makeProgram()
+#     check(program.findStr("bool a = ( 1 >= 10 ) ;"))
 
 suite ":=":
   test "var int a = 10 a := 20":
