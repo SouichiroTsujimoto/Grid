@@ -449,21 +449,27 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
   # リテラル
   of nkIntLiteral:
     code.add((INT, node.token.Literal))
+    code.addSemicolon()
     codeType = INT
   of nkFloatLiteral:
     code.add((FLOAT, node.token.Literal & "f"))
+    code.addSemicolon()
     codeType = FLOAT
   of nkBoolLiteral:
     if node.token.Literal == "True":
       code.add((BOOL, "true"))
+      code.addSemicolon()
     else:
       code.add((BOOL, "false"))
+      code.addSemicolon()
     codeType = BOOL
   of nkCharLiteral:
     code.add((CHAR, "\'" & node.token.Literal & "\'"))
+    code.addSemicolon()
     codeType = CHAR
   of nkStringLiteral:
     code.add((STRING, "\"" & node.token.Literal & "\""))
+    code.addSemicolon()
     codeType = STRING
   of nkArrayLiteral:
     if node.child_nodes != @[]:
@@ -483,14 +489,17 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
         loopCount += 1
       code.add((RBRACE, "}"))
       code.add(("@ARRAYLENGTH", $loopCount))
+      code.addSemicolon()
       codeType = ARRAY & "::" & eltype
     else:
       code.add((LBRACE, "{"))
       code.add((RBRACE, "}"))
       code.add(("@ARRAYLENGTH", "0"))
+      code.addSemicolon()
       codeType = ARRAY
   of nkNIl:
     code.add((NIL, "NULL"))
+    code.addSemicolon()
     codeType = NIL
   of nkIntType:
     if node.child_nodes.len() == 1:
@@ -850,7 +859,10 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
 
   # def文
   of nkDefineStatement:
+    if dost:
+      echoErrorMessage("文の中で関数を定義することはできません", test, node.token.Line)
     var new_dost = true
+
     let di = node.child_nodes[0].makeCodeParts(test, new_dost)
     if identExistenceCheck(di[0][1][1]):
       echoErrorMessage("既に定義されています", test, node.token.Line)
@@ -923,6 +935,9 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
 
   # return文
   of nkReturnStatement:
+    if dost == false:
+      echoErrorMessage("文の外でreturn文を使用することはできません", test, node.token.Line)
+
     if node.child_nodes != @[]:
       var new_dost = true
       code.add((OTHER, "return"))
@@ -1184,7 +1199,10 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
 
   # if文
   of nkIfStatement:
+    if dost == false:
+      echoErrorMessage("文の外でif文を使用することはできません", test, node.token.Line)
     var new_dost = true
+
     code.add((OTHER, "if"))
     code.add((OTHER, "("))
     code.add(node.child_nodes[0].makeCodeParts(test, new_dost)[0].replaceSemicolon(@[(OTHER, "")]))
@@ -1208,7 +1226,10 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
 
   # elif文
   of nkElifStatement:
+    if dost == false:
+      echoErrorMessage("文の外でelif文を使用することはできません", test, node.token.Line)
     var new_dost = true
+
     code.add((OTHER, "else if"))
     code.add((OTHER, "("))
     code.add(node.child_nodes[0].makeCodeParts(test, new_dost)[0].replaceSemicolon(@[(OTHER, "")]))
@@ -1232,7 +1253,10 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
 
   # else文
   of nkElseStatement:
+    if dost == false:
+      echoErrorMessage("文の外でelif文を使用することはできません", test, node.token.Line)
     var new_dost = true
+
     code.add((OTHER, "else"))
     code.add((OTHER, "{"))
     var sr: (seq[codeParts], string)
@@ -1248,6 +1272,9 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
   
   # if式
   of nkIfExpression:
+    if dost == false:
+      echoErrorMessage("文の外でif式を使用することはできません", test, node.token.Line)
+
     code.add((OTHER, "("))
     code.add(node.child_nodes[0].makeCodeParts(test, dost)[0].replaceSemicolon(@[(OTHER, "")]))
     code.add((OTHER, "?"))
@@ -1265,13 +1292,19 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
 
   # else式
   of nkElseExpression:
+    if dost == false:
+      echoErrorMessage("文の外でelse式を使用することはできません", test, node.token.Line)
+
     var sr = node.child_nodes[0].makeCodeParts(test, dost)
     code.add(sr[0].replaceSemicolon(@[(OTHER, "")]))
     codeType = sr[1]
 
   # for文
   of nkForStatement:
+    if dost == false:
+      echoErrorMessage("文の外でfor文を使用することはできません", test, node.token.Line)
     var new_dost = true
+
     let origin = nesting
     code.add((OTHER, "for"))
     code.add((OTHER, "("))
