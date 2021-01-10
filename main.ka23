@@ -1,5 +1,5 @@
 main do
-  string a = "\"Hello\""
+  char a = 'a'
   println(a)
   /*
   for int a <- {1, 2, 3} do

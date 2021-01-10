@@ -53,6 +53,13 @@ proc readNumber(l: Lexer): (string, bool) =
   else:
     return (l.input[position..l.position-1], false)
 
+proc escapeChars(c: char): bool =
+  case c
+  of 'a', 'b', 'n', 'r', 'f', 't', 'v', '\\', '?', '\'', '\"', '0':
+    return true
+  else:
+    return false
+
 proc readChar(l: Lexer): string =
   l.nextChar()
   var c = $l.ch
@@ -61,13 +68,16 @@ proc readChar(l: Lexer): string =
     l.nextChar()
     return c
   elif c == "\\":
-    c = c & $l.ch
-    l.nextChar()
-    if l.ch == '\'':
+    if escapeChars(l.ch):
+      c = c & $l.ch
       l.nextChar()
-      return c
+      if l.ch == '\'':
+        l.nextChar()
+        return c
+      else:
+        echoErrorMessage("文字リテラルの文字が多すぎます", false, l.line)
     else:
-      echoErrorMessage("文字リテラルの文字が多すぎます", false, l.line)
+      echoErrorMessage("無効なエスケープ文字です", false, l.line)
   else:
     echoErrorMessage("文字リテラルの文字が多すぎます", false, l.line)
 
@@ -81,8 +91,15 @@ proc readString(l: Lexer): string =
   while l.ch == '\\' or l.peekChar()[0] != '\"':
     if l.peekChar()[1] == false:
       echoErrorMessage("文字列リテラルが閉じられていません", false, l.line)
-    str.add(l.ch)
-    l.nextChar()
+    elif l.ch == '\\':
+      if escapeChars(l.peekChar()[0]):
+        str.add(l.ch)
+        l.nextChar()
+      else:
+        echoErrorMessage("無効なエスケープ文字です", false, l.line)
+    else:
+      str.add(l.ch)
+      l.nextChar()
   str.add(l.ch)
 
   l.nextChar()
