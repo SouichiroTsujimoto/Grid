@@ -133,11 +133,6 @@ proc nextToken*(l: Lexer): Token =
       l.nextChar()
       let literal = $ch & $l.ch
       tok = Token(Type: NE, Literal: literal, Line: l.line)
-    elif l.peekChar()[0] == '!':
-      let ch = l.ch
-      l.nextChar()
-      let literal = $ch & $l.ch
-      tok = Token(Type: INDEX, Literal: literal, Line: l.line)
     else:
       tok = Token(Type: NOT, Literal: $l.ch, Line: l.line)
   of '<':
@@ -199,6 +194,8 @@ proc nextToken*(l: Lexer): Token =
   of '+' : tok = Token(Type: PLUS, Literal: $l.ch, Line: l.line)
   of '(' : tok = Token(Type: LPAREN, Literal: $l.ch, Line: l.line)
   of ')' : tok = Token(Type: RPAREN, Literal: $l.ch, Line: l.line)
+  of '[' : tok = Token(Type: LBRACKET, Literal: $l.ch, Line: l.line)
+  of ']' : tok = Token(Type: RBRACKET, Literal: $l.ch, Line: l.line)
   of ',' : tok = Token(Type: COMMA, Literal: $l.ch, Line: l.line)
   of '{' : tok = Token(Type: LBRACE, Literal: $l.ch, Line: l.line)
   of '}' : tok = Token(Type: RBRACE, Literal: $l.ch, Line: l.line)

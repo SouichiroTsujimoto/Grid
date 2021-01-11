@@ -1,3 +1,4 @@
 main do
-  {1, 2, 0}
+  array int a = {1, 2, 3}
+  int b = map(a, plus(1))[0]
 end

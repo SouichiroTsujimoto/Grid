@@ -126,7 +126,7 @@ proc parseMapFunction(p: Parser): Node =
   p.shiftToken()
   node.child_nodes.add(p.parseNodes(RPAREN))
   if p.curToken.Type != RPAREN:
-    return Node(kind: nkNil)
+    echoErrorMessage("'('が閉じられていません", false, p.curToken.Line)
 
   return node
 
@@ -189,19 +189,6 @@ proc parsePipeExpression(p: Parser, left: Node): Node =
   let right = p.parseExpression(cp)
   let node = Node(
     kind:        nkPipeExpression,
-    token:       operator,
-    child_nodes: @[left, right],
-  )
-  return node
-
-# 配列の要素へのアクセス
-proc parseAccessElement(p: Parser, left: Node): Node =
-  let operator = p.curToken
-  let cp = operator.tokenPrecedence()
-  p.shiftToken()
-  let right = p.parseExpression(cp)
-  let node = Node(
-    kind:        nkAccessElement,
     token:       operator,
     child_nodes: @[left, right],
   )
@@ -634,7 +621,23 @@ proc parseGroupedExpression(p: Parser): Node =
     p.shiftToken()
     return node
   else:
-    return nil
+    echoErrorMessage("'('が閉じられていません", false, p.curToken.Line)
+
+# 配列の添字
+proc parseAccessElement(p: Parser, left: Node): Node =
+  p.shiftToken()
+  var node = Node(
+    kind:        nkAccessElement,
+    token:       p.curToken,
+    child_nodes: @[left],
+  )
+  let index = p.parseExpression(Lowest)
+  node.child_nodes.add(index)
+  if p.peekToken.Type == RBRACKET:
+    p.shiftToken()
+    return node
+  else:
+    echoErrorMessage("'['が閉じられていません", false, p.curToken.Line)
 
 proc parseType(p: Parser, init: bool): Node =
   case p.curToken.Type
@@ -651,9 +654,9 @@ proc parseExpression(p: Parser, precedence: Precedence): Node =
   var left: Node
   case p.curToken.Type
   of IFEX       : left = p.parseIfExpression()
+  of MAP        : left = p.parseMapFunction()
   of RETURN     : left = p.parseReturnStatement()
   of IDENT      : left = p.parseIdent()
-  of MAP        : left = p.parseMapFunction()
   of INT        : left = p.parseIntLiteral()
   of FLOAT      : left = p.parseFloatLiteral()
   of CHAR       : left = p.parseCharLiteral()
@@ -673,16 +676,16 @@ proc parseExpression(p: Parser, precedence: Precedence): Node =
     case p.curToken.Type
     of PLUS, MINUS, ASTERISC, SLASH, LT, GT, LE, GE, EE, NE:
       left = p.parseInfixExpression(left)
-    # of ARROW:
-    #   left = p.parseGenerator(left)
     of EQUAL:
       left = p.parseAssignExpression(left)
     of LPAREN:
       left = p.parseCallExpression(left)
+    of LBRACKET:
+      left = p.parseAccessElement(left)
     of PIPE:
       left = p.parsePipeExpression(left)
-    of INDEX:
-      left = p.parseAccessElement(left)
+    # of INDEX:
+    #   left = p.parseAccessElement(left)
     else:
       return left
   
@@ -723,7 +726,6 @@ proc parseStatement(p: Parser): Node =
   # of VAR:    return p.parseVarStatement()
   of COMMENTBEGIN: return p.parseComment()
   of MAIN:         return p.parseMainStatement()
-  of MAP:          return p.parseMapFunction()
   of DEFINE:       return p.parseDefineStatement()
   of FOR:          return p.parseForStatement()
   of IF:           return p.parseIfStatement()

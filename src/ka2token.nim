@@ -46,6 +46,8 @@ const
   # 括弧
   LPAREN*       = "("
   RPAREN*       = ")"
+  LBRACKET*     = "["
+  RBRACKET*     = "]"
   LBRACE*       = "{"
   RBRACE*       = "}"
   # キーワード
@@ -73,7 +75,6 @@ const
   T_FUNCTION*   = "T_FUNCTION"
   # その他
   MAP*          = "MAP"
-  INDEX*        = "INDEX"
   FOR*          = "FOR"
   AUTO*         = "AUTO"
   FUNCTION*     = "FUNCTION"

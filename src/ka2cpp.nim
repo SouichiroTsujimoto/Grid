@@ -448,55 +448,77 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
 
   # リテラル
   of nkIntLiteral:
+    if dost == false:
+      echoErrorMessage("文の外でintリテラルを使用することはできません", test, node.token.Line)
     code.add((INT, node.token.Literal))
     code.addSemicolon()
     codeType = INT
   of nkFloatLiteral:
+    if dost == false:
+      echoErrorMessage("文の外でfloatリテラルを使用することはできません", test, node.token.Line)
     code.add((FLOAT, node.token.Literal & "f"))
     code.addSemicolon()
     codeType = FLOAT
   of nkBoolLiteral:
+    if dost == false:
+      echoErrorMessage("文の外でboolリテラルを使用することはできません", test, node.token.Line)
     if node.token.Literal == "True":
       code.add((BOOL, "true"))
       code.addSemicolon()
-    else:
+    elif node.token.Literal == "False":
       code.add((BOOL, "false"))
       code.addSemicolon()
+    else:
+      echoErrorMessage("無効なboolリテラルです", test, node.token.Line)
     codeType = BOOL
   of nkCharLiteral:
+    if dost == false:
+      echoErrorMessage("文の外でcharリテラルを使用することはできません", test, node.token.Line)
     code.add((CHAR, "\'" & node.token.Literal & "\'"))
     code.addSemicolon()
     codeType = CHAR
   of nkStringLiteral:
+    if dost == false:
+      echoErrorMessage("文の外でstringリテラルを使用することはできません", test, node.token.Line)
     code.add((STRING, "\"" & node.token.Literal & "\""))
     code.addSemicolon()
     codeType = STRING
   of nkArrayLiteral:
-    if node.child_nodes != @[]:
+    if dost == false:
+      echoErrorMessage("文の外でArrayリテラルを使用することはできません", test, node.token.Line)
+    if node.child_nodes == @[]:
       code.add((LBRACE, "{"))
+      code.add((RBRACE, "}"))
+      code.add(("@ARRAYLENGTH", "0"))
+      code.addSemicolon()
+      codeType = ARRAY
+    else:
+      var tmp_code: seq[codeParts]
+      tmp_code.add((LBRACE, "{"))
       var eltype: string
       var loopCount = 0
       for arv in node.child_nodes[0].child_nodes:
         let elem = arv.makeCodeParts(test, dost)
         if loopCount == 0:
           eltype = elem[1]
-          code.add(elem[0].replaceSemicolon(@[(OTHER, "")]))
+          tmp_code.add(elem[0].replaceSemicolon(@[(OTHER, "")]))
         elif typeMatch(elem[1], eltype)[0]:
-          code.add((COMMA, ","))
-          code.add(elem[0].replaceSemicolon(@[(OTHER, "")]))
+          tmp_code.add((COMMA, ","))
+          tmp_code.add(elem[0].replaceSemicolon(@[(OTHER, "")]))
         else:
           echoErrorMessage("配列内の要素の型が全て同じになっていません", test, node.token.Line)
         loopCount += 1
-      code.add((RBRACE, "}"))
-      code.add(("@ARRAYLENGTH", $loopCount))
-      code.addSemicolon()
+      tmp_code.add((RBRACE, "}"))
+      tmp_code.add(("@ARRAYLENGTH", $loopCount))
+      tmp_code.addSemicolon()
+      var literal_type = "T_" & ARRAY
+      for ts in eltype.split("::"):
+        literal_type.add("::" & "T_" & ts)
+      code.add((OTHER, "("))
+      code.add(conversionCppType(literal_type))
+      code.add((OTHER, ")"))
+      code.add(tmp_code)
       codeType = ARRAY & "::" & eltype
-    else:
-      code.add((LBRACE, "{"))
-      code.add((RBRACE, "}"))
-      code.add(("@ARRAYLENGTH", "0"))
-      code.addSemicolon()
-      codeType = ARRAY
   of nkNIl:
     code.add((NIL, "NULL"))
     code.addSemicolon()
@@ -1008,24 +1030,26 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
   of nkPipeExpression:
     echoErrorMessage("対象が関数ではありません", test, node.token.Line)
 
-  # 配列の要素へのアクセス
+  # 配列の添字
   of nkAccessElement:
     if node.child_nodes.len() == 2:
       let l = node.child_nodes[0].makeCodeParts(test, dost)
       let r = node.child_nodes[1].makeCodeParts(test, dost)
       let rv = r[0].replaceSemicolon(@[(OTHER, "")])
       let ls = l[1].split("::")
-      if r[1] == INT and ls[0] == ARRAY:
+      if r[1] != INT:
+        echoErrorMessage("添字の型が間違っています", test, node.token.Line)
+      elif ls[0] != ARRAY:
+        echoErrorMessage("配列ではありません", test, node.token.Line)
+      else:
         code.add(l[0].replaceSemicolon(@[(OTHER, "")]))
         code.add((OTHER, "["))
         code.add(rv)
         code.add((OTHER, "]"))
         code.addSemicolon()
         codeType = ls[1..ls.len()-1].join("::")
-      else:
-        echoErrorMessage("オペランドの型が間違っています", test, node.token.Line)
     else:
-      echoErrorMessage("オペランドがありません", test, node.token.Line)
+      echoErrorMessage("添字がありません", test, node.token.Line)
 
   # 代入式
   of nkAssignExpression:
@@ -1113,7 +1137,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
     var cpp_func_name = ""
     var func_result_type = ""
     let array_CandT = node.child_nodes[0].child_nodes[0].makeCodeParts(test, dost)
-    let array_content = array_CandT[0]
+    let array_content = array_CandT[0].replaceSemicolon(@[(OTHER, "")])
     let array_type = array_CandT[1]
     let array_type_split = array_type.split("::")
     var fn = node.child_nodes[0].child_nodes[1]
