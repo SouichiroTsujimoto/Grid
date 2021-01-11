@@ -98,36 +98,15 @@ namespace ka23 {
     return a != b;
   }
 
-  int len(std::vector<int> a) {
+  // int len(std::vector<int> a) {
+  //   return (int)a.size();
+  // }
+  // int len(std::initializer_list<int> a) {
+  //   return (int)a.size();
+  // }
+  auto len = [](auto a) -> int {
     return (int)a.size();
-  }
-  int len(std::initializer_list<int> a) {
-    return (int)a.size();
-  }
-  int len(std::vector<float> a) {
-    return (int)a.size();
-  }
-  int len(std::initializer_list<float> a) {
-    return (int)a.size();
-  }
-  int len(std::vector<char> a) {
-    return (int)a.size();
-  }
-  int len(std::initializer_list<char> a) {
-    return (int)a.size();
-  }
-  int len(std::vector<std::string> a) {
-    return (int)a.size();
-  }
-  int len(std::initializer_list<std::string> a) {
-    return (int)a.size();
-  }
-  int len(std::vector<bool> a) {
-    return (int)a.size();
-  }
-  int len(std::initializer_list<bool> a) {
-    return (int)a.size();
-  }
+  };
 
   std::vector<int> join(std::vector<int> a, std::vector<int> b) {
     std::vector<int> c;

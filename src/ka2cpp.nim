@@ -91,16 +91,18 @@ proc arrayingTypes(types: string): seq[seq[string]] =
       add_type = t1ss
       if add_type.contains("["):
         bracket_count = bracket_count + 1
-        add_type = t1ss.split("[")[1]
+        add_type = add_type.split("[")[1]
       if add_type.contains("]"):
         bracket_count = bracket_count - 1
-        add_type = t1ss.split("[")[0]
+        string1.add("ARRAY::")
+        add_type = add_type.split("]")[0]
       
       if bracket_count != 0:
         for _ in @[0..bracket_count]:
           string1.add("ARRAY::")
       array1.add(string1 & add_type)
       string1 = ""
+
     result.add(array1)
 
 proc typeMatch(type1: string, type2: string): (bool, string) =
@@ -120,6 +122,10 @@ proc typeMatch(type1: string, type2: string): (bool, string) =
       for t1sss in t1ss:
         if t1sss == t2ss:
           typeCandidacies.add(t1sss)
+        elif t1sss.contains("*"):
+          var head = t1sss.split("*")[0]
+          if t2ss.startsWith(head):
+            typeCandidacies.add(t1sss)
     if typeCandidacies != @[]:
       typeFlow.add(typeCandidacies.join("|"))
       typeCandidacies = @[]
@@ -314,7 +320,7 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
     if argsTypeC.len() == 0:
       return (true, IDENT, "ka23::len")
     elif argsTypeC.len() == 1:
-      let fmr1 = funcTypesMatch(ARRAY & "[" & anything_t & "]" & "->" & INT, argsType.join("+"))
+      let fmr1 = funcTypesMatch(ARRAY & "[" & "*" & "]" & "->" & INT, argsType.join("+"))
       if fmr1[0]:
         let res_type = INT
         return (fmr1[0], res_type, "ka23::len")
@@ -530,9 +536,10 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
       code.add((INT, node.child_nodes[0].token.Literal))
       codeType = type_name[0].removeT()
     elif node.child_nodes.len() == 2:
+      var new_dost = true
       var type_name = node.token.Type.conversionCppType()
       var var_name = node.child_nodes[0].token.Literal
-      var value = node.child_nodes[1].makeCodeParts(test, dost)
+      var value = node.child_nodes[1].makeCodeParts(test, new_dost)
       if type_name[0].removeT() == value[1]:
         if identExistenceCheck(var_name):
           echoErrorMessage("既に定義されています", test, node.token.Line)
@@ -562,9 +569,10 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
       code.add((FLOAT, node.child_nodes[0].token.Literal))
       codeType = type_name[0].removeT()
     elif node.child_nodes.len() == 2:
+      var new_dost = true
       var type_name = node.token.Type.conversionCppType()
       var var_name = node.child_nodes[0].token.Literal
-      var value = node.child_nodes[1].makeCodeParts(test, dost)
+      var value = node.child_nodes[1].makeCodeParts(test, new_dost)
       if type_name[0].removeT() == value[1]:
         if identExistenceCheck(var_name):
           echoErrorMessage("既に定義されています", test, node.token.Line)
@@ -594,9 +602,10 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
       code.add((CHAR, node.child_nodes[0].token.Literal))
       codeType = type_name[0].removeT()
     elif node.child_nodes.len() == 2:
+      var new_dost = true
       var type_name = node.token.Type.conversionCppType()
       var var_name = node.child_nodes[0].token.Literal
-      var value = node.child_nodes[1].makeCodeParts(test, dost)
+      var value = node.child_nodes[1].makeCodeParts(test, new_dost)
       if type_name[0].removeT() == value[1]:
         if identExistenceCheck(var_name):
           echoErrorMessage("既に定義されています", test, node.token.Line)
@@ -626,9 +635,10 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
       code.add((STRING, node.child_nodes[0].token.Literal))
       codeType = type_name[0].removeT()
     elif node.child_nodes.len() == 2:
+      var new_dost = true
       var type_name = node.token.Type.conversionCppType()
       var var_name = node.child_nodes[0].token.Literal
-      var value = node.child_nodes[1].makeCodeParts(test, dost)
+      var value = node.child_nodes[1].makeCodeParts(test, new_dost)
       if type_name[0].removeT() == value[1]:
         if identExistenceCheck(var_name):
           echoErrorMessage("既に定義されています", test, node.token.Line)
@@ -658,9 +668,10 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
       code.add((BOOL, node.child_nodes[0].token.Literal))
       codeType = type_name[0].removeT()
     elif node.child_nodes.len() == 2:
+      var new_dost = true
       var type_name = node.token.Type.conversionCppType()
       var var_name = node.child_nodes[0].token.Literal
-      var value = node.child_nodes[1].makeCodeParts(test, dost)
+      var value = node.child_nodes[1].makeCodeParts(test, new_dost)
       if type_name[0].removeT() == value[1]:
         if identExistenceCheck(var_name):
           echoErrorMessage("既に定義されています", test, node.token.Line)
@@ -694,9 +705,10 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
           codeType.add("::")
         codeType.add(tv.removeT())
     elif node.child_nodes.len() == 2:
+      var new_dost = true
       var type_name = node.token.Type.conversionCppType()
       var var_name = node.child_nodes[0].token.Literal
-      var value = node.child_nodes[1].makeCodeParts(test, dost)
+      var value = node.child_nodes[1].makeCodeParts(test, new_dost)
       if type_name[0].removeT() == value[1]:
         if identExistenceCheck(var_name):
           echoErrorMessage("既に定義されています", test, node.token.Line)

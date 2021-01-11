@@ -1,6 +1,6 @@
 #include "ka2lib/ka2funcs.h"
 
 int main ( int argc , char *argv[] ) {
-  const std::vector<int> a = ( std::vector<int> ) { 1 , 2 , 3 } ;
-  const int b = ka23::map ( a , [] ( int _i ) { return ka23::plus ( _i , 1 ) ; } ) [ 0 ] ;
+  const std::vector<std::vector<bool>> a = ( std::vector<std::vector<bool>> ) { ( std::vector<bool> ) { true , false , false } , ( std::vector<bool> ) { true , false , false } } ;
+  ka23::println ( ka23::toString ( ka23::len ( a ) ) ) ;
 }

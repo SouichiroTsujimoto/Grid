@@ -1,4 +1,4 @@
 main do
-  array int a = {1, 2, 3}
-  int b = map(a, plus(1))[0]
+  array array bool a = {{True, False, False}, {True, False, False}}
+  a |> len() |> toString() |> println()
 end
