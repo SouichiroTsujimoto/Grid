@@ -332,7 +332,7 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
     if argsTypeC.len() == 0:
       return (true, IDENT, "ka23::join")
     elif argsTypeC.len() == 2:
-      let fmr1 = funcTypesMatch("ARRAY" & "[" & anything_t & "]" & "+" & "ARRAY" & "[" & anything_t & "]" & "->" & "ARRAY" & "[" & anything_t & "]", argsType.join("+"))
+      let fmr1 = funcTypesMatch("ARRAY" & "[" & "*" & "]" & "+" & "ARRAY" & "[" & "*" & "]" & "->" & "ARRAY" & "[" & "*" & "]", argsType.join("+"))
       if fmr1[0]:
         let res_type = fmr1[1].split("+")[0]
         return (fmr1[0], res_type, "ka23::join")
@@ -344,7 +344,7 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
     if argsTypeC.len() == 0:
       return (true, IDENT, "ka23::join")
     elif argsTypeC.len() == 1:
-      let fmr1 = funcTypesMatch("ARRAY" & "[" & anything_t & "]" & "->" & anything_t, argsType.join("+"))
+      let fmr1 = funcTypesMatch("ARRAY" & "[" & "*" & "]" & "->" & anything_t, argsType.join("+"))
       if fmr1[0]:
         let res_type = fmr1[1].funcTypeSplit("ARRAY::")[2]
         return (fmr1[0], res_type, "ka23::head")
@@ -356,7 +356,7 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
     if argsTypeC.len() == 0:
       return (true, IDENT, "ka23::tail")
     elif argsTypeC.len() == 1:
-      let fmr1 = funcTypesMatch("ARRAY" & "[" & anything_t & "]" & "->" & "ARRAY" & "::" & anything_t, argsType.join("+"))
+      let fmr1 = funcTypesMatch("ARRAY" & "[" & "*" & "]" & "->" & "ARRAY" & "[" & "*" & "]", argsType.join("+"))
       if fmr1[0]:
         let res_type = fmr1[1]
         return (fmr1[0], res_type, "ka23::tail")
@@ -368,7 +368,7 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
     if argsTypeC.len() == 0:
       return (true, IDENT, "ka23::last")
     elif argsTypeC.len() == 1:
-      let fmr1 = funcTypesMatch("ARRAY" & "[" & anything_t & "]" & "->" & anything_t, argsType.join("+"))
+      let fmr1 = funcTypesMatch("ARRAY" & "[" & "*" & "]" & "->" & anything_t, argsType.join("+"))
       if fmr1[0]:
         let res_type = fmr1[1].funcTypeSplit("ARRAY::")[2]
         return (fmr1[0], res_type, "ka23::last")
@@ -380,7 +380,7 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
     if argsTypeC.len() == 0:
       return (true, IDENT, "ka23::init")
     elif argsTypeC.len() == 1:
-      let fmr1 = funcTypesMatch("ARRAY" & "[" & anything_t & "]" & "->" & "ARRAY" & "::" & anything_t, argsType.join("+"))
+      let fmr1 = funcTypesMatch("ARRAY" & "[" & "*" & "]" & "->" & "ARRAY" & "[" & "*" & "]", argsType.join("+"))
       if fmr1[0]:
         let res_type = fmr1[1]
         return (fmr1[0], res_type, "ka23::init")
@@ -404,7 +404,7 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
     if argsTypeC.len() == 0:
       return (true, IDENT, "ka23::at")
     elif argsTypeC.len() == 2:
-      let fmr1 = funcTypesMatch("ARRAY" & "[" & anything_t & "]" & "+" & number_t & "->" & anything_t, argsType.join("+"))
+      let fmr1 = funcTypesMatch("ARRAY" & "[" & anything_t & "]" & "+" & INT & "->" & anything_t, argsType.join("+"))
       if fmr1[0]:
         let res_type = fmr1[1].split("+")[0]
         return (fmr1[0], res_type, "ka23::at")
@@ -1171,7 +1171,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
     
     fn.child_nodes[1].child_nodes = @[i_node] & fn.child_nodes[1].child_nodes
 
-    let ccf = conversionCppFunction(func_name, array_type_split[1..array_type_split.len()-1] & func_arg_types)
+    let ccf = conversionCppFunction(func_name, array_type_split[1..array_type_split.len()-1].join("::") & func_arg_types)
     if ccf[0]:
       cpp_func_name = ccf[2]
       func_result_type = ccf[1]
@@ -1182,7 +1182,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
         else:
           echoErrorMessage("第二引数の関数の引数が正しくありません", test, node.token.Line)
       else:
-        let ftm = funcTypesMatch(identTable[func_name].Type, array_type_split[1..array_type_split.len()-1] & func_arg_types)
+        let ftm = funcTypesMatch(identTable[func_name].Type, array_type_split[1..array_type_split.len()-1].join("::") & func_arg_types)
         if ftm[0]:
           cpp_func_name = func_name
           func_result_type = ftm[2]

@@ -1,4 +1,8 @@
+def array int hoge(array int x) do
+  return x
+end
+
 main do
-  array array bool a = {{True, False, False}, {True, False, False}}
-  a |> len() |> toString() |> println()
+  map({{1, 2}, {3, 4}}, hoge())
+  map({1, 2, 3}, plus(1))
 end
