@@ -1,8 +1,10 @@
-def array int hoge(array int x) do
-  return x
+array int x = {1, 2}
+
+def int a(int b) do
+  int v = 0
+  return 1
 end
 
 main do
-  map({{1, 2}, {3, 4}}, hoge())
-  map({1, 2, 3}, plus(1))
+  
 end

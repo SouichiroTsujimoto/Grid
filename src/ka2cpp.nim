@@ -1,4 +1,4 @@
-import ka2token, ka2node, ka2token, ka2error
+import ka2token, ka2node, ka2token, ka2error, ka2show
 import strutils, tables
 
 #------↓仮↓------
@@ -438,6 +438,30 @@ proc addIndent(code: var string, indent: int) =
     for i in 0..indent-1:
       code.add("  ")
 
+proc makeInitValue(Type: string): seq[codeParts] =
+  case Type
+  of INT:
+    result = @[(INT, "0")]
+  of FLOAT:
+    result = @[(FLOAT, "0.0f")]
+  of CHAR:
+    result = @[(CHAR, "")]
+  of STRING:
+    result = @[(STRING, "")]
+  of BOOL:
+    result = @[(BOOL, "")]
+  else:
+    var type_split = Type.split("::")
+    if type_split[0] == ARRAY:
+      var convT = ""
+      for i, t in type_split:
+        if i != 0:
+          convT.add("::")
+        convT.add("T_" & t)
+      result = @[(LPAREN, "("), (T_ARRAY, convT.conversionCppType()[1]), (LPAREN, ")"), (Type, "{}")]
+    else:
+      echoErrorMessage("当てはまらない型です", false, -1)
+
 # proc addScopeTable(str: string) =
 #   if scopeTable.len()-1 == nestCount:
 #     scopeTable[nestCount].add(str)
@@ -495,7 +519,6 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
     if node.child_nodes == @[]:
       code.add((LBRACE, "{"))
       code.add((RBRACE, "}"))
-      code.add(("@ARRAYLENGTH", "0"))
       code.addSemicolon()
       codeType = ARRAY
     else:
@@ -515,7 +538,6 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
           echoErrorMessage("配列内の要素の型が全て同じになっていません", test, node.token.Line)
         loopCount += 1
       tmp_code.add((RBRACE, "}"))
-      tmp_code.add(("@ARRAYLENGTH", $loopCount))
       tmp_code.addSemicolon()
       var literal_type = "T_" & ARRAY
       for ts in eltype.split("::"):
@@ -819,6 +841,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
     # else:
     #   echoErrorMessage("不明なエラー", test, node.token.Line)
 
+  # main文
   of nkMainStatement:
     var new_dost = true
     let di = node.child_nodes[0].makeCodeParts(test, new_dost)
@@ -922,13 +945,17 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
         used:  false,
       )
       addScopeTable(di[0][1][1], nesting)
+    
     var origin = nesting
     nesting = nesting + 1
+    var return_flag = false
+
     if node.child_nodes[1].child_nodes == @[]:
       code.add((OTHER, "()"))
       code.add((OTHER, "{"))
       for statement in node.child_nodes[2].child_nodes:
         if statement.kind == nkReturnStatement:
+          return_flag = true
           let st = statement.makeCodeParts(test, new_dost)
           if typeMatch(st[1], di[1])[0]:
             code.add(st[0])
@@ -947,13 +974,14 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
           Type:    pr[1],
           path:    nesting,
           mutable: false,
-          used:  false,
+          used:    false,
         )
         addScopeTable(parameter.child_nodes[0].token.Literal, nesting)
       code.add((OTHER, ")"))
       code.add((OTHER, "{"))
       for statement in node.child_nodes[2].child_nodes:
         if statement.kind == nkReturnStatement:
+          return_flag = true
           let st = statement.makeCodeParts(test, new_dost)
           if typeMatch(st[1], di[1])[0]:
             code.add(st[0])
@@ -961,6 +989,12 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
             echoErrorMessage("指定している型と返り値の型が違います", test, node.token.Line)
         else:
           code.add(statement.makeCodeParts(test, new_dost)[0])
+    
+    if return_flag == false:
+      code.add((RETURN, "return"))
+      code.add(makeInitValue(di[1]))
+      code.addSemicolon()
+
     # nestingをリセット
     nesting = origin
     code.add(deleteScope(nesting, test))
@@ -971,18 +1005,16 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
   of nkReturnStatement:
     if dost == false:
       echoErrorMessage("文の外でreturn文を使用することはできません", test, node.token.Line)
-
-    if node.child_nodes != @[]:
-      var new_dost = true
-      code.add((OTHER, "return"))
-      code.add((OTHER, "("))
-      let r = node.child_nodes[0].makeCodeParts(test, new_dost)
-      code.add(r[0].replaceSemicolon(@[(OTHER, "")]))
-      code.add((OTHER, ")"))
-      code.addSemicolon()
-      codeType = r[1]
-    else:
+    if node.child_nodes == @[]:
       echoErrorMessage("式がありません", test, node.token.Line)
+    
+    code.add((OTHER, "return"))
+    code.add((OTHER, "("))
+    let r = node.child_nodes[0].makeCodeParts(test, dost)
+    code.add(r[0].replaceSemicolon(@[(OTHER, "")]))
+    code.add((OTHER, ")"))
+    code.addSemicolon()
+    codeType = r[1]
   
   # 中置
   of nkInfixExpression:
@@ -1233,12 +1265,17 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
     code.add(deleteScope(nesting, test))
     codeType = array_type
 
+  # of nkMutStatement:
+  #   # TODO mut文のを作る
+
   # if文
   of nkIfStatement:
     if dost == false:
       echoErrorMessage("文の外でif文を使用することはできません", test, node.token.Line)
     var new_dost = true
 
+    var original_nesting = nesting
+    nesting = nesting + 1
     code.add((OTHER, "if"))
     code.add((OTHER, "("))
     code.add(node.child_nodes[0].makeCodeParts(test, new_dost)[0].replaceSemicolon(@[(OTHER, "")]))
@@ -1253,6 +1290,8 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
         sr = statement.makeCodeParts(test, new_dost)
         code.add(sr[0])
     code.add((OTHER, "}"))
+
+    nesting = original_nesting
     if node.child_nodes.len() == 3:
       let ar = node.child_nodes[2].makeCodeParts(test, new_dost)
       code.add(ar[0])
@@ -1266,6 +1305,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
       echoErrorMessage("文の外でelif文を使用することはできません", test, node.token.Line)
     var new_dost = true
 
+    var original_nesting = nesting
     code.add((OTHER, "else if"))
     code.add((OTHER, "("))
     code.add(node.child_nodes[0].makeCodeParts(test, new_dost)[0].replaceSemicolon(@[(OTHER, "")]))
@@ -1280,6 +1320,8 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
         sr = statement.makeCodeParts(test, new_dost)
         code.add(sr[0])
     code.add((OTHER, "}"))
+
+    nesting = original_nesting
     if node.child_nodes.len() == 3:
       let ar = node.child_nodes[2].makeCodeParts(test, new_dost)
       code.add(ar[0])
@@ -1293,6 +1335,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
       echoErrorMessage("文の外でelif文を使用することはできません", test, node.token.Line)
     var new_dost = true
 
+    var original_nesting = nesting
     code.add((OTHER, "else"))
     code.add((OTHER, "{"))
     var sr: (seq[codeParts], string)
@@ -1304,6 +1347,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
         sr = statement.makeCodeParts(test, new_dost)
         code.add(sr[0])
     code.add((OTHER, "}"))
+    nesting = original_nesting
     codeType = sr[1]
   
   # if式
@@ -1344,7 +1388,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
     let origin = nesting
     code.add((OTHER, "for"))
     code.add((OTHER, "("))
-    code.add(node.child_nodes[0].makeCodeParts(test, new_dost)[0])
+    code.add(node.child_nodes[0].makeCodeParts(test, new_dost)[0].replaceSemicolon(@[(OTHER, "")]))
     code.add((OTHER, ")"))
     code.add((OTHER, "{"))
     var sr: (seq[codeParts], string)
@@ -1376,7 +1420,7 @@ proc makeCppCode*(node: Node, indent: int, test: bool): string =
   for i, part in parts[0]:
     # echo $i & "回目 : " & part
     # echo part
-    if part.Type[0] == '@' or part.Code == "":
+    if part.Code == "":
       continue
     if part.Type == SEMICOLON and part.Code == ";":
       newLine.add(part.Code)

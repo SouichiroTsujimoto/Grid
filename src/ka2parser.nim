@@ -218,7 +218,6 @@ proc parseNodes(p: Parser, endToken: string): Node =
     p.shiftToken()
     return args
 
-
   p.shiftToken()
   args.child_nodes.add(p.parseExpression(Lowest))
   while p.peekToken.Type == COMMA:
@@ -236,7 +235,7 @@ proc parseNodes(p: Parser, endToken: string): Node =
     p.shiftToken()
     return args
   else:
-    echo "構文エラー！！！(0)"
+    echoErrorMessage("要素が多すぎます", false, p.curToken.Line)
 
 # 関数を宣言するときの引数の処理
 proc parseNameProc(p: Parser, endToken: string): Node =
@@ -294,6 +293,7 @@ proc parseFloatLiteral(p: Parser): Node =
   )
   return node
 
+# 負の数のリテラル
 proc parseMinusNum(p: Parser): Node =
   var node = Node(
     token: Token(Type: p.peekToken.Type, Literal: "-" & p.peekToken.Literal),
@@ -519,6 +519,30 @@ proc parseArrayType(p: Parser, init: bool): Node =
 
 #------ここまで------
 
+# mut文
+proc parseMutStatement(p: Parser): Node =
+  var node = Node(
+    kind:        nkMutStatement,
+    token:       p.curToken,
+    child_nodes: @[],
+  )
+  var vars: seq[Node]
+
+  p.shiftToken()
+  vars.add(p.parseType(false))
+
+  while p.peekToken.Type == COMMA:
+    p.shiftToken()
+    p.shiftToken()
+    vars.add(p.parseType(false))
+
+  if p.peekToken.Type != DO:
+    echoErrorMessage("\"do\"が見つかりません", false, p.curToken.Line)
+  p.shiftToken()
+  node.child_nodes.add(p.parseBlockStatement(@[END]))
+  p.shiftToken()
+  return node
+
 # if文
 proc parseIfStatement(p: Parser): Node =
   var node = Node(
@@ -556,8 +580,7 @@ proc parseIfStatement(p: Parser): Node =
     p.shiftToken()
     return node
   else:
-    echo "構文エラー！！！(0.0.1)"
-    quit()
+    echoErrorMessage("\"end\"がありません", false, p.peekToken.Line)
 
 # if式
 proc parseIfExpression(p: Parser): Node =
@@ -570,25 +593,22 @@ proc parseIfExpression(p: Parser): Node =
   p.shiftToken()
   node.child_nodes.add(p.parseExpression(cp1))
   if p.peekToken.Type != COLON:
-    echo "構文エラー！！！(0.1)"
-    quit()
+    echoErrorMessage("\':\'が必要です", false, p.peekToken.Line)
   p.shiftToken()
   let cp2 = p.curToken.tokenPrecedence()
   p.shiftToken()
   node.child_nodes.add(p.parseExpression(cp2))
-  if p.peekToken.Type == COLON:
-    p.shiftToken()
-    let cp3 = p.curToken.tokenPrecedence()
-    p.shiftToken()
-    node.child_nodes.add(Node(
-      kind: nkElseExpression,
-      token: p.curToken,
-      child_nodes: @[p.parseExpression(cp3)],
-    ))
-    return node
-  else:
-    echo "構文エラー！！！(1)"
-    quit()
+  if p.peekToken.Type != COLON:
+    echoErrorMessage("\':\'が必要です", false, p.peekToken.Line)
+  p.shiftToken()
+  let cp3 = p.curToken.tokenPrecedence()
+  p.shiftToken()
+  node.child_nodes.add(Node(
+    kind: nkElseExpression,
+    token: p.curToken,
+    child_nodes: @[p.parseExpression(cp3)],
+  ))
+  return node
 
 # for文
 proc parseForStatement(p: Parser): Node =
@@ -729,6 +749,7 @@ proc parseStatement(p: Parser): Node =
   of DEFINE:       return p.parseDefineStatement()
   of FOR:          return p.parseForStatement()
   of IF:           return p.parseIfStatement()
+  of MUT:          return p.parseMutStatement()
   else:            return p.parseExpressionStatement()
 
 # ASTを作る

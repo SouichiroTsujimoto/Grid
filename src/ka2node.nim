@@ -41,6 +41,7 @@ type
     nkIfStatement
     nkElifStatement
     nkElseStatement
+    nkMutStatement
     nkPipeExpression,
     nkAccessElement,
 

@@ -65,6 +65,7 @@ const
   ELSE*         = "ELSE"
   DO*           = "DO"
   END*          = "END"
+  MUT*          = "MUT"
   # 型
   T_INT*        = "T_INT"
   T_FLOAT*      = "T_FLOAT"
@@ -97,13 +98,14 @@ let keywords = {
   "end"       : END,
   "map"       : MAP,
   "for"       : FOR,
-  "int"      : T_INT,
-  "float"    : T_FLOAT,
-  "char"     : T_CHAR,
-  "string"   : T_STRING,
-  "bool"     : T_BOOL,
-  "array"    : T_ARRAY,
-  "function" : T_FUNCTION,
+  "mut"       : MUT,
+  "int"       : T_INT,
+  "float"     : T_FLOAT,
+  "char"      : T_CHAR,
+  "string"    : T_STRING,
+  "bool"      : T_BOOL,
+  "array"     : T_ARRAY,
+  "function"  : T_FUNCTION,
 }.newTable
 
 proc LookupIdent*(ident: string): string =
