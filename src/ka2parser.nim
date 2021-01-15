@@ -80,6 +80,18 @@ proc parseReturnStatement(p: Parser): Node =
   node.child_nodes.add(p.parseExpression(Lowest))
   return node
 
+# export文
+proc parseExportStatement(p: Parser): Node =
+  var node = Node(
+    kind:        nkExportStatement,
+    token:       p.curToken,
+    child_nodes: @[],
+  )
+  p.shiftToken()
+  node.child_nodes.add(p.parseExpression(Lowest))
+  return node
+
+# コメント
 proc parseComment(p: Parser): Node =
   var node = Node(
     kind:        nkComment,
@@ -111,7 +123,7 @@ proc parseMainStatement(p: Parser): Node =
 
   node.child_nodes.add(p.parseBlockStatement(@[END]))
   if p.peekToken.Type != END:
-    return Node(kind: nkNil)
+    echoErrorMessage("\"end\"が見つかりません", false, p.curToken.Line)
 
   p.shiftToken()
   return node
@@ -150,7 +162,7 @@ proc parseDefineStatement(p: Parser): Node =
 
   node.child_nodes.add(p.parseBlockStatement(@[END]))
   if p.peekToken.Type != END:
-    return Node(kind: nkNil)
+    echoErrorMessage("\"end\"が見つかりません", false, p.curToken.Line)
 
   p.shiftToken()
   return node
@@ -275,7 +287,6 @@ proc parseIdent(p: Parser): Node =
     token: p.curToken,
   )
   return node
-
 
 # 整数値リテラル
 proc parseIntLiteral(p: Parser): Node =
@@ -519,30 +530,6 @@ proc parseArrayType(p: Parser, init: bool): Node =
 
 #------ここまで------
 
-# mut文
-proc parseMutStatement(p: Parser): Node =
-  var node = Node(
-    kind:        nkMutStatement,
-    token:       p.curToken,
-    child_nodes: @[],
-  )
-  var vars: seq[Node]
-
-  p.shiftToken()
-  vars.add(p.parseType(false))
-
-  while p.peekToken.Type == COMMA:
-    p.shiftToken()
-    p.shiftToken()
-    vars.add(p.parseType(false))
-
-  if p.peekToken.Type != DO:
-    echoErrorMessage("\"do\"が見つかりません", false, p.curToken.Line)
-  p.shiftToken()
-  node.child_nodes.add(p.parseBlockStatement(@[END]))
-  p.shiftToken()
-  return node
-
 # if文
 proc parseIfStatement(p: Parser): Node =
   var node = Node(
@@ -620,7 +607,7 @@ proc parseForStatement(p: Parser): Node =
   p.shiftToken()
   var left = p.parseType(false)
   
-  if p.peekToken.Type != ARROW:
+  if p.peekToken.Type != LARROW:
     echoErrorMessage("\"<-\"が見つかりません", false, p.curToken.Line)
   p.shiftToken()
 
@@ -659,6 +646,68 @@ proc parseAccessElement(p: Parser, left: Node): Node =
   else:
     echoErrorMessage("'['が閉じられていません", false, p.curToken.Line)
 
+proc parseMutArea(p: Parser): Node =
+  var node = Node(
+    kind:        nkMutArea,
+    token:       p.curToken,
+    child_nodes: @[Node(
+      kind:        nkArgs,
+      token:       p.curToken,
+      child_nodes: @[],
+    )],
+  )
+  p.shiftToken()
+  node.child_nodes[0].child_nodes.add(p.parseType(true))
+
+  while p.peekToken.Type == COMMA:
+    p.shiftToken()
+    p.shiftToken()
+    node.child_nodes[0].child_nodes.add(p.parseType(true))
+
+  return node
+
+proc parseForArea(p: Parser): Node =
+  return Node()
+
+# TODO ここでエリア文パース
+proc parseArea(p: Parser): Node =
+  var node = Node()
+  p.shiftToken()
+
+  var area_name = p.curToken
+  p.shiftToken()
+  
+  if p.curToken.Type != LBRACKET:
+    echoErrorMessage("\"[\"が見つかりません", false, p.curToken.Line)
+  
+  case area_name.Type
+  of MUT:
+    node = p.parseMutArea()
+  of FOR:
+    node = p.parseForArea()
+  else:
+    echoErrorMessage("存在しないエリア名です", false, p.curToken.Line)
+
+  p.shiftToken()
+  if p.curToken.Type != RBRACKET:
+    echoErrorMessage("\"]\"が見つかりません", false, p.curToken.Line)
+  p.shiftToken()
+
+  if p.curToken.Type != DO:
+    echoErrorMessage("\"do\"が見つかりません", false, p.curToken.Line)
+
+  node.child_nodes.add(p.parseBlockStatement(@[END]))
+  if p.peekToken.Type != END:
+    echoErrorMessage("\"end\"が見つかりません", false, p.curToken.Line)
+  p.shiftToken()
+
+  p.shiftToken()
+  if p.curToken.Type == RARROW:
+    p.shiftToken()
+    node.child_nodes.add(p.parseType(false))
+
+  return node
+
 proc parseType(p: Parser, init: bool): Node =
   case p.curToken.Type
   of T_INT      : return p.parseIntType(init)
@@ -676,6 +725,7 @@ proc parseExpression(p: Parser, precedence: Precedence): Node =
   of IFEX       : left = p.parseIfExpression()
   of MAP        : left = p.parseMapFunction()
   of RETURN     : left = p.parseReturnStatement()
+  of EXPORT     : left = p.parseExportStatement()
   of IDENT      : left = p.parseIdent()
   of INT        : left = p.parseIntLiteral()
   of FLOAT      : left = p.parseFloatLiteral()
@@ -749,7 +799,7 @@ proc parseStatement(p: Parser): Node =
   of DEFINE:       return p.parseDefineStatement()
   of FOR:          return p.parseForStatement()
   of IF:           return p.parseIfStatement()
-  of MUT:          return p.parseMutStatement()
+  of AREA:         return p.parseArea()
   else:            return p.parseExpressionStatement()
 
 # ASTを作る

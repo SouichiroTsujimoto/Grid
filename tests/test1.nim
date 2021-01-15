@@ -10,8 +10,6 @@ proc makeProgram(str: string, inc: bool): string =
     code = "main do\n" & str & "\nend"
   else:
     code = str & "\n" & "main do\n" & "\nend"
-  
-  echo code
 
   var nodes = code.makeAST().astShaping(false, true)[0]
   var root = Node(
@@ -411,7 +409,7 @@ suite "len":
     check(program.findStr("ka23::len ( a ) ;"))
 
 suite "head":
-  test "array int x = {1, 2} print(x |> head()|> toString())":
+  test "array int x = {1, 2} print(x |> head() |> toString())":
     initTables()
     let program = "array int x = {1, 2} print(x |> head() |> toString())".makeProgram(true)
     check(program.findStr("const std::vector<int> x = { 1 , 2 } ;"))

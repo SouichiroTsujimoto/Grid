@@ -26,7 +26,8 @@ const
   MINUS*        = "-"
   ASTERISC*     = "*"
   SLASH*        = "/"
-  ARROW*        = "<-"
+  LARROW*       = "<-"
+  RARROW*       = "->"
   # 比較演算子
   LT*           = "<"
   GT*           = ">"
@@ -36,6 +37,7 @@ const
   NE*           = "!="
   NOT*          = "!"
   PIPE*         = "|>"
+  VERTICAL*     = "|"
   # デリミタ
   COMMA*        = ","
   COLON*        = ":"
@@ -59,6 +61,7 @@ const
   MAIN*         = "MAIN"
   DEFINE*       = "DEFINE"
   RETURN*       = "RETURN"
+  EXPORT*       = "EXPORT"
   IF*           = "IF"
   IFEX*         = "IFEX"
   ELIF*         = "ELIF"
@@ -66,6 +69,7 @@ const
   DO*           = "DO"
   END*          = "END"
   MUT*          = "MUT"
+  AREA*         = "AREA"
   # 型
   T_INT*        = "T_INT"
   T_FLOAT*      = "T_FLOAT"
@@ -90,6 +94,7 @@ let keywords = {
   "main"      : MAIN,
   "def"       : DEFINE,
   "return"    : RETURN,
+  "export"    : EXPORT,
   "if"        : IF,
   "ifex"      : IFEX,
   "elif"      : ELIF,
@@ -99,6 +104,7 @@ let keywords = {
   "map"       : MAP,
   "for"       : FOR,
   "mut"       : MUT,
+  "area"      : AREA,
   "int"       : T_INT,
   "float"     : T_FLOAT,
   "char"      : T_CHAR,

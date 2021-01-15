@@ -1,10 +1,13 @@
-array int x = {1, 2}
-
 def int a(int b) do
   int v = 0
   return 1
 end
 
 main do
-  
+  int hoge = 10
+  area mut[int v = 0, int x = 10] do
+    v = 30 + x
+    println(toString(v))
+    export v
+  end -> int f
 end

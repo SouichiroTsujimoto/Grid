@@ -145,7 +145,7 @@ proc nextToken*(l: Lexer): Token =
       let ch = l.ch
       l.nextChar()
       let literal = $ch & $l.ch
-      tok = Token(Type: ARROW, Literal: literal, Line: l.line)
+      tok = Token(Type: LARROW, Literal: literal, Line: l.line)
     else:
       tok = Token(Type: LT, Literal: $l.ch, Line: l.line)
   of '>':
@@ -163,18 +163,15 @@ proc nextToken*(l: Lexer): Token =
       let literal = $ch & $l.ch
       tok = Token(Type: PIPE, Literal: literal, Line: l.line)
     else:
-      echo "エラ〜〜〜 : '|'"
+      tok = Token(Type: VERTICAL, Literal: $l.ch, Line: l.line)
   of '-' :
-    tok = Token(Type: MINUS, Literal: $l.ch, Line: l.line)
-    # if l.peekChar().isDigit():
-    #   l.nextChar()
-    #   let (lit, decimal) = l.readNumber
-    #   if decimal:
-    #     return Token(Type: FLOAT, Literal: "-" & lit, Line: l.line)
-    #   else:
-    #     return Token(Type: INT, Literal: "-" & lit, Line: l.line)
-    # else:
-    #   tok = Token(Type: MINUS, Literal: $l.ch, Line: l.line)
+    if l.peekChar()[0] == '>':
+      let ch = l.ch
+      l.nextChar()
+      let literal = $ch & $l.ch
+      tok = Token(Type: RARROW, Literal: literal, Line: l.line)
+    else:
+      tok = Token(Type: MINUS, Literal: $l.ch, Line: l.line)
   of '/' :
     if l.peekChar()[0] == '*':
       let ch = l.ch

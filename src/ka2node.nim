@@ -7,6 +7,7 @@ type
     nkDo
     nkComment
     nkArgs
+    nkStatementArgs
     nkIdent
     nkNilLiteral
     nkIntLiteral
@@ -31,6 +32,7 @@ type
     nkMainStatement
     nkDefineStatement
     nkReturnStatement
+    nkExportStatement
     nkRetrunExpression
     nkMapFunction
     nkForStatement
@@ -41,9 +43,10 @@ type
     nkIfStatement
     nkElifStatement
     nkElseStatement
-    nkMutStatement
-    nkPipeExpression,
-    nkAccessElement,
+    nkArea
+    nkMutArea
+    nkPipeExpression
+    nkAccessElement
 
   Node* = ref object of RootObj
     kind*:          NodeKind
@@ -71,6 +74,6 @@ proc tokenPrecedence*(tok: Token): Precedence =
   of EE, NE:            return Equals
   of PLUS, MINUS:       return Sum
   of SLASH, ASTERISC:   return Product
-  of ARROW:             return Generator
+  of LARROW:            return Generator
   of LPAREN, LBRACKET:  return Call
   else:                 return Lowest
