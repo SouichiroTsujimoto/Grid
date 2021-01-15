@@ -13,4 +13,5 @@ int main ( int argc , char *argv[] ) {
     ka23::println ( ka23::toString ( v ) ) ;
     return ( v ) ;
   } () ;
+  ka23::println ( ka23::toString ( f ) ) ;
 }

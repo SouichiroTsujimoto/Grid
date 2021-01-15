@@ -1228,9 +1228,6 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
       echoErrorMessage("文の外でarea文を使用することはできません", test, node.token.Line)
     var new_dost = true
 
-    var original_nesting = nesting
-    nesting = nesting + 1
-
     var var_cp: (seq[codeParts], string)
     var var_flag = false
 
@@ -1238,8 +1235,17 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
       var_flag = true
       code.add((OTHER, "const"))
       var_cp = node.child_nodes[2].makeCodeParts(test, new_dost)
+      IdentInfo(
+        Type:     var_cp[1],
+        path:     nesting,
+        mutable:  false,
+        used:     false,
+      ).addTable(var_cp[0][1].Code, nesting)
       code.add(var_cp[0])
       code.add((OTHER, "="))
+
+    var original_nesting = nesting
+    nesting = nesting + 1
 
     code.add((OTHER, "[&]"))
     code.add((OTHER, "{"))

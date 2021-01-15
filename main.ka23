@@ -10,4 +10,5 @@ main do
     println(toString(v))
     export v
   end -> int f
+  println(toString(f))
 end
