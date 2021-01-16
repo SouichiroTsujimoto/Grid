@@ -1,12 +1,3 @@
-def int a(int b) do
-  int v = 0
-  return 1
-end
-
 main do
-  later int x
-  if True do
-    x = 10
-  end
-  x |> toString() |> print()
+  map({1, 2, 3}, plus(1))
 end

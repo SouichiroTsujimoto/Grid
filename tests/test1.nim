@@ -83,94 +83,94 @@ suite "int":
   test "int a = 10":
     initTables()
     let program = "int a = 10".makeProgram(true)
-    check(program.findStr("const int a = 10 ;"))
+    check(program.findStr("int a = 10 ;"))
   test "int a = 10 + 20 * 30":
     initTables()
     let program = "int a = 10 + 20 * 30".makeProgram(true)
-    check(program.findStr("const int a = ( 10 + ( 20 * 30 ) ) ;"))
+    check(program.findStr("int a = ( 10 + ( 20 * 30 ) ) ;"))
   test "int a = 10 - (10-30)":
     initTables()
     let program = "int a = 10 - (10-30)".makeProgram(true)
-    check(program.findStr("const int a = ( 10 - ( 10 - 30 ) ) ;"))
+    check(program.findStr("int a = ( 10 - ( 10 - 30 ) ) ;"))
 
 suite "float":
   test "float a = 10.2 - 5.2":
     initTables()
     let program = "float a = 10.2 - 5.2".makeProgram(true)
-    check(program.findStr("const float a = ( 10.2f - 5.2f ) ;"))
+    check(program.findStr("float a = ( 10.2f - 5.2f ) ;"))
   test "float a = 36.5 / 0.5":
     initTables()
     let program = "float a = 36.5 / 0.5".makeProgram(true)
-    check(program.findStr("const float a = ( 36.5f / 0.5f ) ;"))
+    check(program.findStr("float a = ( 36.5f / 0.5f ) ;"))
   
 suite "minus":
   test "float a = -36.5 / -0.5":
     initTables()
     let program = "float a = -36.5 / -0.5".makeProgram(true)
-    check(program.findStr("const float a = ( -36.5f / -0.5f ) ;"))
+    check(program.findStr("float a = ( -36.5f / -0.5f ) ;"))
   test "int a = -10 - (10--30)":
     initTables()
     let program = "int a = -10 - (10--30)".makeProgram(true)
-    check(program.findStr("const int a = ( -10 - ( 10 - -30 ) ) ;"))
+    check(program.findStr("int a = ( -10 - ( 10 - -30 ) ) ;"))
 suite "char":
   test "char a = 'a'":
     initTables()
     let program = "char a = 'a'".makeProgram(true)
-    check(program.findStr("const char a = 'a' ;"))
+    check(program.findStr("char a = 'a' ;"))
   test "char a = '\t'":
     initTables()
     let program = "char a = '\t'".makeProgram(true)
-    check(program.findStr("const char a = '\t' ;"))
+    check(program.findStr("char a = '\t' ;"))
 
 suite "string":
   test "string a = \"Hello\"":
     initTables()
     let program = "string a = \"Hello\"".makeProgram(true)
-    check(program.findStr("const std::string a = \"Hello\" ;"))
+    check(program.findStr("std::string a = \"Hello\" ;"))
   test "string a = \"hoge\thoge\"":
     initTables()
     let program = "string a = \"hoge\thoge\"".makeProgram(true)
-    check(program.findStr("const std::string a = \"hoge\thoge\" ;"))
+    check(program.findStr("std::string a = \"hoge\thoge\" ;"))
   test "string a = toString(1)":
     initTables()
     let program = "string a = toString(1)".makeProgram(true)
-    check(program.findStr("const std::string a = ka23::toString ( 1 ) ;"))
+    check(program.findStr("std::string a = ka23::toString ( 1 ) ;"))
 
 suite "bool":
   test "bool a = True":
     initTables()
     let program = "bool a = True".makeProgram(true)
-    check(program.findStr("const bool a = true ;"))
+    check(program.findStr("bool a = true ;"))
   test "bool a = 1 == 2":
     initTables()
     let program = "bool a = 1 == 2".makeProgram(true)
-    check(program.findStr("const bool a = ( 1 == 2 ) ;"))
+    check(program.findStr("bool a = ( 1 == 2 ) ;"))
 
 suite "array":
   test "array bool a = {True, False, False}":
     initTables()
     let program = "array bool a = {True, False, False}".makeProgram(true)
-    check(program.findStr("const std::vector<bool> a = ( std::vector<bool> ) { true , false , false } ;"))
+    check(program.findStr("std::vector<bool> a = ( std::vector<bool> ) { true , false , false } ;"))
   test "array int a = map({1, 2, 3}, mult(10))":
     initTables()
     let program = "array int a = map({1, 2, 3}, mult(10))".makeProgram(true)
-    check(program.findStr("const std::vector<int> a = ka23::map ( ( std::vector<int> ) { 1 , 2 , 3 } , [] ( int _i ) { return ka23::mult ( _i , 10 ) ; } ) ;"))
+    check(program.findStr("std::vector<int> a = ka23::map ( ( std::vector<int> ) { 1 , 2 , 3 } , [] ( int _i ) { return ka23::mult ( _i , 10 ) ; } ) ;"))
   test "array string a = {\"Hello\", \"World\"}":
     initTables()
     let program = "array string a = {\"Hello\", \"World\"}".makeProgram(true)
-    check(program.findStr("const std::vector<std::string> a = ( std::vector<std::string> ) { \"Hello\" , \"World\" } ;"))
+    check(program.findStr("std::vector<std::string> a = ( std::vector<std::string> ) { \"Hello\" , \"World\" } ;"))
   test "array array int a = {{1, 2}, {1}}":
     initTables()
     let program = "array array int a = {{1, 2}, {1}}".makeProgram(true)
-    check(program.findStr("const std::vector<std::vector<int>> a = ( std::vector<std::vector<int>> ) { ( std::vector<int> ) { 1 , 2 } , ( std::vector<int> ) { 1 } } ;"))
+    check(program.findStr("std::vector<std::vector<int>> a = ( std::vector<std::vector<int>> ) { ( std::vector<int> ) { 1 , 2 } , ( std::vector<int> ) { 1 } } ;"))
   test "array array int a = {{2, 5, 6}, {4, 5}}":
     initTables()
     let program = "array array int a = {{2, 5, 6}, {4, 5}}".makeProgram(true)
-    check(program.findStr("const std::vector<std::vector<int>> a = ( std::vector<std::vector<int>> ) { ( std::vector<int> ) { 2 , 5 , 6 } , ( std::vector<int> ) { 4 , 5 } } ;"))
+    check(program.findStr("std::vector<std::vector<int>> a = ( std::vector<std::vector<int>> ) { ( std::vector<int> ) { 2 , 5 , 6 } , ( std::vector<int> ) { 4 , 5 } } ;"))
   test "array array array int a = {{{2}, {5, 6}}, {{4, 1}, {5}}}":
     initTables()
     let program = "array array array int a = {{{2}, {5, 6}}, {{4, 1}, {5}}}".makeProgram(true)
-    check(program.findStr("const std::vector<std::vector<std::vector<int>>> a = ( std::vector<std::vector<std::vector<int>>> ) { ( std::vector<std::vector<int>> ) { ( std::vector<int> ) { 2 } , ( std::vector<int> ) { 5 , 6 } } , ( std::vector<std::vector<int>> ) { ( std::vector<int> ) { 4 , 1 } , ( std::vector<int> ) { 5 } } } ;"))
+    check(program.findStr("std::vector<std::vector<std::vector<int>>> a = ( std::vector<std::vector<std::vector<int>>> ) { ( std::vector<std::vector<int>> ) { ( std::vector<int> ) { 2 } , ( std::vector<int> ) { 5 , 6 } } , ( std::vector<std::vector<int>> ) { ( std::vector<int> ) { 4 , 1 } , ( std::vector<int> ) { 5 } } } ;"))
 
 # suite "let": 
 #   test "let int a = 10":
@@ -283,7 +283,7 @@ suite "def":
     initTables()
     var program = "def bool a(int b, bool c) do bool d = b == 10 return c == d end".makeProgram(false)
     check(program.findStr("bool a ( int b , bool c ) {"))
-    check(program.findStr("const bool d = ( b == 10 ) ;"))
+    check(program.findStr("bool d = ( b == 10 ) ;"))
     check(program.findStr("return ( ( c == d ) ) ;"))
     check(program.findStr("}"))
 
@@ -348,7 +348,7 @@ suite "ifex":
   test "int a = ifex 2 + 2 == 5 : 1984 : ifex 2 + 2 == 4 : 2020 : 0":
     initTables()
     let program = "int a = ifex 2 + 2 == 5 : 1984 : ifex 2 + 2 == 4 : 2020 : 0".makeProgram(true)
-    check(program.findStr("const int a = ( ( ( 2 + 2 ) == 5 ) ? 1984 : ( ( ( 2 + 2 ) == 4 ) ? 2020 : 0 ) ) ;"))
+    check(program.findStr("int a = ( ( ( 2 + 2 ) == 5 ) ? 1984 : ( ( ( 2 + 2 ) == 4 ) ? 2020 : 0 ) ) ;"))
 
 suite "print":
   test "print(\"Hello\")":
@@ -362,19 +362,19 @@ suite "print":
   test "char ch = \'Q\' print(toString(ch))":
     initTables()
     let program = "char ch = \'Q\' print(toString(ch))".makeProgram(true)
-    check(program.findStr("const char ch = \'Q\' ;"))
+    check(program.findStr("char ch = \'Q\' ;"))
     check(program.findStr("ka23::print ( ka23::toString ( ch ) ) ;"))
 
 suite "[]":
   test "array int a = {1, 2} a[1]":
     initTables()
     let program = "array int a = {1, 2} a[1]".makeProgram(true)
-    check(program.findStr("const std::vector<int> a = ( std::vector<int> ) { 1 , 2 } ;"))
+    check(program.findStr("std::vector<int> a = ( std::vector<int> ) { 1 , 2 } ;"))
     check(program.findStr("a [ 1 ] ;"))
   test "array array int a = {{1, 2}, {3, 4}} print(toString(a[1][0]))":
     initTables()
     let program = "array array int a = {{1, 2}, {3, 4}} print(toString(a[1][0]))".makeProgram(true)
-    check(program.findStr("const std::vector<std::vector<int>> a = ( std::vector<std::vector<int>> ) { ( std::vector<int> ) { 1 , 2 } , ( std::vector<int> ) { 3 , 4 } } ;"))
+    check(program.findStr("std::vector<std::vector<int>> a = ( std::vector<std::vector<int>> ) { ( std::vector<int> ) { 1 , 2 } , ( std::vector<int> ) { 3 , 4 } } ;"))
     check(program.findStr("ka23::print ( ka23::toString ( a [ 1 ] [ 0 ] ) ) ;"))
   
 suite "for":
@@ -399,62 +399,62 @@ suite "len":
   test "array int a = {1, 2} len(a)":
     initTables()
     let program = "array int a = {1, 2} len(a)".makeProgram(true)
-    check(program.findStr("const std::vector<int> a = { 1 , 2 } ;"))
+    check(program.findStr("std::vector<int> a = ( std::vector<int> ) { 1 , 2 } ;"))
     check(program.findStr("ka23::len ( a ) ;"))
 
   test "array int a = {1, 2} a |> len()":
     initTables()
     let program = "array int a = {1, 2} a |> len()".makeProgram(true)
-    check(program.findStr("const std::vector<int> a = { 1 , 2 } ;"))
+    check(program.findStr("std::vector<int> a = ( std::vector<int> ) { 1 , 2 } ;"))
     check(program.findStr("ka23::len ( a ) ;"))
 
 suite "head":
   test "array int x = {1, 2} print(x |> head() |> toString())":
     initTables()
     let program = "array int x = {1, 2} print(x |> head() |> toString())".makeProgram(true)
-    check(program.findStr("const std::vector<int> x = { 1 , 2 } ;"))
+    check(program.findStr("std::vector<int> x = ( std::vector<int> ) { 1 , 2 } ;"))
     check(program.findStr("ka23::print ( ka23::toString ( ka23::head ( x ) ) ) ;"))
 
 suite "tail":
   test "array int x = {1, 2, -3} x |> tail()":
     initTables()
     let program = "array int x = {1, 2, -3} x |> tail()".makeProgram(true)
-    check(program.findStr("const std::vector<int> x = { 1 , 2 , -3 } ;"))
+    check(program.findStr("std::vector<int> x = ( std::vector<int> ) { 1 , 2 , -3 } ;"))
     check(program.findStr("ka23::tail ( x ) ;"))
 
 suite "last":
   test "array int x = {1, 2} print(x |> last())":
     initTables()
     let program = "array int x = {1, 2} x |> last()".makeProgram(true)
-    check(program.findStr("const std::vector<int> x = { 1 , 2 } ;"))
+    check(program.findStr("std::vector<int> x = ( std::vector<int> ) { 1 , 2 } ;"))
     check(program.findStr("ka23::last ( x ) ;"))
 
 suite "init":
   test "array int x = {1, 2, -3} x |> init()":
     initTables()
     let program = "array int x = {1, 2, -3} x |> init()".makeProgram(true)
-    check(program.findStr("const std::vector<int> x = { 1 , 2 , -3 } ;"))
+    check(program.findStr("std::vector<int> x = ( std::vector<int> ) { 1 , 2 , -3 } ;"))
     check(program.findStr("ka23::init ( x ) ;"))
 
 suite "toString":
   test "string a = toString(10)":
     initTables()
     let program = "string a = toString(10)".makeProgram(true)
-    check(program.findStr("const std::string a = ka23::toString ( 10 ) ;"))
+    check(program.findStr("std::string a = ka23::toString ( 10 ) ;"))
   test "string a = toString(True)":
     initTables()
     let program = "string a = toString(True)".makeProgram(true)
-    check(program.findStr("const std::string a = ka23::toString ( true ) ;"))
+    check(program.findStr("std::string a = ka23::toString ( true ) ;"))
 
 suite "map":
   test "map({1, 2, 3}, plus(1))":
     initTables()
     let program = "map({1, 2, 3}, plus(1))".makeProgram(true)
-    check(program.findStr("ka23::map ( { 1 , 2 , 3 } , [] ( int _i ) { return ka23::plus ( _i , 1 ) ; } ) ;"))
+    check(program.findStr("ka23::map ( ( std::vector<int> ) { 1 , 2 , 3 } , [] ( int _i ) { return ka23::plus ( _i , 1 ) ; } ) ;"))
   test "array int a = {1, 2, 3} map(a, plus(1))":
     initTables()
     let program = "array int a = {1, 2, 3} map(a, plus(1))".makeProgram(true)
-    check(program.findStr("std::vector<int> a = { 1 , 2 , 3 } ;"))
+    check(program.findStr("std::vector<int> a = ( std::vector<int> ) { 1 , 2 , 3 } ;"))
     check(program.findStr("ka23::map ( a , [] ( int _i ) { return ka23::plus ( _i , 1 ) ; } ) ;"))
 
 # suite "area":

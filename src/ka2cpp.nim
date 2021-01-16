@@ -127,7 +127,7 @@ proc typeMatch(type1: string, type2: string): (bool, string) =
         elif t1sss.contains("*"):
           var head = t1sss.split("*")[0]
           if t2ss.startsWith(head):
-            typeCandidacies.add(t1sss)
+            typeCandidacies.add(t2ss)
     if typeCandidacies != @[]:
       typeFlow.add(typeCandidacies.join("|"))
       typeCandidacies = @[]
