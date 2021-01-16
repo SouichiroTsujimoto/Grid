@@ -666,6 +666,22 @@ proc parseMutStatement(p: Parser): Node =
 
   return node
 
+# later文
+proc parseLaterStatement(p: Parser): Node =
+  var node = Node(
+    kind:        nkLaterStatement,
+    token:       p.curToken,
+  )
+  p.shiftToken()
+  node.child_nodes.add(p.parseType(false))
+
+  while p.peekToken.Type == COMMA:
+    p.shiftToken()
+    p.shiftToken()
+    node.child_nodes.add(p.parseType(false))
+
+  return node
+
 proc parseType(p: Parser, init: bool): Node =
   case p.curToken.Type
   of T_INT      : return p.parseIntType(init)
@@ -757,6 +773,7 @@ proc parseStatement(p: Parser): Node =
   of FOR:          return p.parseForStatement()
   of IF:           return p.parseIfStatement()
   of MUT:          return p.parseMutStatement()
+  of LATER:        return p.parseLaterStatement()
   else:            return p.parseExpressionStatement()
 
 # ASTを作る

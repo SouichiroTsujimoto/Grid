@@ -56,8 +56,6 @@ const
   TRUE*         = "TRUE"
   FALSE*        = "FALSE"
   NIL*          = "NIL"
-  LET*          = "LET"
-  VAR*          = "VAR"
   MAIN*         = "MAIN"
   DEFINE*       = "DEFINE"
   RETURN*       = "RETURN"
@@ -67,6 +65,7 @@ const
   ELSE*         = "ELSE"
   DO*           = "DO"
   END*          = "END"
+  LATER*        = "LATER"
   MUT*          = "MUT"
   AREA*         = "AREA"
   # 型
@@ -88,8 +87,6 @@ let keywords = {
   "True"      : TRUE,
   "False"     : FALSE,
   "Nil"       : NIL,
-  "let"       : LET,
-  "var"       : VAR,
   "main"      : MAIN,
   "def"       : DEFINE,
   "return"    : RETURN,
@@ -102,6 +99,7 @@ let keywords = {
   "map"       : MAP,
   "for"       : FOR,
   "mut"       : MUT,
+  "later"     : LATER,
   "int"       : T_INT,
   "float"     : T_FLOAT,
   "char"      : T_CHAR,

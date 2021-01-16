@@ -4,8 +4,9 @@ def int a(int b) do
 end
 
 main do
-  int hoge = 10
-  mut int f = 10, string r = "3232" do
-    
+  later int x
+  if True do
+    x = 10
   end
+  x |> toString() |> print()
 end

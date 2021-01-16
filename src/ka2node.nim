@@ -44,6 +44,7 @@ type
     nkElifStatement
     nkElseStatement
     nkMutStatement
+    nkLaterStatement
     nkPipeExpression
     nkAccessElement
 
