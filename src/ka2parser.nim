@@ -671,14 +671,25 @@ proc parseForArea(p: Parser): Node =
 
 # TODO ここでエリア文パース
 proc parseArea(p: Parser): Node =
-  var node = Node()
+  var node: Node
+  var var_flag = false
+  var var_node: Node
+  p.shiftToken()
+
+  if p.curToken.Type != LBRACKET:
+    var_flag = true
+    var_node = p.parseType(false)
+    p.shiftToken()
+
+  if p.curToken.Type != LBRACKET:
+    echoErrorMessage("\"[\"が見つかりません", false, p.curToken.Line)
   p.shiftToken()
 
   var area_name = p.curToken
   p.shiftToken()
-  
-  if p.curToken.Type != LBRACKET:
-    echoErrorMessage("\"[\"が見つかりません", false, p.curToken.Line)
+
+  if p.curToken.Type != VERTICAL:
+    echoErrorMessage("\"|\"が見つかりません", false, p.curToken.Line)
   
   case area_name.Type
   of MUT:
@@ -701,10 +712,8 @@ proc parseArea(p: Parser): Node =
     echoErrorMessage("\"end\"が見つかりません", false, p.curToken.Line)
   p.shiftToken()
 
-  p.shiftToken()
-  if p.curToken.Type == RARROW:
-    p.shiftToken()
-    node.child_nodes.add(p.parseType(false))
+  if var_flag:
+    node.child_nodes.add(var_node)
 
   return node
 

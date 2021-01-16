@@ -7,11 +7,9 @@ int a ( int b ) {
 int main ( int argc , char *argv[] ) {
   const int hoge = 10 ;
   const int f = [&] {
-    int v = 0 ;
+    std::vector<int> v = ( std::vector<int> ) { 0 } ;
     int x = 10 ;
-    v = ( 30 + x ) ;
-    ka23::println ( ka23::toString ( v ) ) ;
-    return ( v ) ;
+    return ( ( v [ 0 ] + x ) ) ;
   } () ;
   ka23::println ( ka23::toString ( f ) ) ;
 }

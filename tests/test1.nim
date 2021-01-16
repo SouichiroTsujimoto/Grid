@@ -456,3 +456,6 @@ suite "map":
     let program = "array int a = {1, 2, 3} map(a, plus(1))".makeProgram(true)
     check(program.findStr("std::vector<int> a = { 1 , 2 , 3 } ;"))
     check(program.findStr("ka23::map ( a , [] ( int _i ) { return ka23::plus ( _i , 1 ) ; } ) ;"))
+
+# suite "area":
+  

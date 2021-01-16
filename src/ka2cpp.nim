@@ -9,7 +9,7 @@ type codeParts = tuple
 
 type IdentInfo* = ref object of RootObj
   Type*:        string
-  contents*:    seq[codeParts]
+  init*:        bool
   path:         int
   mutable*:     bool
   used*:        bool
@@ -490,7 +490,7 @@ proc makeVarDefine(node: Node, var_name: string, type_cp: codeParts, value: seq[
   code.addSemicolon()
   IdentInfo(
     Type:     codeType,
-    contents: value,
+    init:     true,
     path:     nesting,
     mutable:  mutable,
     used:     false,
@@ -722,71 +722,6 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
         echoErrorMessage("定義されていない名前です", test, node.token.Line)
       code.add((ic[1], ic[2]))
       codeType = ic[1]
-  
-  # let文
-  # of nkLetStatement:
-  #   if node.child_nodes.len() == 2:
-  #     let li = node.child_nodes[0].makeCodeParts(test, dost)
-  #     let lv = node.child_nodes[1].makeCodeParts(test, dost)
-  #     if li[1] == lv[1]:
-  #       if identExistenceCheck(li[0][1][1]):
-  #         echoErrorMessage("既に定義されています", test, node.token.Line)
-  #       code.add(li[0])
-  #       code.add((OTHER, "="))
-  #       code.add(lv[0])
-  #       code.addSemicolon()
-  #       identTable[li[0][1][1]] = IdentInfo(
-  #         Type:     li[1],
-  #         contents: lv[0],
-  #         path:     nesting,
-  #         mutable:  false,
-  #         used:     false,
-  #       )
-  #       addScopeTable(li[0][1][1], nesting)
-  #     else:
-  #       echoErrorMessage("指定している型と値の型が違います", test, node.token.Line)
-  #   else:
-  #     echoErrorMessage("不明なエラー", test, node.token.Line)
-  
-  # var文
-  # of nkVarStatement:
-    # if node.child_nodes.len() == 1:
-    #   let li = node.child_nodes[0].makeCodeParts(test, dost)
-    #   if identExistenceCheck(li[0][1][1]):
-    #     echoErrorMessage("既に定義されています", test, node.token.Line)
-    #   else:
-    #     code.add(li[0])
-    #     code.addSemicolon()
-    #     identTable[li[0][1][1]] = IdentInfo(
-    #       Type:     li[1],
-    #       contents: @[],
-    #       path:     nesting,
-    #       mutable:  true,
-    #       used:   false,
-    #     )
-    #     addScopeTable(li[0][1][1], nesting)
-    # if node.child_nodes.len() == 2:
-    #   let li = node.child_nodes[0].makeCodeParts(test, dost)
-    #   let lv = node.child_nodes[1].makeCodeParts(test, dost)
-    #   if li[1] == lv[1]:
-    #     if identExistenceCheck(li[0][1][1]):
-    #       echoErrorMessage("既に定義されています", test, node.token.Line)
-    #     code.add(li[0])
-    #     code.add((OTHER, "="))
-    #     code.add(lv[0])
-    #     code.addSemicolon()
-    #     identTable[li[0][1][1]] = IdentInfo(
-    #       Type:     li[1],
-    #       contents: lv[0],
-    #       path:     nesting,
-    #       mutable:  true,
-    #       used:     false,
-    #     )
-    #     addScopeTable(li[0][1][1], nesting)
-    #   else:
-    #     echoErrorMessage("指定している型と値の型が違います", test, node.token.Line)
-    # else:
-    #   echoErrorMessage("不明なエラー", test, node.token.Line)
 
   # main文
   of nkMainStatement:
@@ -1062,18 +997,17 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
       lmc = l[0][l[0].len()-1].Code
       if lmc == ";":
         lmc = l[0][l[0].len()-2].Code
-      if identExistenceCheck(lmc):
-        if identTable[lmc].mutable == false:
-          echoErrorMessage("代入しようとしている変数がイミュータブルです", test, node.token.Line)
-      else:
+
+      if identExistenceCheck(lmc) == false:
         echoErrorMessage("定義されていない名前です", test, node.token.Line)
+      elif identTable[lmc].mutable == false:
+        echoErrorMessage("代入しようとしている変数がイミュータブルです", test, node.token.Line)
       code.add(l[0].replaceSemicolon(@[(OTHER, "")]))
       lt = l[1]
 
       code.add((OTHER, "="))
       let r = node.child_nodes[1].makeCodeParts(test, dost)
       code.add(r[0])
-      identTable[lmc].contents = r[0]
       rt = r[1]
     else:
       echoErrorMessage("オペランドがありません", test, node.token.Line)
@@ -1265,16 +1199,16 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
       if statement.kind == nkExportStatement:
         export_flag = true
         let st = statement.makeCodeParts(test, new_dost)
-        if typeMatch(st[1], var_cp[1])[0]:
+        if var_flag == false:
+          echoErrorMessage("変数宣言がありません", test, node.token.Line)
+        elif typeMatch(st[1], var_cp[1])[0]:
           code.add(st[0])
         else:
           echoErrorMessage("指定している型と返り値の型が違います", test, node.token.Line)
       else:
         code.add(statement.makeCodeParts(test, new_dost)[0])
     
-    if export_flag == true and var_flag == false:
-      echoErrorMessage("変数宣言がありません", test, node.token.Line)
-    elif export_flag == false and var_flag == true:
+    if export_flag == false and var_flag == true:
       # TODO 警告メッセージを作る
       code.add((RETURN, "return"))
       code.add(makeInitValue(var_cp[1]))
