@@ -6,10 +6,9 @@ int a ( int b ) {
 }
 int main ( int argc , char *argv[] ) {
   const int hoge = 10 ;
-  const int f = [&] {
-    std::vector<int> v = ( std::vector<int> ) { 0 } ;
-    int x = 10 ;
-    return ( ( v [ 0 ] + x ) ) ;
-  } () ;
-  ka23::println ( ka23::toString ( f ) ) ;
+  {
+    int f = 10 ;
+    std::string r = "3232" ;
+    f = 20 ;
+  }
 }

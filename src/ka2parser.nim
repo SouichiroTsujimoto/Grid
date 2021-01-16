@@ -80,17 +80,6 @@ proc parseReturnStatement(p: Parser): Node =
   node.child_nodes.add(p.parseExpression(Lowest))
   return node
 
-# export文
-proc parseExportStatement(p: Parser): Node =
-  var node = Node(
-    kind:        nkExportStatement,
-    token:       p.curToken,
-    child_nodes: @[],
-  )
-  p.shiftToken()
-  node.child_nodes.add(p.parseExpression(Lowest))
-  return node
-
 # コメント
 proc parseComment(p: Parser): Node =
   var node = Node(
@@ -646,9 +635,10 @@ proc parseAccessElement(p: Parser, left: Node): Node =
   else:
     echoErrorMessage("'['が閉じられていません", false, p.curToken.Line)
 
-proc parseMutArea(p: Parser): Node =
+# mut文
+proc parseMutStatement(p: Parser): Node =
   var node = Node(
-    kind:        nkMutArea,
+    kind:        nkMutStatement,
     token:       p.curToken,
     child_nodes: @[Node(
       kind:        nkArgs,
@@ -663,47 +653,9 @@ proc parseMutArea(p: Parser): Node =
     p.shiftToken()
     p.shiftToken()
     node.child_nodes[0].child_nodes.add(p.parseType(true))
-
-  return node
-
-proc parseForArea(p: Parser): Node =
-  return Node()
-
-# TODO ここでエリア文パース
-proc parseArea(p: Parser): Node =
-  var node: Node
-  var var_flag = false
-  var var_node: Node
-  p.shiftToken()
-
-  if p.curToken.Type != LBRACKET:
-    var_flag = true
-    var_node = p.parseType(false)
-    p.shiftToken()
-
-  if p.curToken.Type != LBRACKET:
-    echoErrorMessage("\"[\"が見つかりません", false, p.curToken.Line)
-  p.shiftToken()
-
-  var area_name = p.curToken
-  p.shiftToken()
-
-  if p.curToken.Type != VERTICAL:
-    echoErrorMessage("\"|\"が見つかりません", false, p.curToken.Line)
   
-  case area_name.Type
-  of MUT:
-    node = p.parseMutArea()
-  of FOR:
-    node = p.parseForArea()
-  else:
-    echoErrorMessage("存在しないエリア名です", false, p.curToken.Line)
-
   p.shiftToken()
-  if p.curToken.Type != RBRACKET:
-    echoErrorMessage("\"]\"が見つかりません", false, p.curToken.Line)
-  p.shiftToken()
-
+  
   if p.curToken.Type != DO:
     echoErrorMessage("\"do\"が見つかりません", false, p.curToken.Line)
 
@@ -711,9 +663,6 @@ proc parseArea(p: Parser): Node =
   if p.peekToken.Type != END:
     echoErrorMessage("\"end\"が見つかりません", false, p.curToken.Line)
   p.shiftToken()
-
-  if var_flag:
-    node.child_nodes.add(var_node)
 
   return node
 
@@ -734,7 +683,6 @@ proc parseExpression(p: Parser, precedence: Precedence): Node =
   of IFEX       : left = p.parseIfExpression()
   of MAP        : left = p.parseMapFunction()
   of RETURN     : left = p.parseReturnStatement()
-  of EXPORT     : left = p.parseExportStatement()
   of IDENT      : left = p.parseIdent()
   of INT        : left = p.parseIntLiteral()
   of FLOAT      : left = p.parseFloatLiteral()
@@ -808,7 +756,7 @@ proc parseStatement(p: Parser): Node =
   of DEFINE:       return p.parseDefineStatement()
   of FOR:          return p.parseForStatement()
   of IF:           return p.parseIfStatement()
-  of AREA:         return p.parseArea()
+  of MUT:          return p.parseMutStatement()
   else:            return p.parseExpressionStatement()
 
 # ASTを作る

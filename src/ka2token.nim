@@ -61,7 +61,6 @@ const
   MAIN*         = "MAIN"
   DEFINE*       = "DEFINE"
   RETURN*       = "RETURN"
-  EXPORT*       = "EXPORT"
   IF*           = "IF"
   IFEX*         = "IFEX"
   ELIF*         = "ELIF"
@@ -94,7 +93,6 @@ let keywords = {
   "main"      : MAIN,
   "def"       : DEFINE,
   "return"    : RETURN,
-  "export"    : EXPORT,
   "if"        : IF,
   "ifex"      : IFEX,
   "elif"      : ELIF,
@@ -104,7 +102,6 @@ let keywords = {
   "map"       : MAP,
   "for"       : FOR,
   "mut"       : MUT,
-  "area"      : AREA,
   "int"       : T_INT,
   "float"     : T_FLOAT,
   "char"      : T_CHAR,

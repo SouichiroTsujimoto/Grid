@@ -43,8 +43,7 @@ type
     nkIfStatement
     nkElifStatement
     nkElseStatement
-    nkArea
-    nkMutArea
+    nkMutStatement
     nkPipeExpression
     nkAccessElement
 

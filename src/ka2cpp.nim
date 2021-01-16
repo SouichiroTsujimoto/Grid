@@ -893,21 +893,6 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
     code.addSemicolon()
     codeType = r[1]
   
-  # return文
-  of nkExportStatement:
-    if dost == false:
-      echoErrorMessage("文の外でexport文を使用することはできません", test, node.token.Line)
-    if node.child_nodes == @[]:
-      echoErrorMessage("式がありません", test, node.token.Line)
-    
-    code.add((OTHER, "return"))
-    code.add((OTHER, "("))
-    let r = node.child_nodes[0].makeCodeParts(test, dost)
-    code.add(r[0].replaceSemicolon(@[(OTHER, "")]))
-    code.add((OTHER, ")"))
-    code.addSemicolon()
-    codeType = r[1]
-  
   # 中置
   of nkInfixExpression:
     if dost == false:
@@ -1157,31 +1142,14 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
     codeType = array_type
 
   # TODO mutエリア
-  of nkMutArea:
+  of nkMutStatement:
     if dost == false:
-      echoErrorMessage("文の外でarea文を使用することはできません", test, node.token.Line)
+      echoErrorMessage("文の外でmut文を使用することはできません", test, node.token.Line)
     var new_dost = true
-
-    var var_cp: (seq[codeParts], string)
-    var var_flag = false
-
-    if node.child_nodes.len() == 3:
-      var_flag = true
-      code.add((OTHER, "const"))
-      var_cp = node.child_nodes[2].makeCodeParts(test, new_dost)
-      IdentInfo(
-        Type:     var_cp[1],
-        path:     nesting,
-        mutable:  false,
-        used:     false,
-      ).addTable(var_cp[0][1].Code, nesting)
-      code.add(var_cp[0])
-      code.add((OTHER, "="))
 
     var original_nesting = nesting
     nesting = nesting + 1
 
-    code.add((OTHER, "[&]"))
     code.add((OTHER, "{"))
     for statement in node.child_nodes[0].child_nodes:
       var type_cp = statement.token.Type.conversionCppType()
@@ -1194,29 +1162,14 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
       else:
         echoErrorMessage("指定している型と値の型が違います", test, node.token.Line)
     
-    var export_flag = false
     for statement in node.child_nodes[1].child_nodes:
-      if statement.kind == nkExportStatement:
-        export_flag = true
-        let st = statement.makeCodeParts(test, new_dost)
-        if var_flag == false:
-          echoErrorMessage("変数宣言がありません", test, node.token.Line)
-        elif typeMatch(st[1], var_cp[1])[0]:
-          code.add(st[0])
-        else:
-          echoErrorMessage("指定している型と返り値の型が違います", test, node.token.Line)
-      else:
-        code.add(statement.makeCodeParts(test, new_dost)[0])
+      code.add(statement.makeCodeParts(test, new_dost)[0])
     
-    if export_flag == false and var_flag == true:
-      # TODO 警告メッセージを作る
-      code.add((RETURN, "return"))
-      code.add(makeInitValue(var_cp[1]))
-      code.addSemicolon()
-
-    code.add((OTHER, "} () ;"))
+    code.add((OTHER, "}"))
 
     nesting = original_nesting
+    code.add(deleteScope(nesting, test))
+    # codeType = sr[1]
 
   # if文
   of nkIfStatement:

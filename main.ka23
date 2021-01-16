@@ -5,8 +5,7 @@ end
 
 main do
   int hoge = 10
-  area int f [mut|array int v = {0}, int x = 10] do
-    export v[0] + x
+  mut int f = 10, string r = "3232" do
+    
   end
-  println(toString(f))
 end
