@@ -1053,19 +1053,19 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
     if dost == false:
       echoErrorMessage("文の外で関数を呼び出すことはできません", test, node.token.Line)
 
-    if node.child_nodes[0].child_nodes.len() != 2:
+    if node.child_nodes[1].child_nodes.len() != 2:
       echoErrorMessage("引数の数が合いません", test, node.token.Line)
-    elif node.child_nodes[0].child_nodes[1].kind != nkCallExpression:
+    elif node.child_nodes[1].child_nodes[1].kind != nkCallExpression:
       echoErrorMessage("第二引数が正しくありません", test, node.token.Line)
 
-    let func_name = node.child_nodes[0].child_nodes[1].child_nodes[0].token.Literal
+    let func_name = node.child_nodes[1].child_nodes[1].child_nodes[0].token.Literal
     var cpp_func_name = ""
     var func_result_type = ""
-    let array_CandT = node.child_nodes[0].child_nodes[0].makeCodeParts(test, dost)
+    let array_CandT = node.child_nodes[1].child_nodes[0].makeCodeParts(test, dost)
     let array_content = array_CandT[0].replaceSemicolon(@[(OTHER, "")])
     let array_type = array_CandT[1]
     let array_type_split = array_type.split("::")
-    var fn = node.child_nodes[0].child_nodes[1]
+    var fn = node.child_nodes[1].child_nodes[1]
     
     var func_arg_types: seq[string]
     for nodes in fn.child_nodes[1].child_nodes:
@@ -1146,7 +1146,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
     code.add(deleteScope(nesting, test))
     codeType = array_type
 
-  # TODO mutエリア
+  # mut文
   of nkMutStatement:
     if dost == false:
       echoErrorMessage("文の外でmut文を使用することはできません", test, node.token.Line)

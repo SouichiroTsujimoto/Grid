@@ -67,7 +67,7 @@ const
   END*          = "END"
   LATER*        = "LATER"
   MUT*          = "MUT"
-  AREA*         = "AREA"
+  IMPORT*       = "IMPORT"
   # 型
   T_INT*        = "T_INT"
   T_FLOAT*      = "T_FLOAT"
@@ -100,6 +100,7 @@ let keywords = {
   "for"       : FOR,
   "mut"       : MUT,
   "later"     : LATER,
+  "import"    : IMPORT,
   "int"       : T_INT,
   "float"     : T_FLOAT,
   "char"      : T_CHAR,

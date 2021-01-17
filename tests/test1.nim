@@ -457,5 +457,8 @@ suite "map":
     check(program.findStr("std::vector<int> a = ( std::vector<int> ) { 1 , 2 , 3 } ;"))
     check(program.findStr("ka23::map ( a , [] ( int _i ) { return ka23::plus ( _i , 1 ) ; } ) ;"))
 
-# suite "area":
+# suite "mut":
+  
+
+# suite "later":
   

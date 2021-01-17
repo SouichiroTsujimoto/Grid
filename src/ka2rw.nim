@@ -225,8 +225,7 @@ proc readSource*(name: string): string =
       os.createDir("ka2lib")
     
     if os.existsFile("ka2lib/ka2funcs.h") == false:
-      echo "ファイル作ります"
-      var f: File = open("ka2lib/ka2funcs.h" ,FileMode.fmWrite)
+      var f: File = open("ka2lib/ka2funcs.cpp" ,FileMode.fmWrite)
       defer: close(f)
       f.write(funcs_code)
 

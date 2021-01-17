@@ -80,6 +80,31 @@ proc parseReturnStatement(p: Parser): Node =
   node.child_nodes.add(p.parseExpression(Lowest))
   return node
 
+proc parseFilePath(p: Parser): Node =
+  var node = Node(
+    kind:        nkFilePath,
+    token:       p.curToken,
+    child_nodes: @[],
+  )
+
+  if p.curToken.Type != STRING:
+    echoErrorMessage("ファイルパスが文字列リテラルではありません", false, p.curToken.Line)
+  
+  return node
+
+# TODO import
+proc parseImport(p: Parser): Node =
+  var node = Node(
+    kind:        nkImport,
+    token:       p.curToken,
+    child_nodes: @[],
+  )
+  
+  p.shiftToken()
+  node.child_nodes.add(p.parseFilePath())
+
+  return node
+
 # コメント
 proc parseComment(p: Parser): Node =
   var node = Node(
@@ -118,17 +143,11 @@ proc parseMainStatement(p: Parser): Node =
   return node
 
 # map関数
-proc parseMapFunction(p: Parser): Node =
-  var node = Node(
-    kind:  nkMapFunction,
+proc parseMapIdent(p: Parser): Node =
+  let node = Node(
+    kind:  nkMapIdent,
     token: p.curToken,
-    child_nodes: @[],
   )
-  p.shiftToken()
-  node.child_nodes.add(p.parseNodes(RPAREN))
-  if p.curToken.Type != RPAREN:
-    echoErrorMessage("'('が閉じられていません", false, p.curToken.Line)
-
   return node
 
 # def文
@@ -262,12 +281,22 @@ proc parseNameProc(p: Parser, endToken: string): Node =
 
 # 関数呼び出しの処理
 proc parseCallExpression(p: Parser, left: Node): Node =
-  var node = Node(
-    kind:  nkCallExpression,
-    token: p.curToken,
-    child_nodes: @[left, p.parseNodes(RPAREN)],
-  )
-  return node
+  if left.kind == nkIdent:
+    var node = Node(
+      kind:  nkCallExpression,
+      token: p.curToken,
+      child_nodes: @[left, p.parseNodes(RPAREN)],
+    )
+    return node
+  elif left.kind == nkMapIdent:
+    var node = Node(
+      kind:  nkMapFunction,
+      token: p.curToken,
+      child_nodes: @[left, p.parseNodes(RPAREN)],
+    )
+    return node
+  else:
+    echoErrorMessage("無効な関数呼び出しです", false, p.curToken.Line)
 
 # 名前
 proc parseIdent(p: Parser): Node =
@@ -697,8 +726,8 @@ proc parseExpression(p: Parser, precedence: Precedence): Node =
   var left: Node
   case p.curToken.Type
   of IFEX       : left = p.parseIfExpression()
-  of MAP        : left = p.parseMapFunction()
   of RETURN     : left = p.parseReturnStatement()
+  of MAP        : left = p.parseMapIdent()
   of IDENT      : left = p.parseIdent()
   of INT        : left = p.parseIntLiteral()
   of FLOAT      : left = p.parseFloatLiteral()
@@ -767,6 +796,7 @@ proc parseStatement(p: Parser): Node =
   case p.curToken.Type
   # of LET:    return p.parseLetStatement()
   # of VAR:    return p.parseVarStatement()
+  of IMPORT:       return p.parseImport()
   of COMMENTBEGIN: return p.parseComment()
   of MAIN:         return p.parseMainStatement()
   of DEFINE:       return p.parseDefineStatement()

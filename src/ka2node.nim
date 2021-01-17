@@ -5,10 +5,13 @@ type
     nkRoot
     nkNil
     nkDo
+    nkImport
+    nkFilePath
     nkComment
     nkArgs
     nkStatementArgs
     nkIdent
+    nkMapIdent
     nkNilLiteral
     nkIntLiteral
     nkFloatLiteral

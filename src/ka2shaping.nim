@@ -1,4 +1,5 @@
 import ka2token, ka2node, ka2token, ka2error, ka2show
+import strutils, os, times
 
 proc makeNewNode(inp_node: Node, main_flag: bool, test: bool): (Node, bool)
 
@@ -49,17 +50,19 @@ proc astShaping*(inp_nodes: seq[Node], main_flag: bool, test: bool): (seq[Node],
         child_nodes: @[main_type, main_args] & res[0],
       )
       out_nodes.add(new_node)
+    # # import文
+    # of nkImport:
+    #   if os.existsFile(inp_node.child_nodes[0].token.Literal):
+        
+    #   else:
+    #     echoErrorMessage("\"" & inp_node.child_nodes[0].token.Literal & "\"が存在しません", test, inp_node.token.Line)
     # パイプライン演算子を前置記法の関数の形に変形
     of nkPipeExpression:
       if inp_node.child_nodes.len() != 2:
         var new_node = makeNewNode(inp_node, new_main_flag, test)
         new_main_flag = new_node[1]
         out_nodes.add(new_node[0])
-      elif inp_node.child_nodes[1].kind != nkCallExpression:
-        var new_node = makeNewNode(inp_node, new_main_flag, test)
-        new_main_flag = new_node[1]
-        out_nodes.add(new_node[0])
-      else:
+      elif inp_node.child_nodes[1].kind == nkCallExpression or inp_node.child_nodes[1].kind == nkMapFunction:
         var res0 = @[inp_node.child_nodes[0]].astShaping(new_main_flag, test)
         let element = res0[0]
         new_main_flag = res0[1]
@@ -74,6 +77,10 @@ proc astShaping*(inp_nodes: seq[Node], main_flag: bool, test: bool): (seq[Node],
           child_nodes: function[0].child_nodes,
         )
         out_nodes.add(new_node)
+      else:
+        var new_node = makeNewNode(inp_node, new_main_flag, test)
+        new_main_flag = new_node[1]
+        out_nodes.add(new_node[0])
     else:
       var new_node = makeNewNode(inp_node, new_main_flag, test)
       new_main_flag = new_node[1]

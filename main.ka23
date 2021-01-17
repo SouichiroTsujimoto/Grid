@@ -1,3 +1,9 @@
 main do
-  map({1, 2, 3}, plus(1))
+  array int hairetsu = {1, 2, 3}
+
+  {1, 2, 3} |> map(plus(1))    |> last() |> toString() |> println()
+  {1, 2, 3} |> join({4, 5, 6}) |> last() |> toString() |> println()
+  {1, 2, 3} |> tail()          |> last() |> toString() |> println()
+  {1, 2, 3} |> init()          |> last() |> toString() |> println()
+  {1, 2, 3} |> len()                     |> toString() |> println()
 end
