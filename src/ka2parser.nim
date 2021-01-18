@@ -105,6 +105,19 @@ proc parseImport(p: Parser): Node =
 
   return node
 
+# TODO include
+proc parseInclude(p: Parser): Node =
+  var node = Node(
+    kind:        nkInclude,
+    token:       p.curToken,
+    child_nodes: @[],
+  )
+  
+  p.shiftToken()
+  node.child_nodes.add(p.parseFilePath())
+
+  return node
+
 # コメント
 proc parseComment(p: Parser): Node =
   var node = Node(
@@ -797,6 +810,7 @@ proc parseStatement(p: Parser): Node =
   # of LET:    return p.parseLetStatement()
   # of VAR:    return p.parseVarStatement()
   of IMPORT:       return p.parseImport()
+  of INCLUDE:      return p.parseInclude()
   of COMMENTBEGIN: return p.parseComment()
   of MAIN:         return p.parseMainStatement()
   of DEFINE:       return p.parseDefineStatement()

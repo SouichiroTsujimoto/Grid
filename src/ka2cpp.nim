@@ -1,5 +1,5 @@
 import ka2token, ka2node, ka2token, ka2error, ka2show
-import strutils, tables
+import strutils, tables, os
 
 #------↓仮↓------
 

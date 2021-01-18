@@ -1,5 +1,4 @@
 import ka2token, ka2node, ka2token, ka2error, ka2show
-import strutils, os, times
 
 proc makeNewNode(inp_node: Node, main_flag: bool, test: bool): (Node, bool)
 
@@ -50,12 +49,7 @@ proc astShaping*(inp_nodes: seq[Node], main_flag: bool, test: bool): (seq[Node],
         child_nodes: @[main_type, main_args] & res[0],
       )
       out_nodes.add(new_node)
-    # # import文
-    # of nkImport:
-    #   if os.existsFile(inp_node.child_nodes[0].token.Literal):
-        
-    #   else:
-    #     echoErrorMessage("\"" & inp_node.child_nodes[0].token.Literal & "\"が存在しません", test, inp_node.token.Line)
+
     # パイプライン演算子を前置記法の関数の形に変形
     of nkPipeExpression:
       if inp_node.child_nodes.len() != 2:

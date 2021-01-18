@@ -1,3 +1,5 @@
+#include Hello.ka23
+
 main do
   array int hairetsu = {1, 2, 3}
 

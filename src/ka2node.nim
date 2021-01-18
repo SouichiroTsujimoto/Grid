@@ -6,6 +6,7 @@ type
     nkNil
     nkDo
     nkImport
+    nkInclude
     nkFilePath
     nkComment
     nkArgs

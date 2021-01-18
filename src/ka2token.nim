@@ -68,6 +68,7 @@ const
   LATER*        = "LATER"
   MUT*          = "MUT"
   IMPORT*       = "IMPORT"
+  INCLUDE*      = "INCLUDE"
   # 型
   T_INT*        = "T_INT"
   T_FLOAT*      = "T_FLOAT"
@@ -101,6 +102,7 @@ let keywords = {
   "mut"       : MUT,
   "later"     : LATER,
   "import"    : IMPORT,
+  "include"   : INCLUDE,
   "int"       : T_INT,
   "float"     : T_FLOAT,
   "char"      : T_CHAR,

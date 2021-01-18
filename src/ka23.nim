@@ -1,4 +1,4 @@
-import  ka2parser, ka2rw, ka2node, ka2cpp, ka2shaping, ka2show, ka2error, ka2token
+import  ka2parser, ka2rw, ka2node, ka2cpp, ka2shaping, ka2show, ka2error, ka2token, ka2preprocessor
 import strutils, system, os
 
 var cppCode = """
@@ -18,39 +18,58 @@ when isMainModule:
     test = false
     ast = false
     lang: Lang = JP
+    filename = ""
+    peekParam = ""
+    skip_flag = false
 
   # コマンドライン引数の処理
-  for param in os.commandLineParams():
+  for i, param in os.commandLineParams():
+    if i != os.paramCount()-1:
+      peekParam = os.commandLineParams()[i+1]
+    else:
+      peekParam = "EOP"
+
+    if skip_flag:
+      skip_flag = false
+      continue
+
     if param[0] == '-':
-      options.add(param[1..param.len()-1])
+      case param
+      of "-ast":
+        ast = true
+      of "-en":
+        lang = EN
+      of "-jp":
+        lang = JP
+      of "-o":
+        if peekParam != "EOP":
+          filename = param
+          skip_flag = true
+        else:
+          echoErrorMessage("\"-o\"の後にファイル名が指定されていません", false, -1)
+      else:
+        echoErrorMessage("無効なオプションが含まれています", false, -1)
     elif sourceName == "":
       sourceName = param
     else:
       echoErrorMessage("無効なコマンドライン引数が含まれています", false, -1)
-  
-  # オプション
-  for option in options:
-    case option
-    of "ast":
-      ast = true
-    of "en":
-      lang = EN
-    of "jp":
-      lang = JP
-    else:
-      echoErrorMessage("無効なオプションが含まれています", false, -1)
 
-  # ソースファイル
   if sourceName == "":
     echo "ファイル名を入力してください"
     sourceName = readLine(stdin)
+  
+  var cppFileName = ""
+  if filename == "":
+    cppFileName = sourceName.split(".")[0] & ".cpp"
   else:
-    sourceName = os.commandLineParams()[0]
+    cppFileName = filename
 
   # AST作成してC++を出力
   var
-    input = sourceName.readSource()
-    asts = makeAST(input)
+    input  = sourceName.readSource()
+    prepro = input.preprocess()
+
+  var asts   = prepro.makeAST()
 
   (asts, main_flag) = astShaping(asts, main_flag, test)
   var root = Node(
@@ -67,10 +86,7 @@ when isMainModule:
   
   cppCode.add(makeCppCode(root, 0, test))
 
-  let cppFileName = sourceName.split(".")[0] & ".cpp"
-  
   writeCpp(cppFileName, cppCode)
-
 
 #[
   TODO
