@@ -14,10 +14,17 @@ type IdentInfo* = ref object of RootObj
   mutable*:     bool
   used*:        bool
 
+type TypeInfo* = ref object of RootObj
+  Type*:        string
+  path:         int
+  mutable*:     bool
+  used*:        bool
+
 var
   #                      ↓名前    ↓情報
   identTable = initTable[string, IdentInfo]()
-  #                      ↓ネストの深さ   ↓そのスコープに含まれる変数名の配列
+  typeTable  = initTable[string, TypeInfo]()
+  #                      ↓ネストの深さ  ↓そのスコープに含まれる変数名と型名の配列
   scopeTable = initTable[int,         seq[string]]()
   nesting = 0
 
@@ -50,20 +57,34 @@ proc addSemicolon(parts: var seq[codeParts]) =
   if tail.Type != SEMICOLON:
     parts.add((SEMICOLON, ";"))
 
-proc addTable(info: IdentInfo, ident: string, n: int) =
-  identTable[ident] = info
+proc identRegistration(info: IdentInfo, ident_name: string, n: int) =
+  identTable[ident_name] = info
 
   if scopeTable.contains(n):
     var flag = false
     for element in scopeTable[n]:
-      if element == ident:
+      if element == ident_name:
         flag = true
     # まだ登録されていなければ追加する
     if flag == false:
-      scopeTable[n].add(ident)
+      scopeTable[n].add(ident_name)
   else:
-    scopeTable[n] = @[ident]
+    scopeTable[n] = @[ident_name]
   
+proc typeRegistration(info: TypeInfo, type_name: string, n: int) =
+  typeTable[type_name] = info
+
+  if scopeTable.contains(n):
+    var flag = false
+    for element in scopeTable[n]:
+      if element == type_name:
+        flag = true
+    # まだ登録されていなければ追加する
+    if flag == false:
+      scopeTable[n].add(type_name)
+  else:
+    scopeTable[n] = @[type_name]
+
 proc deleteScope(n: int, test: bool): seq[codeParts] =
   if scopeTable.len()-1 > n:
     var new_scopeTable = initTable[int, seq[string]]()
@@ -90,93 +111,83 @@ proc identExistenceCheck(ident: string): bool =
   
   return false
 
-proc arrayingTypes(types: string): seq[seq[string]] =
+# 返り値1: マッチ結果, 返り値2: 型変数の値の配列
+proc typePartMatch(type1: string, type2: string): (bool, seq[(string, string)]) =
   var
-    add_type = ""
-    bracket_count = 0
-    array1: seq[string]
-    string1: string
+    flow: seq[string]
+    match = false
+    vars: seq[(string, string)]
+    t1_bar_s = type1.split("|")
+    t1_bar_s_cc_s: seq[string]
+    t2_cc_s = type2.split("::")
 
-  for t1s in types.split("+"):
-    for t1ss in t1s.split("|"):
-      add_type = t1ss
-      if add_type.contains("["):
-        bracket_count = bracket_count + 1
-        add_type = add_type.split("[")[1]
-      if add_type.contains("]"):
-        bracket_count = bracket_count - 1
-        string1.add("ARRAY::")
-        add_type = add_type.split("]")[0]
-      
-      if bracket_count != 0:
-        for _ in @[0..bracket_count]:
-          string1.add("ARRAY::")
-      array1.add(string1 & add_type)
-      string1 = ""
+  for part in t1_bar_s:
+    t1_bar_s_cc_s = part.split("::")
+    for i, elem in t1_bar_s_cc_s:
+      match = false
+      if elem.startsWith("@"):
+        vars.add((elem, t2_cc_s[i..t2_cc_s.len()-1].join("::")))
+        flow.add(t2_cc_s[i..t2_cc_s.len()-1].join("::"))
+        match = true
+        break
+      elif elem == t2_cc_s[i]:
+        flow.add(elem)
+        match = true
+      else:
+        break
+    if match:
+      return (true, vars)
+  
+  return (false, vars)
 
-    result.add(array1)
-
-proc typeMatch(type1: string, type2: string): (bool, string) =
+# 返り値1: マッチ結果, 返り値2: 返り値の型
+proc funcTypesMatch(fn_type: string, arg_type: string): (bool, string) =
+  # 引数部と返り値部を分ける
   var
-    typeArray1: seq[seq[string]] = arrayingTypes(type1)
-    typeArray2: seq[seq[string]] = arrayingTypes(type2)
-
-  var
-    typeFlow: seq[string]
-    typeCandidacies: seq[string]
-
-  if typeArray1.len() != typeArray2.len():
-    return (false, "")
-
-  for i, t1ss in typeArray1:
-    for t2ss in typeArray2[i]:
-      for t1sss in t1ss:
-        if t1sss == t2ss:
-          typeCandidacies.add(t1sss)
-        elif t1sss.contains("*"):
-          var head = t1sss.split("*")[0]
-          if t2ss.startsWith(head):
-            typeCandidacies.add(t2ss)
-    if typeCandidacies != @[]:
-      typeFlow.add(typeCandidacies.join("|"))
-      typeCandidacies = @[]
+    fn_type_a = fn_type.split("->")[0]
+    fn_type_r = fn_type.split("->")[1]
+    fn_type_a_s = fn_type_a.split("+")
+    arg_type_s  = arg_type.split("+")
+    vars: seq[(string, string)]
+  
+  for i, ftas_part in fn_type_a_s:
+    var match_res = typePartMatch(ftas_part, arg_type_s[i])
+    if match_res[0]:
+      vars.add(match_res[1])
     else:
       return (false, "")
 
-  return (true, typeFlow.join("+"))
-
-proc funcTypeSplit(funcType: string, target: string): (bool, string, string) =
-  var fnTs = funcType.split(target)
-  if fnTs.len() == 1:
-    return (false, "", funcType)
-
-  fnTs[1] = fnTs[1..fnTs.len()-1].join(target)
-  
-  return (true, fnTs[0], fnTs[1])
-
-# [0] -> マッチしたかどうか [1] -> マッチした型 [2] -> 返り値の型
-proc funcTypesMatch(funcType: string, argType: string): (bool, string, string) =
-  var (_, flow, res) = funcType.funcTypeSplit("->")
-  var match = typeMatch(flow, argType)
-  
-  return (match[0], match[1], res)
-
-proc funcTypesMatch(funcType: string, argsType: seq[string]): (bool, string, string) =
-  var res: (bool, string, string)
-  var passedFuncType: string
-  var nextFuncType = funcType
-  for argType in argsType:
-    res = funcTypesMatch(nextFuncType, argType)
-    if res[0]:
-      passedFuncType = res[1]
-      nextFuncType = res[2]
-    else:
-      return (false, passedFuncType, nextFuncType)
-  
-  if nextFuncType.contains("+"):
-    return (false, passedFuncType, nextFuncType)
+  if fn_type_r.startsWith("@"):
+    for (name, Type) in vars:
+      if name == fn_type_r:
+        return (true, Type)
+    return (false, "")
   else:
-    return (true, passedFuncType, nextFuncType)
+    return (true, fn_type_r)
+
+# proc funcTypeSplit(funcType: string, target: string): (bool, string, string) =
+#   var fnTs = funcType.split(target)
+#   if fnTs.len() == 1:
+#     return (false, "", funcType)
+
+#   fnTs[1] = fnTs[1..fnTs.len()-1].join(target)
+  
+#   return (true, fnTs[0], fnTs[1])
+
+proc typeFilter(Type: string, filter: string): (bool, string) =
+  var ts = Type.split("|")
+  var fl = filter.split("|")
+  var results: seq[string]
+
+  for i, part in ts:
+    for f in fl:
+      if part == f:
+        results.add(part)
+  
+  if results == @[]:
+    return (false, "")
+  else:
+    return (true, results.join("|"))
 
 proc conversionCppType(Type: string): (string, string) =
   let ts = Type.split("::")
@@ -206,45 +217,95 @@ proc conversionCppOperator(fn: string, argsType: seq[string]): (bool, string, st
 
   case fn
   of PLUS:
-    let fmr1 = funcTypesMatch(number_t & "+" & number_t & "->" & number_t, argsType.join("+"))
-    let res_type = fmr1[1].split("+")[0]
-    return (fmr1[0], res_type, "+")
+    var ftm_res = funcTypesMatch("@a" & "+" & "@a" & "->" & "@a", argsType.join("+"))
+    if ftm_res[0] == false:
+      return (false, OTHER, "+")
+    var tf_res = ftm_res[1].typeFilter(number_t)
+    if tf_res[0] == false:
+      return (false, OTHER, "+")
+    
+    return (true, tf_res[1], "+")
   of MINUS:
-    let fmr1 = funcTypesMatch(number_t & "+" & number_t & "->" & number_t, argsType.join("+"))
-    let res_type = fmr1[1].split("+")[0]
-    return (fmr1[0], res_type, "-")
+    var ftm_res = funcTypesMatch("@a" & "+" & "@a" & "->" & "@a", argsType.join("+"))
+    if ftm_res[0] == false:
+      return (false, OTHER, "-")
+    var tf_res = ftm_res[1].typeFilter(number_t)
+    if tf_res[0] == false:
+      return (false, OTHER, "-")
+    
+    return (true, tf_res[1], "-")
   of ASTERISC:
-    let fmr1 = funcTypesMatch(number_t & "+" & number_t & "->" & number_t, argsType.join("+"))
-    let res_type = fmr1[1].split("+")[0]
-    return (fmr1[0], res_type, "*")
+    var ftm_res = funcTypesMatch("@a" & "+" & "@a" & "->" & "@a", argsType.join("+"))
+    if ftm_res[0] == false:
+      return (false, OTHER, "*")
+    var tf_res = ftm_res[1].typeFilter(number_t)
+    if tf_res[0] == false:
+      return (false, OTHER, "*")
+    
+    return (true, tf_res[1], "*")
   of SLASH:
-    let fmr1 = funcTypesMatch(number_t & "+" & number_t & "->" & number_t, argsType.join("+"))
-    let res_type = fmr1[1].split("+")[0]
-    return (fmr1[0], res_type, "/")
+    var ftm_res = funcTypesMatch("@a" & "+" & "@a" & "->" & "@a", argsType.join("+"))
+    if ftm_res[0] == false:
+      return (false, OTHER, "/")
+    var tf_res = ftm_res[1].typeFilter(number_t)
+    if tf_res[0] == false:
+      return (false, OTHER, "/")
+    
+    return (true, tf_res[1], "/")
   of LT:
-    let fmr1 = funcTypesMatch(anything_t & "+" & anything_t & "->" & BOOL, argsType.join("+"))
-    let res_type = BOOL
-    return (fmr1[0], res_type, "<")
+    var ftm_res = funcTypesMatch("@a" & "+" & "@a" & "->" & BOOL, argsType.join("+"))
+    if ftm_res[0] == false:
+      return (false, OTHER, "<")
+    var tf_res = ftm_res[1].typeFilter(number_t)
+    if tf_res[0] == false:
+      return (false, OTHER, "<")
+    
+    return (true, tf_res[1], "<")
   of GT:
-    let fmr1 = funcTypesMatch(anything_t & "+" & anything_t & "->" & BOOL, argsType.join("+"))
-    let res_type = BOOL
-    return (fmr1[0], res_type, ">")
+    var ftm_res = funcTypesMatch("@a" & "+" & "@a" & "->" & BOOL, argsType.join("+"))
+    if ftm_res[0] == false:
+      return (false, OTHER, ">")
+    var tf_res = ftm_res[1].typeFilter(number_t)
+    if tf_res[0] == false:
+      return (false, OTHER, ">")
+    
+    return (true, tf_res[1], ">")
   of LE:
-    let fmr1 = funcTypesMatch(anything_t & "+" & anything_t & "->" & BOOL, argsType.join("+"))
-    let res_type = BOOL
-    return (fmr1[0], res_type, "<=")
+    var ftm_res = funcTypesMatch("@a" & "+" & "@a" & "->" & BOOL, argsType.join("+"))
+    if ftm_res[0] == false:
+      return (false, OTHER, "<=")
+    var tf_res = ftm_res[1].typeFilter(number_t)
+    if tf_res[0] == false:
+      return (false, OTHER, "<=")
+    
+    return (true, tf_res[1], "<=")
   of GE:
-    let fmr1 = funcTypesMatch(anything_t & "+" & anything_t & "->" & BOOL, argsType.join("+"))
-    let res_type = BOOL
-    return (fmr1[0], res_type, ">=")
+    var ftm_res = funcTypesMatch("@a" & "+" & "@a" & "->" & BOOL, argsType.join("+"))
+    if ftm_res[0] == false:
+      return (false, OTHER, ">=")
+    var tf_res = ftm_res[1].typeFilter(number_t)
+    if tf_res[0] == false:
+      return (false, OTHER, ">=")
+    
+    return (true, tf_res[1], ">=")
   of EE:
-    let fmr1 = funcTypesMatch(anything_t & "+" & anything_t & "->" & BOOL, argsType.join("+"))
-    let res_type = BOOL
-    return (fmr1[0], res_type, "==")
+    var ftm_res = funcTypesMatch("@a" & "+" & "@a" & "->" & BOOL, argsType.join("+"))
+    if ftm_res[0] == false:
+      return (false, OTHER, "==")
+    var tf_res = ftm_res[1].typeFilter(anything_t)
+    if tf_res[0] == false:
+      return (false, OTHER, "==")
+    
+    return (true, tf_res[1], "==")
   of NE:
-    let fmr1 = funcTypesMatch(anything_t & "+" & anything_t & "->" & BOOL, argsType.join("+"))
-    let res_type = BOOL
-    return (fmr1[0], res_type, "!=")
+    var ftm_res = funcTypesMatch("@a" & "+" & "@a" & "->" & BOOL, argsType.join("+"))
+    if ftm_res[0] == false:
+      return (false, OTHER, "!=")
+    var tf_res = ftm_res[1].typeFilter(anything_t)
+    if tf_res[0] == false:
+      return (false, OTHER, "!=")
+    
+    return (true, tf_res[1], "!=")
 
 # 型のチェックをしてC++の関数に変換する
 proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, string) =
@@ -259,168 +320,166 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
     if argsTypeC.len() == 0:
       return (true, IDENT, "ka23::plus")
     elif argsTypeC.len() == 2:
-      let fmr1 = funcTypesMatch(number_t & "+" & number_t & "->" & number_t, argsType.join("+"))
-      if fmr1[0]:
-        let res_type = fmr1[1].split("+")[0]
-        return (fmr1[0], res_type, "ka23::plus")
-      else:
-        return (false, OTHER, "")
+      var ftm_res = funcTypesMatch("@a" & "+" & "@a" & "->" & "@a", argsType.join("+"))
+      if ftm_res[0] == false:
+        return (false, OTHER, "ka23::plus")
+      var tf_res = ftm_res[1].typeFilter(number_t)
+      if tf_res[0] == false:
+        return (false, OTHER, "ka23::plus")
+      
+      return (true, tf_res[1], "ka23::plus")
     else:
       return (false, OTHER, "")
   of "minu":
     if argsTypeC.len() == 0:
       return (true, IDENT, "ka23::minu")
     elif argsTypeC.len() == 2:
-      let fmr1 = funcTypesMatch(number_t & "+" & number_t & "->" & number_t, argsType.join("+"))
-      if fmr1[0]:
-        let res_type = fmr1[1].split("+")[0]
-        return (fmr1[0], res_type, "ka23::minu")
-      else:
-        return (false, OTHER, "")
+      var ftm_res = funcTypesMatch("@a" & "+" & "@a" & "->" & "@a", argsType.join("+"))
+      if ftm_res[0] == false:
+        return (false, OTHER, "ka23::minu")
+      var tf_res = ftm_res[1].typeFilter(number_t)
+      if tf_res[0] == false:
+        return (false, OTHER, "ka23::minu")
+      
+      return (true, tf_res[1], "ka23::minu")
     else:
       return (false, OTHER, "")
   of "mult":
     if argsTypeC.len() == 0:
       return (true, IDENT, "ka23::mult")
     elif argsTypeC.len() == 2:
-      let fmr1 = funcTypesMatch(number_t & "+" & number_t & "->" & number_t, argsType.join("+"))
-      if fmr1[0]:
-        let res_type = fmr1[1].split("+")[0]
-        return (fmr1[0], res_type, "ka23::mult")
-      else:
-        return (false, OTHER, "")
+      var ftm_res = funcTypesMatch("@a" & "+" & "@a" & "->" & "@a", argsType.join("+"))
+      if ftm_res[0] == false:
+        return (false, OTHER, "ka23::mult")
+      var tf_res = ftm_res[1].typeFilter(number_t)
+      if tf_res[0] == false:
+        return (false, OTHER, "ka23::mult")
+      
+      return (true, tf_res[1], "ka23::mult")
     else:
       return (false, OTHER, "")
   of "divi":
     if argsTypeC.len() == 0:
       return (true, IDENT, "ka23::divi")
     elif argsTypeC.len() == 2:
-      let fmr1 = funcTypesMatch(number_t & "+" & number_t & "->" & number_t, argsType.join("+"))
-      if fmr1[0]:
-        let res_type = fmr1[1].split("+")[0]
-        return (fmr1[0], res_type, "ka23::divi")
-      else:
-        return (false, OTHER, "")
+      var ftm_res = funcTypesMatch("@a" & "+" & "@a" & "->" & "@a", argsType.join("+"))
+      if ftm_res[0] == false:
+        return (false, OTHER, "ka23::divi")
+      var tf_res = ftm_res[1].typeFilter(number_t)
+      if tf_res[0] == false:
+        return (false, OTHER, "ka23::divi")
+      
+      return (true, tf_res[1], "ka23::divi")
     else:
       return (false, OTHER, "")
   of "print":
     if argsTypeC.len() == 0:
       return (true, IDENT, "ka23::print")
     elif argsTypeC.len() == 1:
-      let fmr1 = funcTypesMatch(letter_t & "->" & NIL, argsType.join("+"))
-      if fmr1[0]:
-        let res_type = NIL
-        return (fmr1[0], res_type, "ka23::print")
-      else:
-        return (false, OTHER, "")
+      var ftm_res = funcTypesMatch(letter_t & "->" & NIL, argsType.join("+"))
+      if ftm_res[0] == false:
+        return (false, OTHER, "ka23::print")
+      
+      return (true, ftm_res[1], "ka23::print")
     else:
       return (false, OTHER, "")
   of "println":
     if argsTypeC.len() == 0:
       return (true, IDENT, "ka23::println")
     elif argsTypeC.len() == 1:
-      let fmr1 = funcTypesMatch(letter_t & "->" & NIL, argsType.join("+"))
-      if fmr1[0]:
-        let res_type = NIL
-        return (fmr1[0], res_type, "ka23::println")
-      else:
-        return (false, OTHER, "")
+      var ftm_res = funcTypesMatch(letter_t & "->" & NIL, argsType.join("+"))
+      if ftm_res[0] == false:
+        return (false, OTHER, "ka23::println")
+      
+      return (true, ftm_res[1], "ka23::println")
     else:
       return (false, OTHER, "")
   of "len":
     if argsTypeC.len() == 0:
       return (true, IDENT, "ka23::len")
     elif argsTypeC.len() == 1:
-      let fmr1 = funcTypesMatch(ARRAY & "[" & "*" & "]" & "->" & INT, argsType.join("+"))
-      if fmr1[0]:
-        let res_type = INT
-        return (fmr1[0], res_type, "ka23::len")
-      else:
-        return (false, OTHER, "")
+      var ftm_res = funcTypesMatch("ARRAY::@a" & "->" & "INT", argsType.join("+"))
+      if ftm_res[0] == false:
+        return (false, OTHER, "ka23::len")
+      
+      return (true, ftm_res[1], "ka23::len")
     else:
       return (false, OTHER, "")
   of "join":
     if argsTypeC.len() == 0:
       return (true, IDENT, "ka23::join")
     elif argsTypeC.len() == 2:
-      let fmr1 = funcTypesMatch("ARRAY" & "[" & "*" & "]" & "+" & "ARRAY" & "[" & "*" & "]" & "->" & "ARRAY" & "[" & "*" & "]", argsType.join("+"))
-      if fmr1[0]:
-        let res_type = fmr1[1].split("+")[0]
-        return (fmr1[0], res_type, "ka23::join")
-      else:
-        return (false, OTHER, "")
+      var ftm_res = funcTypesMatch("ARRAY::@a" & "+" & "ARRAY::@a" & "->" & "ARRAY::@a", argsType.join("+"))
+      if ftm_res[0] == false:
+        return (false, OTHER, "ka23::join")
+      
+      return (true, ftm_res[1], "ka23::join")
     else:
       return (false, OTHER, "")
   of "head":
     if argsTypeC.len() == 0:
       return (true, IDENT, "ka23::join")
     elif argsTypeC.len() == 1:
-      let fmr1 = funcTypesMatch("ARRAY" & "[" & "*" & "]" & "->" & anything_t, argsType.join("+"))
-      if fmr1[0]:
-        let res_type = fmr1[1].funcTypeSplit("ARRAY::")[2]
-        return (fmr1[0], res_type, "ka23::head")
-      else:
-        return (false, OTHER, "")
+      var ftm_res = funcTypesMatch("ARRAY::@a" & "->" & "@a", argsType.join("+"))
+      if ftm_res[0] == false:
+        return (false, OTHER, "ka23::head")
+      
+      return (true, ftm_res[1], "ka23::head")
     else:
       return (false, OTHER, "")
   of "tail":
     if argsTypeC.len() == 0:
       return (true, IDENT, "ka23::tail")
     elif argsTypeC.len() == 1:
-      let fmr1 = funcTypesMatch("ARRAY" & "[" & "*" & "]" & "->" & "ARRAY" & "[" & "*" & "]", argsType.join("+"))
-      if fmr1[0]:
-        let res_type = fmr1[1]
-        return (fmr1[0], res_type, "ka23::tail")
-      else:
-        return (false, OTHER, "")
+      var ftm_res = funcTypesMatch("ARRAY::@a" & "->" & "ARRAY::@a", argsType.join("+"))
+      if ftm_res[0] == false:
+        return (false, OTHER, "ka23::tail")
+      
+      return (true, ftm_res[1], "ka23::tail")
     else:
       return (false, OTHER, "")
   of "last":
     if argsTypeC.len() == 0:
       return (true, IDENT, "ka23::last")
     elif argsTypeC.len() == 1:
-      let fmr1 = funcTypesMatch("ARRAY" & "[" & "*" & "]" & "->" & anything_t, argsType.join("+"))
-      if fmr1[0]:
-        let res_type = fmr1[1].funcTypeSplit("ARRAY::")[2]
-        return (fmr1[0], res_type, "ka23::last")
-      else:
-        return (false, OTHER, "")
+      var ftm_res = funcTypesMatch("ARRAY::@a" & "->" & "@a", argsType.join("+"))
+      if ftm_res[0] == false:
+        return (false, OTHER, "ka23::last")
+      
+      return (true, ftm_res[1], "ka23::last")
     else:
       return (false, OTHER, "")
   of "init":
     if argsTypeC.len() == 0:
       return (true, IDENT, "ka23::init")
     elif argsTypeC.len() == 1:
-      let fmr1 = funcTypesMatch("ARRAY" & "[" & "*" & "]" & "->" & "ARRAY" & "[" & "*" & "]", argsType.join("+"))
-      if fmr1[0]:
-        let res_type = fmr1[1]
-        return (fmr1[0], res_type, "ka23::init")
-      else:
-        return (false, OTHER, "")
+      var ftm_res = funcTypesMatch("ARRAY::@a" & "->" & "ARRAY::@a", argsType.join("+"))
+      if ftm_res[0] == false:
+        return (false, OTHER, "ka23::init")
+      
+      return (true, ftm_res[1], "ka23::init")
     else:
       return (false, OTHER, "")
   of "toString":
     if argsTypeC.len() == 0:
       return (true, IDENT, "ka23::toString")
     elif argsTypeC.len() == 1:
-      let fmr1 = funcTypesMatch(anything_t & "->" & anything_t, argsType.join("+"))
-      if fmr1[0]:
-        let res_type = STRING
-        return (fmr1[0], res_type, "ka23::toString")
-      else:
-        return (false, OTHER, "")
+      var ftm_res = funcTypesMatch(anything_t & "->" & STRING, argsType.join("+"))
+      if ftm_res[0] == false:
+        return (false, OTHER, "ka23::toString")
+      
+      return (true, ftm_res[1], "ka23::toString")
     else:
       return (false, OTHER, "")
   of "at":
     if argsTypeC.len() == 0:
       return (true, IDENT, "ka23::at")
     elif argsTypeC.len() == 2:
-      let fmr1 = funcTypesMatch("ARRAY" & "[" & anything_t & "]" & "+" & INT & "->" & anything_t, argsType.join("+"))
-      if fmr1[0]:
-        let res_type = fmr1[1].split("+")[0]
-        return (fmr1[0], res_type, "ka23::at")
-      else:
-        return (false, OTHER, "")
+      var ftm_res = funcTypesMatch("ARRAY::@a" & "+" & INT & "->" & "@a", argsType.join("+"))
+      if ftm_res[0] == false:
+        return (false, OTHER, "ka23::at")
+      
+      return (true, ftm_res[1], "ka23::at")
     else:
       return (false, OTHER, "")
   of "readln":
@@ -505,7 +564,7 @@ proc makeVarDefine(node: Node, var_name: string, namespace: seq[string], type_cp
     path:     nesting,
     mutable:  mutable,
     used:     false,
-  ).addTable(var_name_full, nesting)
+  ).identRegistration(var_name_full, nesting)
   
   return (code, codeType)
 
@@ -578,7 +637,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
         if loopCount == 0:
           eltype = elem[1]
           tmp_code.add(elem[0].replaceSemicolon(@[(OTHER, "")]))
-        elif typeMatch(elem[1], eltype)[0]:
+        elif typePartMatch(elem[1], eltype)[0]:
           tmp_code.add((COMMA, ","))
           tmp_code.add(elem[0].replaceSemicolon(@[(OTHER, "")]))
         else:
@@ -750,7 +809,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
         path:    nesting,
         mutable: false,
         used:  false,
-      ).addTable(di[0][1][1], nesting)
+      ).identRegistration(di[0][1][1], nesting)
     else:
       var argsType: seq[string]
       for parameter in node.child_nodes[1].child_nodes:
@@ -761,7 +820,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
         path:    nesting,
         mutable: false,
         used:  false,
-      ).addTable(di[0][1][1], nesting)
+      ).identRegistration(di[0][1][1], nesting)
     var origin = nesting
     nestingIncrement()
     if node.child_nodes[1].child_nodes == @[]:
@@ -770,7 +829,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
       for statement in node.child_nodes[2].child_nodes:
         if statement.kind == nkReturnStatement:
           let st = statement.makeCodeParts(test, new_dost)
-          if typeMatch(st[1], di[1])[0]:
+          if typePartMatch(st[1], di[1])[0]:
             code.add(st[0])
           else:
             echoErrorMessage("指定している型と返り値の型が違います", test, node.token.Line)
@@ -789,13 +848,13 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
           path:    nesting,
           mutable: false,
           used:  false,
-        ).addTable(parameter.child_nodes[0].token.Literal, nesting)
+        ).identRegistration(parameter.child_nodes[0].token.Literal, nesting)
       code.add((OTHER, ")"))
       code.add((OTHER, "{"))
       for statement in node.child_nodes[2].child_nodes:
         if statement.kind == nkReturnStatement:
           let st = statement.makeCodeParts(test, new_dost)
-          if typeMatch(st[1], di[1])[0]:
+          if typePartMatch(st[1], di[1])[0]:
             code.add(st[0])
           else:
             echoErrorMessage("指定している型と返り値の型が違います", test, node.token.Line)
@@ -825,7 +884,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
         path:    nesting,
         mutable: false,
         used:  false,
-      ).addTable(di[0][1][1], nesting)
+      ).identRegistration(di[0][1][1], nesting)
     else:
       var argsType: seq[string]
       for parameter in node.child_nodes[1].child_nodes:
@@ -836,7 +895,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
         path:    nesting,
         mutable: false,
         used:  false,
-      ).addTable(di[0][1][1], nesting)
+      ).identRegistration(di[0][1][1], nesting)
     
     var origin = nesting
     nestingIncrement()
@@ -849,7 +908,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
         if statement.kind == nkReturnStatement:
           return_flag = true
           let st = statement.makeCodeParts(test, new_dost)
-          if typeMatch(st[1], di[1])[0]:
+          if typePartMatch(st[1], di[1])[0]:
             code.add(st[0])
           else:
             echoErrorMessage("指定している型と返り値の型が違います", test, node.token.Line)
@@ -868,14 +927,14 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
           path:    nesting,
           mutable: false,
           used:    false,
-        ).addTable(parameter.child_nodes[0].token.Literal, nesting)
+        ).identRegistration(parameter.child_nodes[0].token.Literal, nesting)
       code.add((OTHER, ")"))
       code.add((OTHER, "{"))
       for statement in node.child_nodes[2].child_nodes:
         if statement.kind == nkReturnStatement:
           return_flag = true
           let st = statement.makeCodeParts(test, new_dost)
-          if typeMatch(st[1], di[1])[0]:
+          if typePartMatch(st[1], di[1])[0]:
             code.add(st[0])
           else:
             echoErrorMessage("指定している型と返り値の型が違います", test, node.token.Line)
@@ -950,13 +1009,15 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
         path:    nesting,
         mutable: false,
         used:  false,
-      ).addTable(l[0][1][1], nesting)
+      ).identRegistration(l[0][1][1], nesting)
       codeType = l[1]
       
       code.add((COLON, ":"))
 
       let r = node.child_nodes[1].makeCodeParts(test, dost)
-      if lt == r[1].funcTypeSplit("ARRAY::")[2]:
+      var r_s = r[1].split("ARRAY::")
+      var r_tail = r_s[1..r_s.len()-1]
+      if lt == r_tail.join():
         code.add(r[0])
       else:
         echoErrorMessage("指定している型と値の型が違います", test, node.token.Line)
@@ -1011,7 +1072,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
     else:
       echoErrorMessage("オペランドがありません", test, node.token.Line)
     code.addSemicolon()
-    if typeMatch(lt, rt)[0]:
+    if typePartMatch(lt, rt)[0]:
       codeType = lt
     else:
       echoErrorMessage("オペランドの型がそれぞれ違います", test, node.token.Line)
@@ -1032,10 +1093,11 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
     let funcName = node.child_nodes[0].token.Literal
     let iec = identExistenceCheck(funcName)
     if iec:
-      let ftm = funcTypesMatch(identTable[funcName].Type, argsType)
+      # TODO 不安
+      let ftm = funcTypesMatch(identTable[funcName].Type, argsType.join("+"))
       if ftm[0]:
         code.add((IDENT, funcName))
-        codeType = ftm[2]
+        codeType = ftm[1]
       else:
         echoErrorMessage("引数の型が正しくありません", test, node.token.Line)
     else:
@@ -1104,10 +1166,11 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
         else:
           echoErrorMessage("第二引数の関数の引数が正しくありません", test, node.token.Line)
       else:
-        let ftm = funcTypesMatch(identTable[func_name].Type, array_type_split[1..array_type_split.len()-1].join("::") & func_arg_types)
+        # TODO 不安
+        let ftm = funcTypesMatch(identTable[func_name].Type, array_type_split[1..array_type_split.len()-1].join("::") & func_arg_types.join("+"))
         if ftm[0]:
           cpp_func_name = func_name
-          func_result_type = ftm[2]
+          func_result_type = ftm[1]
         else:  
           echoErrorMessage("第二引数の関数の引数が正しくありません", test, node.token.Line)
 
@@ -1135,7 +1198,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
       path:     nesting,
       mutable:  false,
       used:     false,
-    ).addTable("_i", nesting)
+    ).identRegistration("_i", nesting)
     code.add(ident.makeCodeParts(test, dost)[0].replaceSemicolon(@[(OTHER, "")]))
     code.add((OTHER, ")"))
     code.add((LBRACE, "{"))
@@ -1215,8 +1278,15 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
       code.add(mvd_res[0].replaceSemicolon(@[(OTHER, "")]))
       code.addSemicolon()
       codeType = mvd_res[1]
-    
+
     nestingReset(original_nesting, test)
+    #TODO
+    # TypeInfo(
+    #   Type:    ,
+    #   path:    nesting,
+    #   mutable: false,
+    #   used:    false,
+    # ).typeRegistration(struct_name, nesting)
     code.add((OTHER, "} ;"))
 
   # if文
@@ -1310,7 +1380,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
     var sr = node.child_nodes[1].makeCodeParts(test, dost)
     code.add(sr[0].replaceSemicolon(@[(OTHER, "")]))
     let ar = node.child_nodes[2].makeCodeParts(test, dost)
-    if typeMatch(ar[1], sr[1])[0]:
+    if typePartMatch(ar[1], sr[1])[0]:
       code.add((OTHER, ":"))
       code.add(ar[0].replaceSemicolon(@[(OTHER, "")]))
       codeType = sr[1]

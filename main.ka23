@@ -1,7 +1,3 @@
 main do
-  later array int t
-  struct kouzou do
-    int a,
-    bool b,
-  end
+  int a = 10 + 20 * 30
 end
