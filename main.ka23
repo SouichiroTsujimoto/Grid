@@ -1,21 +1,7 @@
-def bool FizzBuzz(array int x) do
-  for int i <- x do
-    if i / 15 * 15 == i do
-      "FizzBuzz" |> println()
-    elif i / 5 * 5 == i do
-      "Buzz" |> println()
-    elif i / 3 * 3 == i do
-      "Fizz" |> println()
-    else
-      i |> toString() |> println()
-    end
-  end
-  return True
-end
-
 main do
-  
-  FizzBuzz({1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15})
-  later int z
-  z = 20
+  later array int t
+  struct kouzou do
+    int a,
+    bool b,
+  end
 end

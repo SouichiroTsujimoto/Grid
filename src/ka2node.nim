@@ -12,6 +12,8 @@ type
     nkArgs
     nkStatementArgs
     nkIdent
+    nkStruct
+    nkPair
     nkMapIdent
     nkNilLiteral
     nkIntLiteral

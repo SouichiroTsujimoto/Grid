@@ -255,14 +255,10 @@ proc parseNodes(p: Parser, endToken: string): Node =
   args.child_nodes.add(p.parseExpression(Lowest))
   while p.peekToken.Type == COMMA:
     p.shiftToken()
+    if p.peekToken.Type == endToken:
+      break
     p.shiftToken()
     args.child_nodes.add(p.parseExpression(Lowest))
-  
-  # echo "---------"
-  # echo p.curToken.Type
-  # echo p.peekToken.Type
-  # echo endToken
-  # echo "---------"
 
   if p.peekToken.Type == endToken:
     p.shiftToken()
@@ -286,8 +282,13 @@ proc parseNameProc(p: Parser, endToken: string): Node =
 
   while p.peekToken.Type == COMMA:
     p.shiftToken()
+    if p.peekToken.Type == endToken:
+      break
     p.shiftToken()
     args.child_nodes.add(p.parseType(false))
+  
+  if p.peekToken.Type != endToken:
+    echoErrorMessage("\"" & endToken & "\"が見つかりません", false, p.curToken.Line)
 
   p.shiftToken()
   return args
@@ -693,6 +694,8 @@ proc parseMutStatement(p: Parser): Node =
 
   while p.peekToken.Type == COMMA:
     p.shiftToken()
+    if p.peekToken.Type == DO:
+      break
     p.shiftToken()
     node.child_nodes[0].child_nodes.add(p.parseType(true))
   
@@ -721,6 +724,52 @@ proc parseLaterStatement(p: Parser): Node =
     p.shiftToken()
     p.shiftToken()
     node.child_nodes.add(p.parseType(false))
+
+  return node
+
+# proc parsePair(p: Parser): Node =
+#   var node = Node(
+#     kind:        nkPair,
+#     token:       p.curToken,
+#     child_nodes: @[],
+#   )
+
+# struct文
+proc parseStruct(p: Parser): Node =
+  var node = Node(
+    kind:        nkStruct,
+    token:       p.curToken,
+    child_nodes: @[],
+  )
+  if p.peekToken.Type != IDENT:
+    echoErrorMessage("struct名がありません", false, p.curToken.Line)
+
+  p.shiftToken()
+  node.child_nodes.add(p.parseIdent())
+
+  if p.peekToken.Type != DO:
+    echoErrorMessage("\"DO\"が見つかりません", false, p.curToken.Line)
+  p.shiftToken()
+  
+  node.child_nodes.add(Node(
+    kind:        nkArgs,
+    token:       p.curToken,
+    child_nodes: @[],
+  ))
+
+  p.shiftToken()
+  node.child_nodes[1].child_nodes.add(p.parseType(false))
+
+  while p.peekToken.Type == COMMA:
+    p.shiftToken()
+    if p.peekToken.Type == END:
+      break
+    p.shiftToken()
+    node.child_nodes[1].child_nodes.add(p.parseType(false))
+  
+  if p.peekToken.Type != END:
+    echoErrorMessage("\"END\"が見つかりません", false, p.curToken.Line)
+  p.shiftToken()
 
   return node
 
@@ -812,13 +861,13 @@ proc parseStatement(p: Parser): Node =
   of IMPORT:       return p.parseImport()
   of INCLUDE:      return p.parseInclude()
   of COMMENTBEGIN: return p.parseComment()
+  of STRUCT:       return p.parseStruct()
   of MAIN:         return p.parseMainStatement()
   of DEFINE:       return p.parseDefineStatement()
   of FOR:          return p.parseForStatement()
   of IF:           return p.parseIfStatement()
   of MUT:          return p.parseMutStatement()
   of LATER:        return p.parseLaterStatement()
-  # of STRUCT:       return p.parseStructStatement()
   else:            return p.parseExpressionStatement()
 
 # ASTを作る
