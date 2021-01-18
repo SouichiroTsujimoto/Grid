@@ -19,4 +19,6 @@ bool FizzBuzz ( std::vector<int> x ) {
 }
 int main ( int argc , char *argv[] ) {
   FizzBuzz ( ( std::vector<int> ) { 1 , 2 , 3 , 4 , 5 , 6 , 7 , 8 , 9 , 10 , 11 , 12 , 13 , 14 , 15 } ) ;
-}
+  int z = 0 ;
+  z = 20 ;
+z }

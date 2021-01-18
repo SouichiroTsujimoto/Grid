@@ -818,6 +818,7 @@ proc parseStatement(p: Parser): Node =
   of IF:           return p.parseIfStatement()
   of MUT:          return p.parseMutStatement()
   of LATER:        return p.parseLaterStatement()
+  # of STRUCT:       return p.parseStructStatement()
   else:            return p.parseExpressionStatement()
 
 # ASTを作る

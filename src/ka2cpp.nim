@@ -76,7 +76,7 @@ proc deleteScope(n: int, test: bool): seq[codeParts] =
 
 proc identExistenceCheck(ident: string): bool =
   if identTable.contains(ident):
-    if identTable[ident].path <= nesting:
+    if identTable[ident].path <= nesting and identTable[ident].init == true:
       return true
   
   return false
@@ -738,6 +738,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
     if node.child_nodes[1].child_nodes == @[]:
       IdentInfo(
         Type:    NIL & "+" & di[1],
+        init:    true,
         path:    nesting,
         mutable: false,
         used:  false,
@@ -748,6 +749,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
         argsType.add(parameter.token.Type.removeT())
       IdentInfo(
         Type:    argsType.join("+") & "+" & di[1],
+        init:    true,
         path:    nesting,
         mutable: false,
         used:  false,
@@ -775,6 +777,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
         code.add(pr[0])
         IdentInfo(
           Type:    pr[1],
+          init:    true,
           path:    nesting,
           mutable: false,
           used:  false,
@@ -811,6 +814,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
     if node.child_nodes[1].child_nodes == @[]:
       IdentInfo(
         Type:    NIL & "->" & di[1],
+        init:    true,
         path:    nesting,
         mutable: false,
         used:  false,
@@ -821,6 +825,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
         argsType.add(parameter.token.Type.removeT())
       IdentInfo(
         Type:    argsType.join("+") & "->" & di[1],
+        init:    true,
         path:    nesting,
         mutable: false,
         used:  false,
@@ -852,6 +857,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
         code.add(pr[0])
         IdentInfo(
           Type:    pr[1],
+          init:    true,
           path:    nesting,
           mutable: false,
           used:    false,
@@ -934,6 +940,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
         echoErrorMessage("既に定義されています", test, node.token.Line)
       IdentInfo(
         Type:    lt,
+        init:    true,
         path:    nesting,
         mutable: false,
         used:  false,
@@ -978,22 +985,18 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
   # 代入式
   of nkAssignExpression:
     var lt, rt: string
-    var lmc: string
     if node.child_nodes.len() == 2:
       # 値を代入しようとしている変数のチェック
-      let l = node.child_nodes[0].makeCodeParts(test, dost)
-      lmc = l[0][l[0].len()-1].Code
-      if lmc == ";":
-        lmc = l[0][l[0].len()-2].Code
-
-      if identExistenceCheck(lmc) == false:
+      # 未定義の変数も扱うので少し特殊
+      var lmc = node.child_nodes[0].token.Literal
+      if identTable.contains(lmc) == false:
         echoErrorMessage("定義されていない名前です", test, node.token.Line)
       elif identTable[lmc].mutable == false and identTable[lmc].init == true:
         echoErrorMessage("代入しようとしている変数がイミュータブルです", test, node.token.Line)
       else:
         identTable[lmc].init = true
-        code.add(l[0].replaceSemicolon(@[(OTHER, "")]))
-      lt = l[1]
+        code.add((IDENT, lmc))
+      lt = identTable[lmc].Type
 
       code.add((OTHER, "="))
       let r = node.child_nodes[1].makeCodeParts(test, dost)
@@ -1122,6 +1125,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
     )
     IdentInfo(
       Type:     array_type_split[1..array_type_split.len()-1].join("::"),
+      init:     true,
       path:     nesting,
       mutable:  false,
       used:     false,
