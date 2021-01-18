@@ -18,7 +18,7 @@ when isMainModule:
     test = false
     ast = false
     lang: Lang = JP
-    filename = ""
+    cppFileName = ""
     peekParam = ""
     skip_flag = false
 
@@ -43,7 +43,7 @@ when isMainModule:
         lang = JP
       of "-o":
         if peekParam != "EOP":
-          filename = param
+          cppFileName = peekParam
           skip_flag = true
         else:
           echoErrorMessage("\"-o\"の後にファイル名が指定されていません", false, -1)
@@ -58,11 +58,8 @@ when isMainModule:
     echo "ファイル名を入力してください"
     sourceName = readLine(stdin)
   
-  var cppFileName = ""
-  if filename == "":
+  if cppFileName == "":
     cppFileName = sourceName.split(".")[0] & ".cpp"
-  else:
-    cppFileName = filename
 
   # AST作成してC++を出力
   var
@@ -99,23 +96,27 @@ when isMainModule:
     ・ ~配列~
       ・ 配列リテラルを関数に渡せるようにする ✅
       ・ at関数 ✅
-    ・ ~変数
-      ・ 型のキャスト
+      ・ map関数 ✅
+      ・ filter関数
+      ・ range関数
+    ・ ~型~
+      ・ 型のキャスト 🔺
+        ・ '$'
+      ・ void
     ・ ~IO~
-      ・ 標準入力 △
+      ・ 標準入力 🔺
     ・ ~その他~
       ・ コメント ✅
       ・ case文
       ・ 辞書型
-      ・ map関数 ✅
-      ・ filter関数
       ・ エスケープ文字 ✅
       ・ エラーメッセージに行番号を付ける ✅
 
       ・ ＜構造体＞
+      ・ ＜モジュール(名前空間？)＞
       
       ・ ＜＜include＞＞
-      ・ ＜＜include＞＞
+      ・ ＜＜import＞＞
 
       ・ ＜エラーメッセージを英語化できるようにする＞
       ・ ＜リファレンス的なのを用意する＞

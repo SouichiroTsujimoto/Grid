@@ -1,13 +1,22 @@
 #include "ka2lib/ka2funcs.cpp"
 
-int hoge ( int x ) {
-  return ( x ) ;
+bool FizzBuzz ( std::vector<int> x ) {
+  for ( int i : x ) {
+    if ( ( ( ( i / 15 ) * 15 ) == i ) ) {
+      ka23::println ( "FizzBuzz" ) ;
+    }
+    else if ( ( ( ( i / 5 ) * 5 ) == i ) ) {
+      ka23::println ( "Buzz" ) ;
+    }
+    else if ( ( ( ( i / 3 ) * 3 ) == i ) ) {
+      ka23::println ( "Fizz" ) ;
+    }
+    else {
+      ka23::println ( ka23::toString ( i ) ) ;
+    }
+  }
+  return ( true ) ;
 }
 int main ( int argc , char *argv[] ) {
-  std::vector<int> hairetsu = ( std::vector<int> ) { 1 , 2 , 3 } ;
-  ka23::println ( ka23::toString ( ka23::last ( ka23::map ( ( std::vector<int> ) { 1 , 2 , 3 } , [] ( int _i ) { return ka23::plus ( _i , 1 ) ; } ) ) ) ) ;
-  ka23::println ( ka23::toString ( ka23::last ( ka23::join ( ( std::vector<int> ) { 1 , 2 , 3 } , ( std::vector<int> ) { 4 , 5 , 6 } ) ) ) ) ;
-  ka23::println ( ka23::toString ( ka23::last ( ka23::tail ( ( std::vector<int> ) { 1 , 2 , 3 } ) ) ) ) ;
-  ka23::println ( ka23::toString ( ka23::last ( ka23::init ( ( std::vector<int> ) { 1 , 2 , 3 } ) ) ) ) ;
-  ka23::println ( ka23::toString ( ka23::len ( ( std::vector<int> ) { 1 , 2 , 3 } ) ) ) ;
+  FizzBuzz ( ( std::vector<int> ) { 1 , 2 , 3 , 4 , 5 , 6 , 7 , 8 , 9 , 10 , 11 , 12 , 13 , 14 , 15 } ) ;
 }
