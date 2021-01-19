@@ -3,7 +3,6 @@ import strutils, system, os
 
 var cppCode = """
 #include "ka2lib/ka2funcs.cpp"
-
 """
 
 type Lang = enum
@@ -112,9 +111,9 @@ when isMainModule:
       ・ エスケープ文字 ✅
       ・ エラーメッセージに行番号を付ける ✅
 
-      ・ ＜構造体＞
+      ・ ＜構造体＞ <- これと
       ・ ＜無名関数＞
-      ・ ＜モジュール(名前空間？)＞
+      ・ ＜モジュール(名前空間？)＞　<- これを終わらさないと進まない
       
       ・ ＜＜include＞＞
       ・ ＜＜import＞＞

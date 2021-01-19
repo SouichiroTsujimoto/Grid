@@ -1,4 +1,4 @@
-import ka2parser, ka2rw, ka2node, ka2cpp, ka2shaping
+import ka2node
 
 proc showAST*(node: Node, indent: int): string =
   if node.kind != nkNil:

@@ -12,8 +12,8 @@ type
     nkArgs
     nkStatementArgs
     nkIdent
+    nkTypeIdent
     nkStruct
-    nkPair
     nkMapIdent
     nkNilLiteral
     nkIntLiteral
@@ -21,6 +21,7 @@ type
     nkBoolLiteral
     nkCharLiteral
     nkStringLiteral
+    nkCompoundLiteral
     nkCppCode
     nkArrayLiteral
     nkIntType
@@ -73,13 +74,13 @@ type
 
 proc tokenPrecedence*(tok: Token): Precedence =
   case tok.Type
-  of PIPE:              return Pipeline
-  of EQUAL:             return Assign
-  of IFEX, COLON:       return Ifexpression
-  of LT, GT, LE, GE:    return Lg
-  of EE, NE:            return Equals
-  of PLUS, MINUS:       return Sum
-  of SLASH, ASTERISC:   return Product
-  of LARROW:            return Generator
-  of LPAREN, LBRACKET:  return Call
-  else:                 return Lowest
+  of PIPE:                      return Pipeline
+  of EQUAL:                     return Assign
+  of IFEX, COLON:               return Ifexpression
+  of LT, GT, LE, GE:            return Lg
+  of EE, NE:                    return Equals
+  of PLUS, MINUS:               return Sum
+  of SLASH, ASTERISC:           return Product
+  of LARROW:                    return Generator
+  of LPAREN, LBRACKET, LBRACE:  return Call
+  else:                         return Lowest

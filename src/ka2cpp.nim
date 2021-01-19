@@ -16,6 +16,7 @@ type IdentInfo* = ref object of RootObj
 
 type TypeInfo* = ref object of RootObj
   Type*:        string
+  code*:        string
   path:         int
   mutable*:     bool
   used*:        bool
@@ -40,7 +41,7 @@ proc nestingIncrement() =
 
 proc nestingReset(original: int, test: bool) =
   nesting = original
-  var del = deleteScope(nesting, test)
+  discard deleteScope(nesting, test)
 
 proc removeT(Type: string): string =
   var rts: seq[string]
@@ -107,6 +108,13 @@ proc deleteScope(n: int, test: bool): seq[codeParts] =
 proc identExistenceCheck(ident: string): bool =
   if identTable.contains(ident):
     if identTable[ident].path <= nesting and identTable[ident].init == true:
+      return true
+  
+  return false
+
+proc typeExistenceCheck(Type: string): bool =
+  if typeTable.contains(Type):
+    if typeTable[Type].path <= nesting:
       return true
   
   return false
@@ -189,7 +197,7 @@ proc typeFilter(Type: string, filter: string): (bool, string) =
   else:
     return (true, results.join("|"))
 
-proc conversionCppType(Type: string): (string, string) =
+proc conversionCppType(Type: string, test: bool, line: int): (string, string) =
   let ts = Type.split("::")
   for t in ts:
     case t
@@ -204,11 +212,14 @@ proc conversionCppType(Type: string): (string, string) =
     of T_BOOL:
       return (T_BOOL, "bool")
     of T_ARRAY:
-      return (T_ARRAY & "::" & ts[1..ts.len()-1].join("::").conversionCppType()[0], "std::vector<" & ts[1..ts.len()-1].join("::").conversionCppType()[1] & ">")
+      return (T_ARRAY & "::" & ts[1..ts.len()-1].join("::").conversionCppType(test, line)[0], "std::vector<" & ts[1..ts.len()-1].join("::").conversionCppType(test, line)[1] & ">")
     of T_FUNCTION:
       return (T_FUNCTION, "auto")
     else:
-      return (NIL, "NULL")
+      if typeExistenceCheck(Type):
+        return ("T_" & Type, typeTable[Type].code)
+      else:
+        echoErrorMessage("\"" & Type & "\"が存在しません", test, line)
 
 # 型のチェックをしてC++の演算子に変換する 
 proc conversionCppOperator(fn: string, argsType: seq[string]): (bool, string, string) =
@@ -508,29 +519,38 @@ proc addIndent(code: var string, indent: int) =
     for i in 0..indent-1:
       code.add("  ")
 
-proc makeInitValue(Type: string): seq[codeParts] =
-  case Type
+proc makeInitValue(Type: string, test: bool, line: int): seq[codeParts] =
+  var type_split = Type.split("::")
+
+  case type_split[0]
   of INT:
     result = @[(INT, "0")]
   of FLOAT:
     result = @[(FLOAT, "0.0f")]
   of CHAR:
-    result = @[(CHAR, "")]
+    result = @[(CHAR, "\'\'")]
   of STRING:
-    result = @[(STRING, "")]
+    result = @[(STRING, "\"\"")]
   of BOOL:
-    result = @[(BOOL, "")]
+    result = @[(BOOL, "false")]
+  of ARRAY:
+    var convT = ""
+    for i, t in type_split:
+      if i != 0:
+        convT.add("::")
+      convT.add("T_" & t)
+    result = @[(LPAREN, "("), (T_ARRAY, convT.conversionCppType(test, line)[1]), (LPAREN, ")"), (Type, "{}")]
   else:
-    var type_split = Type.split("::")
-    if type_split[0] == ARRAY:
-      var convT = ""
-      for i, t in type_split:
+    if typeExistenceCheck(type_split[0]):
+      var ts = typeTable[type_split[0]].Type.split("+")
+      result.add((LBRACE, "{"))
+      for i, t in ts:
         if i != 0:
-          convT.add("::")
-        convT.add("T_" & t)
-      result = @[(LPAREN, "("), (T_ARRAY, convT.conversionCppType()[1]), (LPAREN, ")"), (Type, "{}")]
+          result.add((OTHER, ","))
+        result.add(t.makeInitValue(test, line))
+      result.add((RBRACE, "}"))
     else:
-      echoErrorMessage("当てはまらない型です", false, -1)
+      echoErrorMessage("当てはまらない型です", test, line)
 
 proc makeVarDefine(node: Node, var_name: string, namespace: seq[string], type_cp: codeParts, value: seq[codeParts], test: bool, mutable: bool, init: bool): (seq[codeParts], string) =
   var code: seq[codeParts]
@@ -649,7 +669,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
       for ts in eltype.split("::"):
         literal_type.add("::" & "T_" & ts)
       code.add((OTHER, "("))
-      code.add(conversionCppType(literal_type))
+      code.add(conversionCppType(literal_type, test, node.token.Line))
       code.add((OTHER, ")"))
       code.add(tmp_code)
       codeType = ARRAY & "::" & eltype
@@ -659,15 +679,16 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
     codeType = NIL
   of nkIntType:
     if node.child_nodes.len() == 1:
-      var type_cp = node.token.Type.conversionCppType()
+      var type_cp = node.token.Type.conversionCppType(test, node.token.Line)
       code.add(type_cp)
       code.add((INT, node.child_nodes[0].token.Literal))
       codeType = type_cp[0].removeT()
     elif node.child_nodes.len() == 2:
-      var new_dost = true
-      var type_cp = node.token.Type.conversionCppType()
-      var var_name = node.child_nodes[0].token.Literal
-      var value = node.child_nodes[1].makeCodeParts(test, new_dost)
+      var
+        new_dost = true
+        type_cp = node.token.Type.conversionCppType(test, node.token.Line)
+        var_name = node.child_nodes[0].token.Literal
+        value = node.child_nodes[1].makeCodeParts(test, new_dost)
       if type_cp[0].removeT() == value[1]:
         var mvd_res = makeVarDefine(node, var_name, @[], type_cp, value[0], test, false, true)
         code.add(mvd_res[0])
@@ -678,15 +699,16 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
       echoErrorMessage("不明なエラー", test, node.token.Line)
   of nkFloatType:
     if node.child_nodes.len() == 1:
-      var type_cp = node.token.Type.conversionCppType()
+      var type_cp = node.token.Type.conversionCppType(test, node.token.Line)
       code.add(type_cp)
       code.add((FLOAT, node.child_nodes[0].token.Literal))
       codeType = type_cp[0].removeT()
     elif node.child_nodes.len() == 2:
-      var new_dost = true
-      var type_cp = node.token.Type.conversionCppType()
-      var var_name = node.child_nodes[0].token.Literal
-      var value = node.child_nodes[1].makeCodeParts(test, new_dost)
+      var
+        new_dost = true
+        type_cp = node.token.Type.conversionCppType(test, node.token.Line)
+        var_name = node.child_nodes[0].token.Literal
+        value = node.child_nodes[1].makeCodeParts(test, new_dost)
       if type_cp[0].removeT() == value[1]:
         var mvd_res = makeVarDefine(node, var_name, @[], type_cp, value[0], test, false, true)
         code.add(mvd_res[0])
@@ -697,14 +719,15 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
       echoErrorMessage("不明なエラー", test, node.token.Line)
   of nkCharType:
     if node.child_nodes.len() == 1:
-      var type_cp = node.token.Type.conversionCppType()
+      var type_cp = node.token.Type.conversionCppType(test, node.token.Line)
       code.add(type_cp)
       code.add((CHAR, node.child_nodes[0].token.Literal))
       codeType = type_cp[0].removeT()
     elif node.child_nodes.len() == 2:
-      var new_dost = true
-      var type_cp = node.token.Type.conversionCppType()
-      var var_name = node.child_nodes[0].token.Literal
+      var
+        new_dost = true
+        type_cp = node.token.Type.conversionCppType(test, node.token.Line)
+        var_name = node.child_nodes[0].token.Literal
       var value = node.child_nodes[1].makeCodeParts(test, new_dost)
       if type_cp[0].removeT() == value[1]:
         var mvd_res = makeVarDefine(node, var_name, @[], type_cp, value[0], test, false, true)
@@ -716,15 +739,16 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
       echoErrorMessage("不明なエラー", test, node.token.Line)
   of nkStringType:
     if node.child_nodes.len() == 1:
-      var type_cp = node.token.Type.conversionCppType()
+      var type_cp = node.token.Type.conversionCppType(test, node.token.Line)
       code.add(type_cp)
       code.add((STRING, node.child_nodes[0].token.Literal))
       codeType = type_cp[0].removeT()
     elif node.child_nodes.len() == 2:
-      var new_dost = true
-      var type_cp = node.token.Type.conversionCppType()
-      var var_name = node.child_nodes[0].token.Literal
-      var value = node.child_nodes[1].makeCodeParts(test, new_dost)
+      var
+        new_dost = true
+        type_cp = node.token.Type.conversionCppType(test, node.token.Line)
+        var_name = node.child_nodes[0].token.Literal
+        value = node.child_nodes[1].makeCodeParts(test, new_dost)
       if type_cp[0].removeT() == value[1]:
         var mvd_res = makeVarDefine(node, var_name, @[], type_cp, value[0], test, false, true)
         code.add(mvd_res[0])
@@ -735,15 +759,16 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
       echoErrorMessage("不明なエラー", test, node.token.Line)
   of nkBoolType:
     if node.child_nodes.len() == 1:
-      var type_name = node.token.Type.conversionCppType()
+      var type_name = node.token.Type.conversionCppType(test, node.token.Line)
       code.add(type_name)
       code.add((BOOL, node.child_nodes[0].token.Literal))
       codeType = type_name[0].removeT()
     elif node.child_nodes.len() == 2:
-      var new_dost = true
-      var type_cp = node.token.Type.conversionCppType()
-      var var_name = node.child_nodes[0].token.Literal
-      var value = node.child_nodes[1].makeCodeParts(test, new_dost)
+      var
+        new_dost = true
+        type_cp = node.token.Type.conversionCppType(test, node.token.Line)
+        var_name = node.child_nodes[0].token.Literal
+        value = node.child_nodes[1].makeCodeParts(test, new_dost)
       if type_cp[0].removeT() == value[1]:
         var mvd_res = makeVarDefine(node, var_name, @[], type_cp, value[0], test, false, true)
         code.add(mvd_res[0])
@@ -755,7 +780,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
   of nkArrayType:
     if node.child_nodes.len() == 1:
       # ARRAYだけ特殊
-      code.add(node.token.Type.conversionCppType())
+      code.add(node.token.Type.conversionCppType(test, node.token.Line))
       code.add((ARRAY, node.child_nodes[0].token.Literal))
       let types = node.token.Type.split("::")
       for i, tv in types:
@@ -763,10 +788,11 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
           codeType.add("::")
         codeType.add(tv.removeT())
     elif node.child_nodes.len() == 2:
-      var new_dost = true
-      var type_cp = node.token.Type.conversionCppType()
-      var var_name = node.child_nodes[0].token.Literal
-      var value = node.child_nodes[1].makeCodeParts(test, new_dost)
+      var
+        new_dost = true
+        type_cp = node.token.Type.conversionCppType(test, node.token.Line)
+        var_name = node.child_nodes[0].token.Literal
+        value = node.child_nodes[1].makeCodeParts(test, new_dost)
       if type_cp[0].removeT() == value[1]:
         var mvd_res = makeVarDefine(node, var_name, @[], type_cp, value[0], test, false, true)
         code.add(mvd_res[0])
@@ -775,6 +801,54 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
         echoErrorMessage("指定している型と値の型が違います", test, node.token.Line)
     else:
       echoErrorMessage("不明なエラー", test, node.token.Line)
+  
+  # TODO ユーザー定義型
+  of nkTypeIdent:
+    if node.child_nodes.len() == 1:
+      var type_name = node.token.Type.conversionCppType(test, node.token.Line)
+      code.add(type_name)
+      code.add((type_name[0].removeT(), node.child_nodes[0].token.Literal))
+      codeType = type_name[0].removeT()
+    elif node.child_nodes.len() == 2:
+      var
+        new_dost = true
+        type_cp = node.token.Type.conversionCppType(test, node.token.Line)
+        var_name = node.child_nodes[0].token.Literal
+        value = node.child_nodes[1].makeCodeParts(test, new_dost)
+      if type_cp[0].removeT() == value[1]:
+        var mvd_res = makeVarDefine(node, var_name, @[], type_cp, value[0], test, false, true)
+        code.add(mvd_res[0])
+        codeType = mvd_res[1]
+      else:
+        echoErrorMessage("指定している型と値の型が違います", test, node.token.Line)
+    else:
+      echoErrorMessage("不明なエラー", test, node.token.Line)
+
+  # 複合リテラル
+  of nkCompoundLiteral:
+    var
+      struct_type = node.child_nodes[0].token.Literal.conversionCppType(test, node.token.Line)
+      lit: (seq[codeParts], string)
+      lit_types: seq[string]
+    
+    code.add((OTHER, "("))
+    code.add(struct_type)
+    code.add((OTHER, ")"))
+
+    code.add((LBRACE, "{"))
+    for i, n in node.child_nodes[1].child_nodes:
+      if i != 0:
+        code.add((OTHER, ","))
+      lit = n.makeCodeParts(test, dost)
+      code.add(lit[0].replaceSemicolon(@[(OTHER, "")]))
+      lit_types.add(lit[1])
+    code.add((RBRACE, "}"))
+    code.addSemicolon()
+
+    if typeTable[node.child_nodes[0].token.Literal].Type != lit_types.join("+"):
+      echoErrorMessage("指定された型と合いません", test, node.token.Line)
+    else:
+      codeType = node.child_nodes[0].token.Literal
 
   # コメント
   of nkComment:
@@ -795,6 +869,9 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
 
   # main文
   of nkMainStatement:
+    if dost == false:
+      code.add((OTHER, "\n"))
+    
     var new_dost = true
     let di = node.child_nodes[0].makeCodeParts(test, new_dost)
     if identExistenceCheck(di[0][1][1]):
@@ -869,6 +946,8 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
   of nkDefineStatement:
     if dost:
       echoErrorMessage("文の中で関数を定義することはできません", test, node.token.Line)
+    else:
+      code.add((OTHER, "\n"))
     var new_dost = true
 
     let di = node.child_nodes[0].makeCodeParts(test, new_dost)
@@ -944,7 +1023,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
     if return_flag == false:
       # TODO 警告メッセージを作る
       code.add((RETURN, "return"))
-      code.add(makeInitValue(di[1]))
+      code.add(makeInitValue(di[1], test, node.token.Line))
       code.addSemicolon()
 
     # nestingをリセット
@@ -1229,7 +1308,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
 
     code.add((OTHER, "{"))
     for statement in node.child_nodes[0].child_nodes:
-      var type_cp = statement.token.Type.conversionCppType()
+      var type_cp = statement.token.Type.conversionCppType(test, node.token.Line)
       var var_name = statement.child_nodes[0].token.Literal
       var value = statement.child_nodes[1].makeCodeParts(test, new_dost)
       if type_cp[0].removeT() == value[1]:
@@ -1248,46 +1327,64 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
 
   # later文
   of nkLaterStatement:
-    var new_dost = true
+    if dost == false:
+      code.add((OTHER, "\n"))
 
+    var
+      new_dost = true
+      type_cp: codeParts
+      var_name: string
+      mvd_res: (seq[codeParts], string)
     for statement in node.child_nodes:
-      var type_cp = statement.token.Type.conversionCppType()
-      var var_name = statement.child_nodes[0].token.Literal
-      var mvd_res = makeVarDefine(node, var_name, @[], type_cp, @[], test, false, false)
+      type_cp = statement.token.Type.conversionCppType(test, node.token.Line)
+      var_name = statement.child_nodes[0].token.Literal
+      mvd_res = makeVarDefine(node, var_name, @[], type_cp, @[], test, false, false)
       code.add(mvd_res[0].replaceSemicolon(@[(OTHER, "")]))
       code.add((OTHER, "="))
-      code.add(makeInitValue(type_cp[0].removeT()))
+      code.add(makeInitValue(type_cp[0].removeT(), test, node.token.Line))
       code.addSemicolon()
       codeType = mvd_res[1]
   
   # TODO struct文
   of nkStruct:
-    var new_dost = true
-    var original_nesting = nesting
+    if dost == false:
+      code.add((OTHER, "\n"))
+
+    var
+      new_dost = true
+      original_nesting = nesting
+      struct_name = node.child_nodes[0].token.Literal
     nestingIncrement()
     
+    code.add((OTHER, "typedef"))
     code.add((OTHER, "struct"))
-    var struct_name = node.child_nodes[0].token.Literal
-    code.add((OTHER, struct_name))
     code.add((OTHER, "{"))
 
+    var
+      type_cps: seq[string]
+      type_cp: codeParts
+      var_name: string
+      mvd_res: (seq[codeParts], string)
     for statement in node.child_nodes[1].child_nodes:
-      var type_cp = statement.token.Type.conversionCppType()
-      var var_name = statement.child_nodes[0].token.Literal
-      var mvd_res = makeVarDefine(node, var_name, @[], type_cp, @[], test, false, false)
+      type_cp = statement.token.Type.conversionCppType(test, node.token.Line)
+      type_cps.add(type_cp.Type.removeT())
+      var_name = statement.child_nodes[0].token.Literal
+      mvd_res = makeVarDefine(node, var_name, @[], type_cp, @[], test, false, false)
       code.add(mvd_res[0].replaceSemicolon(@[(OTHER, "")]))
       code.addSemicolon()
-      codeType = mvd_res[1]
 
     nestingReset(original_nesting, test)
     #TODO
-    # TypeInfo(
-    #   Type:    ,
-    #   path:    nesting,
-    #   mutable: false,
-    #   used:    false,
-    # ).typeRegistration(struct_name, nesting)
-    code.add((OTHER, "} ;"))
+    TypeInfo(
+      Type:    type_cps.join("+"),
+      code:    struct_name,
+      path:    nesting,
+      mutable: false,
+      used:    false,
+    ).typeRegistration(struct_name, nesting)
+    codeType = type_cps.join("+")
+
+    code.add((OTHER, "} " & struct_name & " ;"))
 
   # if文
   of nkIfStatement:
@@ -1453,7 +1550,7 @@ proc makeCppCode*(node: Node, indent: int, test: bool): string =
       outCode.add(ind & newLine & "\n")
       braceCount = braceCount + 1
       newLine = ""
-    elif part.Type == OTHER and (part.Code == "}" or part.Code == "} ;" or part.Code == "} () ;"):
+    elif part.Type == OTHER and part.Code.contains("}"):
       if newLine.split(" ").join("") != "":
         outCode.add(newLine)
       braceCount = braceCount - 1

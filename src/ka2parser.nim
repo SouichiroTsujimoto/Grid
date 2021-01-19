@@ -24,6 +24,7 @@ proc parseCallExpression(p: Parser, left: Node): Node
 proc parseNodes(p: Parser, endToken: string): Node
 proc parseType(p: Parser, init: bool): Node
 proc parseNameProc(p: Parser, endToken: string): Node
+proc parseTypeIdent(p: Parser, init: bool): Node
 
 # curTokenとpeekTokenを一つ進める
 proc shiftToken(p: Parser) =
@@ -312,12 +313,29 @@ proc parseCallExpression(p: Parser, left: Node): Node =
   else:
     echoErrorMessage("無効な関数呼び出しです", false, p.curToken.Line)
 
+# 複合リテラル
+proc parseCompoundLiteral(p: Parser, left: Node): Node =
+  if left.kind == nkIdent:
+    var node = Node(
+      kind:  nkCompoundLiteral,
+      token: p.curToken,
+      child_nodes: @[left, p.parseNodes(RBRACE)],
+    )
+    return node
+  else:
+    echoErrorMessage("無効な複合リテラルです", false, p.curToken.Line)
+
 # 名前
 proc parseIdent(p: Parser): Node =
-  let node = Node(
-    kind:  nkIdent,
-    token: p.curToken,
+  var node = Node(
+    kind:        nkIdent,
+    token:       p.curToken,
+    child_nodes: @[],
   )
+
+  if p.peekToken.Type == IDENT:
+    node = p.parseTypeIdent(true)
+  
   return node
 
 # 整数値リテラル
@@ -560,7 +578,33 @@ proc parseArrayType(p: Parser, init: bool): Node =
   
   return node
 
-#------ここまで------
+# ユーザー定義型
+proc parseTypeIdent(p: Parser, init: bool): Node =
+  # Token 特殊
+  let node = Node(
+    kind:  nkTypeIdent,
+    token: Token(Type: p.curToken.Literal, Literal: p.curToken.Literal, Line: p.curToken.Line),
+    child_nodes: @[],
+  )
+  if p.peekToken.Type != IDENT:
+    echoErrorMessage("変数名がありません", false, p.curToken.Line)
+    return node
+
+  p.shiftToken()
+  node.child_nodes.add(p.parseIdent())
+  
+  if init == false:
+    return node
+  
+  if p.peekToken.Type != EQUAL:
+    echoErrorMessage("初期化されていません", false, p.curToken.Line)
+    return node
+  
+  p.shiftToken()
+  p.shiftToken()
+  node.child_nodes.add(p.parseExpression(Lowest))
+  
+  return node
 
 # if文
 proc parseIfStatement(p: Parser): Node =
@@ -727,13 +771,6 @@ proc parseLaterStatement(p: Parser): Node =
 
   return node
 
-# proc parsePair(p: Parser): Node =
-#   var node = Node(
-#     kind:        nkPair,
-#     token:       p.curToken,
-#     child_nodes: @[],
-#   )
-
 # struct文
 proc parseStruct(p: Parser): Node =
   var node = Node(
@@ -781,7 +818,7 @@ proc parseType(p: Parser, init: bool): Node =
   of T_STRING   : return p.parseStringType(init)
   of T_BOOL     : return p.parseBoolType(init)
   of T_ARRAY    : return p.parseArrayType(init)
-  else          : echoErrorMessage("存在しない型です", false, p.curToken.Line)
+  else          : return p.parseTypeIdent(init)
 
 # 式の処理
 proc parseExpression(p: Parser, precedence: Precedence): Node =
@@ -814,6 +851,8 @@ proc parseExpression(p: Parser, precedence: Precedence): Node =
       left = p.parseAssignExpression(left)
     of LPAREN:
       left = p.parseCallExpression(left)
+    of LBRACE:
+      left = p.parseCompoundLiteral(left)
     of LBRACKET:
       left = p.parseAccessElement(left)
     of PIPE:
