@@ -9,6 +9,7 @@ type codeParts = tuple
 
 type IdentInfo* = ref object of RootObj
   Type*:        string
+  member*:      seq[(string, IdentInfo)]
   init*:        bool
   path:         int
   mutable*:     bool
@@ -16,6 +17,7 @@ type IdentInfo* = ref object of RootObj
 
 type TypeInfo* = ref object of RootObj
   Type*:        string
+  member*:      seq[(string, TypeInfo)]
   code*:        string
   path:         int
   mutable*:     bool
@@ -105,12 +107,33 @@ proc deleteScope(n: int, test: bool): seq[codeParts] =
 
     scopeTable = new_scopeTable
 
-proc identExistenceCheck(ident: string): bool =
-  if identTable.contains(ident):
-    if identTable[ident].path <= nesting and identTable[ident].init == true:
-      return true
+proc memberSearch(member: seq[(string, IdentInfo)], target: string): (bool, IdentInfo) =
+  var target_split = target.split(".")
   
-  return false
+  if target_split.len() == 1:
+    for elem in member:
+      if elem[0] == target_split[0]:
+        return (true, elem[1])
+  else:
+    for elem in member:
+      if elem[0] == target_split[0]:
+        return memberSearch(elem[1].member, target_split[1..target_split.len()-1].join("."))
+  
+  return (false, IdentInfo())
+
+proc identExistenceCheck(ident: string): (bool, IdentInfo) =
+  var ident_split = ident.split(".")
+
+  if ident_split.len() == 1:
+    if identTable.contains(ident_split[0]):
+      if identTable[ident_split[0]].path <= nesting and identTable[ident_split[0]].init == true:
+        return (true, identTable[ident_split[0]])
+  else:
+    if identTable.contains(ident_split[0]):
+      if identTable[ident_split[0]].path <= nesting and identTable[ident_split[0]].init == true:
+        return (false, memberSearch(identTable[ident_split[0]].member, ident_split[1..ident_split.len()-1].join("."))[1])
+  
+  return (false, IdentInfo())
 
 proc typeExistenceCheck(Type: string): bool =
   if typeTable.contains(Type):
@@ -552,13 +575,20 @@ proc makeInitValue(Type: string, test: bool, line: int): seq[codeParts] =
     else:
       echoErrorMessage("当てはまらない型です", test, line)
 
-proc makeVarDefine(node: Node, var_name: string, namespace: seq[string], type_cp: codeParts, value: seq[codeParts], test: bool, mutable: bool, init: bool): (seq[codeParts], string) =
-  var code: seq[codeParts]
-  var codeType: string
-  var types = node.token.Type.split("::")
-  var var_name_full = join(namespace & @[var_name], ".")
+proc makeVarDefine(node: Node, var_name: string, namespace: string, type_cp: codeParts, value: seq[codeParts], test: bool, mutable: bool, init: bool): (seq[codeParts], string) =
+  var
+    code: seq[codeParts]
+    codeType: string
+    types = node.token.Type.split("::")
+    var_name_full: string = var_name
   
-  if identExistenceCheck(var_name_full):
+  if namespace != "":
+    if identExistenceCheck(namespace)[0]:
+      var_name_full = namespace & "." & var_name_full
+    else:
+      echoErrorMessage("\"" & namespace & "\"が存在しません", test, node.token.Line)
+  
+  if identExistenceCheck(var_name_full)[0]:
     echoErrorMessage("既に定義されています", test, node.token.Line)
 
   if types[0] == ARRAY:
@@ -578,13 +608,23 @@ proc makeVarDefine(node: Node, var_name: string, namespace: seq[string], type_cp
     code.add((OTHER, "="))
     code.add(value)
   code.addSemicolon()
-  IdentInfo(
-    Type:     codeType,
-    init:     init,
-    path:     nesting,
-    mutable:  mutable,
-    used:     false,
-  ).identRegistration(var_name_full, nesting)
+
+  if namespace == "":
+    IdentInfo(
+      Type:     codeType,
+      init:     init,
+      path:     nesting,
+      mutable:  mutable,
+      used:     false,
+    ).identRegistration(var_name_full, nesting)
+  else:
+    identTable[namespace].member.add((var_name, IdentInfo(
+      Type:     codeType,
+      init:     init,
+      path:     nesting,
+      mutable:  mutable,
+      used:     false,
+    )))
   
   return (code, codeType)
 
@@ -690,7 +730,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
         var_name = node.child_nodes[0].token.Literal
         value = node.child_nodes[1].makeCodeParts(test, new_dost)
       if type_cp[0].removeT() == value[1]:
-        var mvd_res = makeVarDefine(node, var_name, @[], type_cp, value[0], test, false, true)
+        var mvd_res = makeVarDefine(node, var_name, "", type_cp, value[0], test, false, true)
         code.add(mvd_res[0])
         codeType = mvd_res[1]
       else:
@@ -710,7 +750,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
         var_name = node.child_nodes[0].token.Literal
         value = node.child_nodes[1].makeCodeParts(test, new_dost)
       if type_cp[0].removeT() == value[1]:
-        var mvd_res = makeVarDefine(node, var_name, @[], type_cp, value[0], test, false, true)
+        var mvd_res = makeVarDefine(node, var_name, "", type_cp, value[0], test, false, true)
         code.add(mvd_res[0])
         codeType = mvd_res[1]
       else:
@@ -730,7 +770,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
         var_name = node.child_nodes[0].token.Literal
       var value = node.child_nodes[1].makeCodeParts(test, new_dost)
       if type_cp[0].removeT() == value[1]:
-        var mvd_res = makeVarDefine(node, var_name, @[], type_cp, value[0], test, false, true)
+        var mvd_res = makeVarDefine(node, var_name, "", type_cp, value[0], test, false, true)
         code.add(mvd_res[0])
         codeType = mvd_res[1]
       else:
@@ -750,7 +790,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
         var_name = node.child_nodes[0].token.Literal
         value = node.child_nodes[1].makeCodeParts(test, new_dost)
       if type_cp[0].removeT() == value[1]:
-        var mvd_res = makeVarDefine(node, var_name, @[], type_cp, value[0], test, false, true)
+        var mvd_res = makeVarDefine(node, var_name, "", type_cp, value[0], test, false, true)
         code.add(mvd_res[0])
         codeType = mvd_res[1]
       else:
@@ -770,7 +810,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
         var_name = node.child_nodes[0].token.Literal
         value = node.child_nodes[1].makeCodeParts(test, new_dost)
       if type_cp[0].removeT() == value[1]:
-        var mvd_res = makeVarDefine(node, var_name, @[], type_cp, value[0], test, false, true)
+        var mvd_res = makeVarDefine(node, var_name, "", type_cp, value[0], test, false, true)
         code.add(mvd_res[0])
         codeType = mvd_res[1]
       else:
@@ -794,7 +834,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
         var_name = node.child_nodes[0].token.Literal
         value = node.child_nodes[1].makeCodeParts(test, new_dost)
       if type_cp[0].removeT() == value[1]:
-        var mvd_res = makeVarDefine(node, var_name, @[], type_cp, value[0], test, false, true)
+        var mvd_res = makeVarDefine(node, var_name, "", type_cp, value[0], test, false, true)
         code.add(mvd_res[0])
         codeType = mvd_res[1]
       else:
@@ -816,7 +856,9 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
         var_name = node.child_nodes[0].token.Literal
         value = node.child_nodes[1].makeCodeParts(test, new_dost)
       if type_cp[0].removeT() == value[1]:
-        var mvd_res = makeVarDefine(node, var_name, @[], type_cp, value[0], test, false, true)
+        var mvd_res = makeVarDefine(node, var_name, "", type_cp, value[0], test, false, true)
+        for m in typeTable[node.token.Type.removeT()].member:
+          discard makeVarDefine(node, m[0], var_name, m[1].Type.conversionCppType(test, node.token.Line), @[], test, false, true)
         code.add(mvd_res[0])
         codeType = mvd_res[1]
       else:
@@ -856,14 +898,20 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
 
   # 名前
   of nkIdent:
-    if identExistenceCheck(node.token.Literal):
+    var check_res = identExistenceCheck(node.token.Literal)
+
+    if check_res[0]:
       code.add((IDENT, node.token.Literal))
-      codeType = identTable[node.token.Literal].Type
+      codeType = (identTable[node.token.Literal].Type)
       identTable[node.token.Literal].used = true
+    elif check_res[1] != IdentInfo():
+      code.add((IDENT, node.token.Literal))
+      codeType = (check_res[1].Type)
+      identTable[node.token.Literal.split(".")[0]].used = true
     else:
       let ic = node.token.Literal.conversionCppFunction(@[])
       if ic[1] == NIL:
-        echoErrorMessage("定義されていない名前です", test, node.token.Line)
+        echoErrorMessage("\"" & node.token.Literal & "\"が定義されていません", test, node.token.Line)
       code.add((ic[1], ic[2]))
       codeType = ic[1]
 
@@ -874,7 +922,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
     
     var new_dost = true
     let di = node.child_nodes[0].makeCodeParts(test, new_dost)
-    if identExistenceCheck(di[0][1][1]):
+    if identExistenceCheck(di[0][1][1])[0]:
       echoErrorMessage("既に定義されています", test, node.token.Line)
     # echo di
     code.add((OTHER, di[0][0].Code))
@@ -951,7 +999,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
     var new_dost = true
 
     let di = node.child_nodes[0].makeCodeParts(test, new_dost)
-    if identExistenceCheck(di[0][1][1]):
+    if identExistenceCheck(di[0][1][1])[0]:
       echoErrorMessage("既に定義されています", test, node.token.Line)
     # echo di
     code.add(di[0][0])
@@ -1080,7 +1128,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
       code.add(l[0])
       lt = l[1]
       nestingIncrement()
-      if identExistenceCheck(l[0][1][1]):
+      if identExistenceCheck(l[0][1][1])[0]:
         echoErrorMessage("既に定義されています", test, node.token.Line)
       IdentInfo(
         Type:    lt,
@@ -1128,20 +1176,30 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
     else:
       echoErrorMessage("添字がありません", test, node.token.Line)
 
-  # 代入式
+  # TODO 代入式
   of nkAssignExpression:
     var lt, rt: string
     if node.child_nodes.len() == 2:
       # 値を代入しようとしている変数のチェック
       # 未定義の変数も扱うので少し特殊
       var lmc = node.child_nodes[0].token.Literal
-      if identTable.contains(lmc) == false:
-        echoErrorMessage("定義されていない名前です", test, node.token.Line)
-      elif identTable[lmc].mutable == false and identTable[lmc].init == true:
+      var lmc_split = lmc.split(".")
+      
+      if identTable.contains(lmc_split[0]) == false:
+        echoErrorMessage("\"" & lmc & "\"が定義されていません", test, node.token.Line)
+      elif identTable[lmc_split[0]].mutable == false and identTable[lmc_split[0]].init == true:
         echoErrorMessage("代入しようとしている変数がイミュータブルです", test, node.token.Line)
       else:
-        identTable[lmc].init = true
-        code.add((IDENT, lmc))
+        if lmc_split.len() != 1:
+          var search_res = memberSearch(identTable[lmc_split[0]].member, lmc_split[1..lmc_split.len()-1].join("."))
+          if search_res[0]:
+            identTable[lmc_split[0]].init = true
+            code.add((IDENT, lmc))
+          else:
+            echoErrorMessage("\"" & lmc & "\"が定義されていません", test, node.token.Line)
+        else:
+          identTable[lmc_split[0]].init = true
+          code.add((IDENT, lmc_split[0]))
       lt = identTable[lmc].Type
 
       code.add((OTHER, "="))
@@ -1151,6 +1209,9 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
     else:
       echoErrorMessage("オペランドがありません", test, node.token.Line)
     code.addSemicolon()
+    echo "左と右"
+    echo lt
+    echo rt
     if typePartMatch(lt, rt)[0]:
       codeType = lt
     else:
@@ -1170,7 +1231,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
       argsCode.add(a[0].replaceSemicolon(@[(OTHER, "")]))
       argsType.add(a[1])
     let funcName = node.child_nodes[0].token.Literal
-    let iec = identExistenceCheck(funcName)
+    let iec = identExistenceCheck(funcName)[0]
     if iec:
       # TODO 不安
       let ftm = funcTypesMatch(identTable[funcName].Type, argsType.join("+"))
@@ -1188,7 +1249,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
         if ccf[1] == OTHER:
           echoErrorMessage("引数の型が正しくありません", test, node.token.Line)
         else:
-          echoErrorMessage("定義されていない名前です", test, node.token.Line)
+          echoErrorMessage("\"" & funcName & "\"が定義されていません", test, node.token.Line)
     
     code.add((OTHER, "("))
     for i, argc in argsCode:
@@ -1239,7 +1300,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
       cpp_func_name = ccf[2]
       func_result_type = ccf[1]
     else:
-      if identExistenceCheck(func_name) == false:
+      if identExistenceCheck(func_name)[0] == false:
         if ccf[1] == NIL:
           echoErrorMessage("存在しない関数です", test, node.token.Line)
         else:
@@ -1312,7 +1373,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
       var var_name = statement.child_nodes[0].token.Literal
       var value = statement.child_nodes[1].makeCodeParts(test, new_dost)
       if type_cp[0].removeT() == value[1]:
-        var mvd_res = makeVarDefine(node, var_name, @[], type_cp, value[0], test, true, true)
+        var mvd_res = makeVarDefine(node, var_name, "", type_cp, value[0], test, true, true)
         code.add(mvd_res[0])
         codeType = mvd_res[1]
       else:
@@ -1325,7 +1386,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
 
     nestingReset(original_nesting, test)
 
-  # later文
+  # TODO later文
   of nkLaterStatement:
     if dost == false:
       code.add((OTHER, "\n"))
@@ -1338,7 +1399,10 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
     for statement in node.child_nodes:
       type_cp = statement.token.Type.conversionCppType(test, node.token.Line)
       var_name = statement.child_nodes[0].token.Literal
-      mvd_res = makeVarDefine(node, var_name, @[], type_cp, @[], test, false, false)
+      if typeExistenceCheck(statement.token.Type):
+        for m in typeTable[statement.token.Type].member:
+          discard makeVarDefine(node, m[0], var_name, m[1].Type.conversionCppType(test, node.token.Line), @[], test, false, false)
+      mvd_res = makeVarDefine(node, var_name, "", type_cp, @[], test, false, false)
       code.add(mvd_res[0].replaceSemicolon(@[(OTHER, "")]))
       code.add((OTHER, "="))
       code.add(makeInitValue(type_cp[0].removeT(), test, node.token.Line))
@@ -1361,28 +1425,38 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
     code.add((OTHER, "{"))
 
     var
-      type_cps: seq[string]
+      member_infos: seq[(string, TypeInfo)]
+      member_types: seq[string]
       type_cp: codeParts
-      var_name: string
+      member_name: string
       mvd_res: (seq[codeParts], string)
     for statement in node.child_nodes[1].child_nodes:
       type_cp = statement.token.Type.conversionCppType(test, node.token.Line)
-      type_cps.add(type_cp.Type.removeT())
-      var_name = statement.child_nodes[0].token.Literal
-      mvd_res = makeVarDefine(node, var_name, @[], type_cp, @[], test, false, false)
+      member_name = statement.child_nodes[0].token.Literal
+      member_infos.add((member_name, TypeInfo(
+        Type:    type_cp[0],
+        member:  @[],
+        code:    type_cp[1],
+        path:    nesting,
+        mutable: false,
+        used:    false,
+      )))
+      member_types.add(type_cp.Type.removeT())
+      mvd_res = makeVarDefine(node, member_name, "", type_cp, @[], test, false, false)
       code.add(mvd_res[0].replaceSemicolon(@[(OTHER, "")]))
       code.addSemicolon()
 
     nestingReset(original_nesting, test)
     #TODO
     TypeInfo(
-      Type:    type_cps.join("+"),
+      Type:    member_types.join("+"),
+      member:  member_infos,
       code:    struct_name,
       path:    nesting,
       mutable: false,
       used:    false,
     ).typeRegistration(struct_name, nesting)
-    codeType = type_cps.join("+")
+    codeType = member_types.join("+")
 
     code.add((OTHER, "} " & struct_name & " ;"))
 

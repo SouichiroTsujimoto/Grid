@@ -435,7 +435,11 @@ proc parseIntType(p: Parser, init: bool): Node =
     return node
 
   p.shiftToken()
-  node.child_nodes.add(p.parseIdent())
+  # parseIdent()を使うとTypeIdentになってしまう可能性がある
+  node.child_nodes.add(Node(
+    kind:        nkIdent,
+    token:       p.curToken,
+  ))
   
   if init == false:
     return node
@@ -462,7 +466,10 @@ proc parseFloatType(p: Parser, init: bool): Node =
     return node
 
   p.shiftToken()
-  node.child_nodes.add(p.parseIdent())
+  node.child_nodes.add(Node(
+    kind:        nkIdent,
+    token:       p.curToken,
+  ))
   
   if init == false:
     return node
@@ -489,7 +496,10 @@ proc parseCharType(p: Parser, init: bool): Node =
     return node
 
   p.shiftToken()
-  node.child_nodes.add(p.parseIdent())
+  node.child_nodes.add(Node(
+    kind:        nkIdent,
+    token:       p.curToken,
+  ))
   
   if init == false:
     return node
@@ -516,7 +526,10 @@ proc parseStringType(p: Parser, init: bool): Node =
     return node
 
   p.shiftToken()
-  node.child_nodes.add(p.parseIdent())
+  node.child_nodes.add(Node(
+    kind:        nkIdent,
+    token:       p.curToken,
+  ))
   
   if init == false:
     return node
@@ -543,7 +556,10 @@ proc parseBoolType(p: Parser, init: bool): Node =
     return node
 
   p.shiftToken()
-  node.child_nodes.add(p.parseIdent())
+  node.child_nodes.add(Node(
+    kind:        nkIdent,
+    token:       p.curToken,
+  ))
   
   if init == false:
     return node
@@ -591,7 +607,10 @@ proc parseTypeIdent(p: Parser, init: bool): Node =
     return node
 
   p.shiftToken()
-  node.child_nodes.add(p.parseIdent())
+  node.child_nodes.add(Node(
+    kind:        nkIdent,
+    token:       p.curToken,
+  ))
   
   if init == false:
     return node

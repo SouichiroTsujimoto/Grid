@@ -5,9 +5,7 @@ typedef struct {
   std::string b ;
 } hoge ;
 
-hoge kansuu ( hoge x , hoge y ) {
-  return ( y ) ;
-}
-
 int main ( int argc , char *argv[] ) {
+  hoge ahoge = ( hoge ) { 100 , "だめ" } ;
+  ka23::println ( ahoge.b ) ;
 }

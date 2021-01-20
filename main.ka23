@@ -3,10 +3,7 @@ struct hoge do
   string b,
 end
 
-def hoge kansuu(hoge x, hoge y) do
-  return y
-end
-
 main do
-  
+  hoge ahoge = hoge{100, "だめ"}
+  println(ahoge.b)
 end
