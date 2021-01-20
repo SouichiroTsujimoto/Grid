@@ -1,4 +1,4 @@
-import ka2token, ka2node, ka2token, ka2error
+import g_token, g_node, g_token, g_error
 
 proc makeNewNode(inp_node: Node, main_flag: bool, test: bool): (Node, bool)
 

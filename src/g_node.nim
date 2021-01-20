@@ -1,4 +1,4 @@
-import ka2token
+import g_token
 
 type 
   NodeKind* = enum

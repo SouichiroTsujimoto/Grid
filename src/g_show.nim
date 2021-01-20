@@ -1,4 +1,4 @@
-import ka2node
+import g_node
 
 proc showAST*(node: Node, indent: int): string =
   if node.kind != nkNil:

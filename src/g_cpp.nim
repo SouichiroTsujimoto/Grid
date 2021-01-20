@@ -1,4 +1,4 @@
-import ka2token, ka2node, ka2token, ka2error, ka2show
+import g_token, g_node, g_token, g_error, g_show
 import strutils, tables, os
 
 #------↓仮↓------
@@ -352,174 +352,174 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
   case fn
   of "plus":
     if argsTypeC.len() == 0:
-      return (true, IDENT, "ka23::plus")
+      return (true, IDENT, "grid::plus")
     elif argsTypeC.len() == 2:
       var ftm_res = funcTypesMatch("@a" & "+" & "@a" & "->" & "@a", argsType.join("+"))
       if ftm_res[0] == false:
-        return (false, OTHER, "ka23::plus")
+        return (false, OTHER, "grid::plus")
       var tf_res = ftm_res[1].typeFilter(number_t)
       if tf_res[0] == false:
-        return (false, OTHER, "ka23::plus")
+        return (false, OTHER, "grid::plus")
       
-      return (true, tf_res[1], "ka23::plus")
+      return (true, tf_res[1], "grid::plus")
     else:
       return (false, OTHER, "")
   of "minu":
     if argsTypeC.len() == 0:
-      return (true, IDENT, "ka23::minu")
+      return (true, IDENT, "grid::minu")
     elif argsTypeC.len() == 2:
       var ftm_res = funcTypesMatch("@a" & "+" & "@a" & "->" & "@a", argsType.join("+"))
       if ftm_res[0] == false:
-        return (false, OTHER, "ka23::minu")
+        return (false, OTHER, "grid::minu")
       var tf_res = ftm_res[1].typeFilter(number_t)
       if tf_res[0] == false:
-        return (false, OTHER, "ka23::minu")
+        return (false, OTHER, "grid::minu")
       
-      return (true, tf_res[1], "ka23::minu")
+      return (true, tf_res[1], "grid::minu")
     else:
       return (false, OTHER, "")
   of "mult":
     if argsTypeC.len() == 0:
-      return (true, IDENT, "ka23::mult")
+      return (true, IDENT, "grid::mult")
     elif argsTypeC.len() == 2:
       var ftm_res = funcTypesMatch("@a" & "+" & "@a" & "->" & "@a", argsType.join("+"))
       if ftm_res[0] == false:
-        return (false, OTHER, "ka23::mult")
+        return (false, OTHER, "grid::mult")
       var tf_res = ftm_res[1].typeFilter(number_t)
       if tf_res[0] == false:
-        return (false, OTHER, "ka23::mult")
+        return (false, OTHER, "grid::mult")
       
-      return (true, tf_res[1], "ka23::mult")
+      return (true, tf_res[1], "grid::mult")
     else:
       return (false, OTHER, "")
   of "divi":
     if argsTypeC.len() == 0:
-      return (true, IDENT, "ka23::divi")
+      return (true, IDENT, "grid::divi")
     elif argsTypeC.len() == 2:
       var ftm_res = funcTypesMatch("@a" & "+" & "@a" & "->" & "@a", argsType.join("+"))
       if ftm_res[0] == false:
-        return (false, OTHER, "ka23::divi")
+        return (false, OTHER, "grid::divi")
       var tf_res = ftm_res[1].typeFilter(number_t)
       if tf_res[0] == false:
-        return (false, OTHER, "ka23::divi")
+        return (false, OTHER, "grid::divi")
       
-      return (true, tf_res[1], "ka23::divi")
+      return (true, tf_res[1], "grid::divi")
     else:
       return (false, OTHER, "")
   of "print":
     if argsTypeC.len() == 0:
-      return (true, IDENT, "ka23::print")
+      return (true, IDENT, "grid::print")
     elif argsTypeC.len() == 1:
       var ftm_res = funcTypesMatch(letter_t & "->" & NIL, argsType.join("+"))
       if ftm_res[0] == false:
-        return (false, OTHER, "ka23::print")
+        return (false, OTHER, "grid::print")
       
-      return (true, ftm_res[1], "ka23::print")
+      return (true, ftm_res[1], "grid::print")
     else:
       return (false, OTHER, "")
   of "println":
     if argsTypeC.len() == 0:
-      return (true, IDENT, "ka23::println")
+      return (true, IDENT, "grid::println")
     elif argsTypeC.len() == 1:
       var ftm_res = funcTypesMatch(letter_t & "->" & NIL, argsType.join("+"))
       if ftm_res[0] == false:
-        return (false, OTHER, "ka23::println")
+        return (false, OTHER, "grid::println")
       
-      return (true, ftm_res[1], "ka23::println")
+      return (true, ftm_res[1], "grid::println")
     else:
       return (false, OTHER, "")
   of "len":
     if argsTypeC.len() == 0:
-      return (true, IDENT, "ka23::len")
+      return (true, IDENT, "grid::len")
     elif argsTypeC.len() == 1:
       var ftm_res = funcTypesMatch("ARRAY::@a" & "->" & "INT", argsType.join("+"))
       if ftm_res[0] == false:
-        return (false, OTHER, "ka23::len")
+        return (false, OTHER, "grid::len")
       
-      return (true, ftm_res[1], "ka23::len")
+      return (true, ftm_res[1], "grid::len")
     else:
       return (false, OTHER, "")
   of "join":
     if argsTypeC.len() == 0:
-      return (true, IDENT, "ka23::join")
+      return (true, IDENT, "grid::join")
     elif argsTypeC.len() == 2:
       var ftm_res = funcTypesMatch("ARRAY::@a" & "+" & "ARRAY::@a" & "->" & "ARRAY::@a", argsType.join("+"))
       if ftm_res[0] == false:
-        return (false, OTHER, "ka23::join")
+        return (false, OTHER, "grid::join")
       
-      return (true, ftm_res[1], "ka23::join")
+      return (true, ftm_res[1], "grid::join")
     else:
       return (false, OTHER, "")
   of "head":
     if argsTypeC.len() == 0:
-      return (true, IDENT, "ka23::join")
+      return (true, IDENT, "grid::join")
     elif argsTypeC.len() == 1:
       var ftm_res = funcTypesMatch("ARRAY::@a" & "->" & "@a", argsType.join("+"))
       if ftm_res[0] == false:
-        return (false, OTHER, "ka23::head")
+        return (false, OTHER, "grid::head")
       
-      return (true, ftm_res[1], "ka23::head")
+      return (true, ftm_res[1], "grid::head")
     else:
       return (false, OTHER, "")
   of "tail":
     if argsTypeC.len() == 0:
-      return (true, IDENT, "ka23::tail")
+      return (true, IDENT, "grid::tail")
     elif argsTypeC.len() == 1:
       var ftm_res = funcTypesMatch("ARRAY::@a" & "->" & "ARRAY::@a", argsType.join("+"))
       if ftm_res[0] == false:
-        return (false, OTHER, "ka23::tail")
+        return (false, OTHER, "grid::tail")
       
-      return (true, ftm_res[1], "ka23::tail")
+      return (true, ftm_res[1], "grid::tail")
     else:
       return (false, OTHER, "")
   of "last":
     if argsTypeC.len() == 0:
-      return (true, IDENT, "ka23::last")
+      return (true, IDENT, "grid::last")
     elif argsTypeC.len() == 1:
       var ftm_res = funcTypesMatch("ARRAY::@a" & "->" & "@a", argsType.join("+"))
       if ftm_res[0] == false:
-        return (false, OTHER, "ka23::last")
+        return (false, OTHER, "grid::last")
       
-      return (true, ftm_res[1], "ka23::last")
+      return (true, ftm_res[1], "grid::last")
     else:
       return (false, OTHER, "")
   of "init":
     if argsTypeC.len() == 0:
-      return (true, IDENT, "ka23::init")
+      return (true, IDENT, "grid::init")
     elif argsTypeC.len() == 1:
       var ftm_res = funcTypesMatch("ARRAY::@a" & "->" & "ARRAY::@a", argsType.join("+"))
       if ftm_res[0] == false:
-        return (false, OTHER, "ka23::init")
+        return (false, OTHER, "grid::init")
       
-      return (true, ftm_res[1], "ka23::init")
+      return (true, ftm_res[1], "grid::init")
     else:
       return (false, OTHER, "")
   of "toString":
     if argsTypeC.len() == 0:
-      return (true, IDENT, "ka23::toString")
+      return (true, IDENT, "grid::toString")
     elif argsTypeC.len() == 1:
       var ftm_res = funcTypesMatch(anything_t & "->" & STRING, argsType.join("+"))
       if ftm_res[0] == false:
-        return (false, OTHER, "ka23::toString")
+        return (false, OTHER, "grid::toString")
       
-      return (true, ftm_res[1], "ka23::toString")
+      return (true, ftm_res[1], "grid::toString")
     else:
       return (false, OTHER, "")
   of "at":
     if argsTypeC.len() == 0:
-      return (true, IDENT, "ka23::at")
+      return (true, IDENT, "grid::at")
     elif argsTypeC.len() == 2:
       var ftm_res = funcTypesMatch("ARRAY::@a" & "+" & INT & "->" & "@a", argsType.join("+"))
       if ftm_res[0] == false:
-        return (false, OTHER, "ka23::at")
+        return (false, OTHER, "grid::at")
       
-      return (true, ftm_res[1], "ka23::at")
+      return (true, ftm_res[1], "grid::at")
     else:
       return (false, OTHER, "")
   of "readln":
     if argsTypeC.len() == 0:
       let res_type = STRING
-      return (true, res_type, "ka23::readln")
+      return (true, res_type, "grid::readln")
     else:
       return (false, OTHER, "")
   else:
@@ -1317,7 +1317,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
     if func_result_type.split("::") != array_type_split[1..array_type_split.len()-1]:
       echoErrorMessage("第二引数の関数の返り値が正しくありません", test, node.token.Line)
 
-    code.add((IDENT, "ka23::map"))
+    code.add((IDENT, "grid::map"))
     code.add((OTHER, "("))
     code.add(array_content)
     code.add((OTHER, ","))

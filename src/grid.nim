@@ -1,8 +1,8 @@
-import  ka2parser, ka2rw, ka2node, ka2cpp, ka2shaping, ka2show, ka2error, ka2token, ka2preprocessor
+import  g_parser, g_rw, g_node, g_cpp, g_shaping, g_show, g_error, g_token, g_preprocessor
 import strutils, system, os
 
 var cppCode = """
-#include "ka2lib/ka2funcs.cpp"
+#include "gridfuncs.cpp"
 """
 
 type Lang = enum
@@ -123,7 +123,7 @@ when isMainModule:
       ・ エラーメッセージを英語化できるようにする
       ・ リファレンス的なのを用意する
       
-      ・ ka2funcsを自動生成 ✅
+      ・ g_funcsを自動生成 ✅
       ・ 最適化オプション
       ・ エラーメッセージをちゃんと作る 🔺
       ・ てきとうすぎる変数名、関数名をどうにかする

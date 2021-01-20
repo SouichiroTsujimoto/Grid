@@ -1,4 +1,4 @@
-#include "ka2lib/ka2funcs.cpp"
+#include "gridfuncs.cpp"
 
 typedef struct {
   int a ;
@@ -6,6 +6,6 @@ typedef struct {
 } hoge ;
 
 int main ( int argc , char *argv[] ) {
-  hoge ahoge = ( hoge ) { 100 , "だめ" } ;
-  ka23::println ( ahoge.b ) ;
+  hoge ahoge = ( hoge ) { 100 , "あ" } ;
+  grid::println ( ahoge.b ) ;
 }

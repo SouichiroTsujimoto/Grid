@@ -1,4 +1,4 @@
-import ka2token, ka2error
+import g_token, g_error
 
 type Lexer* = ref object of RootObj
   input:        string

@@ -4,7 +4,7 @@
 #include <tuple>
 #include <functional>
 
-namespace ka23 {
+namespace grid {
   auto plus = [](auto a, auto b){
     return a + b;
   };

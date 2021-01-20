@@ -4,6 +4,6 @@ struct hoge do
 end
 
 main do
-  hoge ahoge = hoge{100, "だめ"}
+  hoge ahoge = hoge{100, "あ"}
   println(ahoge.b)
 end

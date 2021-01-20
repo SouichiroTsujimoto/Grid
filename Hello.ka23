@@ -1,3 +1,0 @@
-def int hoge(int x) do
-  return x
-end

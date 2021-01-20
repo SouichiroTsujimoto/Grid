@@ -1,4 +1,4 @@
-import ../src/ka2parser, ../src/ka2cpp, ../src/ka2shaping, ../src/ka2node, ../src/ka2token
+import ../src/g_parser, ../src/g_cpp, ../src/g_shaping, ../src/g_node, ../src/g_token
 import unittest, strutils
 
 proc findStr(code: string, str: string): bool =
@@ -73,11 +73,11 @@ suite "|>":
   test "1 |> plus(2) |> plus(3) |> divi(6)":
     initTables()
     let program = "1 |> plus(2) |> plus(3) |> divi(6)".makeProgram(true)
-    check(program.findStr("ka23::divi ( ka23::plus ( ka23::plus ( 1 , 2 ) , 3 ) , 6 ) ;"))
+    check(program.findStr("grid::divi ( grid::plus ( grid::plus ( 1 , 2 ) , 3 ) , 6 ) ;"))
   test "(3 |> plus(10)) + (1 |> plus(1)) |> toString() |> print()":
     initTables()
     let program = "(3 |> plus(10)) + (1 |> plus(1)) |> toString() |> print()".makeProgram(true)
-    check(program.findStr("ka23::print ( ka23::toString ( ( ka23::plus ( 3 , 10 ) + ka23::plus ( 1 , 1 ) ) ) ) ;"))
+    check(program.findStr("grid::print ( grid::toString ( ( grid::plus ( 3 , 10 ) + grid::plus ( 1 , 1 ) ) ) ) ;"))
 
 suite "int":
   test "int a = 10":
@@ -134,7 +134,7 @@ suite "string":
   test "string a = toString(1)":
     initTables()
     let program = "string a = toString(1)".makeProgram(true)
-    check(program.findStr("std::string a = ka23::toString ( 1 ) ;"))
+    check(program.findStr("std::string a = grid::toString ( 1 ) ;"))
 
 suite "bool":
   test "bool a = True":
@@ -154,7 +154,7 @@ suite "array":
   test "array int a = map({1, 2, 3}, mult(10))":
     initTables()
     let program = "array int a = map({1, 2, 3}, mult(10))".makeProgram(true)
-    check(program.findStr("std::vector<int> a = ka23::map ( ( std::vector<int> ) { 1 , 2 , 3 } , [] ( int _i ) { return ka23::mult ( _i , 10 ) ; } ) ;"))
+    check(program.findStr("std::vector<int> a = grid::map ( ( std::vector<int> ) { 1 , 2 , 3 } , [] ( int _i ) { return grid::mult ( _i , 10 ) ; } ) ;"))
   test "array string a = {\"Hello\", \"World\"}":
     initTables()
     let program = "array string a = {\"Hello\", \"World\"}".makeProgram(true)
@@ -171,100 +171,6 @@ suite "array":
     initTables()
     let program = "array array array int a = {{{2}, {5, 6}}, {{4, 1}, {5}}}".makeProgram(true)
     check(program.findStr("std::vector<std::vector<std::vector<int>>> a = ( std::vector<std::vector<std::vector<int>>> ) { ( std::vector<std::vector<int>> ) { ( std::vector<int> ) { 2 } , ( std::vector<int> ) { 5 , 6 } } , ( std::vector<std::vector<int>> ) { ( std::vector<int> ) { 4 , 1 } , ( std::vector<int> ) { 5 } } } ;"))
-
-# suite "let": 
-#   test "let int a = 10":
-#     initTables()
-#     let program = "let int a = 10".makeProgram(true)
-#     check(program.findStr("int * a = new int ;"))
-#     check(program.findStr("* a = 10 ;"))
-#     check(program.findStr("delete a ;"))
-#   test "let int a = 10 + 10":
-#     initTables()
-#     let program = "let int a = 10 + 10".makeProgram(true)
-#     check(program.findStr("int * a = new int ;"))
-#     check(program.findStr("* a = ( 10 + 10 ) ;"))
-#     check(program.findStr("delete a ;"))
-#   test "let float a = 1.5":
-#     initTables()
-#     let program = "let float a = 1.5".makeProgram(true)
-#     check(program.findStr("float * a = new float ;"))
-#     check(program.findStr("* a = 1.5f ;"))
-#     check(program.findStr("delete a ;"))
-#   test "let char a = \'A\'":
-#     initTables()
-#     let program = "let char a = \'A\'".makeProgram(true)
-#     check(program.findStr("char * a = new char ;"))
-#     check(program.findStr("* a = \'A\' ;"))
-#     check(program.findStr("delete a ;"))
-#   test "let string a = \"Hello\"":
-#     initTables()
-#     let program = "let string a = \"Hello\"".makeProgram(true)
-#     check(program.findStr("std::string * a = new std::string ;"))
-#     check(program.findStr("* a = \"Hello\" ;"))
-#     check(program.findStr("delete a ;"))
-#   test "let bool a = True":
-#     initTables()
-#     let program = "let bool a = True".makeProgram(true)
-#     check(program.findStr("bool * a = new bool ;"))
-#     check(program.findStr("* a = true ;"))
-#     check(program.findStr("delete a ;"))
-#   test "let bool a = 1 >= 10":
-#     initTables()
-#     let program = "let bool a = 1 >= 10".makeProgram(true)
-#     check(program.findStr("bool * a = new bool ;"))
-#     check(program.findStr("* a = ( 1 >= 10 ) ;"))
-#     check(program.findStr("delete a ;"))
-
-# suite "var":
-#   test "var int a = 10":
-#     initTables()
-#     let program = "var int a = 10".makeProgram(true)
-#     check(program.findStr("int a = 10 ;"))
-#   test "var int a = 10 + 10":
-#     initTables()
-#     let program = "var int a = 10 + 10".makeProgram(true)
-#     check(program.findStr("int a = ( 10 + 10 ) ;"))
-#   test "var float a = 1.5":
-#     initTables()
-#     let program = "var float a = 1.5".makeProgram(true)
-#     check(program.findStr("float a = 1.5f ;"))
-#   test "var char a = \'A\'":
-#     initTables()
-#     let program = "var char a = \'A\'".makeProgram(true)
-#     check(program.findStr("char a = \'A\' ;"))
-#   test "var string a = \"Hello\"":
-#     initTables()
-#     let program = "var string a = \"Hello\"".makeProgram(true)
-#     check(program.findStr("std::string a = \"Hello\" ;"))
-#   test "var bool a = True":
-#     initTables()
-#     let program = "var bool a = True".makeProgram(true)
-#     check(program.findStr("bool a = true ;"))
-#   test "var bool a = 1 >= 10":
-#     initTables()
-#     let program = "var bool a = 1 >= 10".makeProgram(true)
-#     check(program.findStr("bool a = ( 1 >= 10 ) ;"))
-
-# suite "=":
-#   test "var int a = 10 a = 20":
-#     initTables()
-#     let program = "var int a = 10 a := 20".makeProgram(true)
-#     check(program.findStr("int a = 10 ;"))
-#     check(program.findStr("a = 20 ;"))
-#   test "var int a = 10 var int b = 20 a := b := 20":
-#     initTables()
-#     let program = "var int a = 10 var int b = 20 a := b := 20".makeProgram(true)
-#     check(program.findStr("int a = 10 ;"))
-#     check(program.findStr("int b = 20 ;"))
-#     check(program.findStr("a = b = 20 ;"))
-#   test "var int a = 10 var int b = 20 var int c = 30 a := b := c := 20":
-#     initTables()
-#     let program = "var int a = 10 var int b = 20 var int c = 30 a := b := c := 20".makeProgram(true)
-#     check(program.findStr("int a = 10 ;"))
-#     check(program.findStr("int b = 20 ;"))
-#     check(program.findStr("int c = 30 ;"))
-#     check(program.findStr("a = b = c = 20 ;"))
 
 suite "def":
   test "def int a(int b) do return b * 2 end":
@@ -292,16 +198,16 @@ suite "if":
     initTables()
     let program = "if 1 + 1 <= 3 do print(\"OK\") end".makeProgram(true)
     check(program.findStr("if ( ( ( 1 + 1 ) <= 3 ) ) {"))
-    check(program.findStr("ka23::print ( \"OK\" ) ;"))
+    check(program.findStr("grid::print ( \"OK\" ) ;"))
     check(program.findStr("}"))
   test "if 5 + 5 == 10 do print(\"5 + 5 = 10\") else print(\"?\") end":
     initTables()
     let program = "if 5 + 5 == 10 do print(\"5 + 5 = 10\") else print(\"?\") end".makeProgram(true)
     check(program.findStr("if ( ( ( 5 + 5 ) == 10 ) ) {"))
-    check(program.findStr("ka23::print ( \"5 + 5 = 10\" ) ;"))
+    check(program.findStr("grid::print ( \"5 + 5 = 10\" ) ;"))
     check(program.findStr("}"))
     check(program.findStr("else {"))
-    check(program.findStr("ka23::print ( \"?\" ) ;"))
+    check(program.findStr("grid::print ( \"?\" ) ;"))
     check(program.findStr("}"))
   test "if True do return \"1\" elif True do return \"2\" else return \"3\" end":
     initTables()
@@ -319,16 +225,16 @@ suite "if":
     initTables()
     let program = "if 1 == 3 do print(\"ok\") elif 4 != 5 do print(toString(True)) elif False do print(\"違う\") else print(\"else\") end".makeProgram(true)
     check(program.findStr("if ( ( 1 == 3 ) ) {"))
-    check(program.findStr("ka23::print ( \"ok\" ) ;"))
+    check(program.findStr("grid::print ( \"ok\" ) ;"))
     check(program.findStr("}"))
     check(program.findStr("else if ( ( 4 != 5 ) ) {"))
-    check(program.findStr("ka23::print ( ka23::toString ( true ) ) ;"))
+    check(program.findStr("grid::print ( grid::toString ( true ) ) ;"))
     check(program.findStr("}"))
     check(program.findStr("else if ( false ) {"))
-    check(program.findStr("ka23::print ( \"違う\" ) ;"))
+    check(program.findStr("grid::print ( \"違う\" ) ;"))
     check(program.findStr("}"))
     check(program.findStr("else {"))
-    check(program.findStr("ka23::print ( \"else\" ) ;"))
+    check(program.findStr("grid::print ( \"else\" ) ;"))
     check(program.findStr("}"))
 
 suite "ifex":
@@ -354,16 +260,16 @@ suite "print":
   test "print(\"Hello\")":
     initTables()
     let program = "print(\"Hello\")".makeProgram(true)
-    check(program.findStr("ka23::print ( \"Hello\" ) ;"))
+    check(program.findStr("grid::print ( \"Hello\" ) ;"))
   test "print(toString(2005))":
     initTables()
     let program = "print(toString(2005))".makeProgram(true)
-    check(program.findStr("ka23::print ( ka23::toString ( 2005 ) ) ;"))
+    check(program.findStr("grid::print ( grid::toString ( 2005 ) ) ;"))
   test "char ch = \'Q\' print(toString(ch))":
     initTables()
     let program = "char ch = \'Q\' print(toString(ch))".makeProgram(true)
     check(program.findStr("char ch = \'Q\' ;"))
-    check(program.findStr("ka23::print ( ka23::toString ( ch ) ) ;"))
+    check(program.findStr("grid::print ( grid::toString ( ch ) ) ;"))
 
 suite "[]":
   test "array int a = {1, 2} a[1]":
@@ -375,14 +281,14 @@ suite "[]":
     initTables()
     let program = "array array int a = {{1, 2}, {3, 4}} print(toString(a[1][0]))".makeProgram(true)
     check(program.findStr("std::vector<std::vector<int>> a = ( std::vector<std::vector<int>> ) { ( std::vector<int> ) { 1 , 2 } , ( std::vector<int> ) { 3 , 4 } } ;"))
-    check(program.findStr("ka23::print ( ka23::toString ( a [ 1 ] [ 0 ] ) ) ;"))
+    check(program.findStr("grid::print ( grid::toString ( a [ 1 ] [ 0 ] ) ) ;"))
   
 suite "for":
   test "for string a <- {\"a\", \"b\", \"c\"} do print(a) end":
     initTables()
     let program = "for string a <- {\"a\", \"b\", \"c\"} do print(a) end".makeProgram(true)
     check(program.findStr("for ( std::string a : ( std::vector<std::string> ) { \"a\" , \"b\" , \"c\" } ) {"))
-    check(program.findStr("ka23::print ( a ) ;"))
+    check(program.findStr("grid::print ( a ) ;"))
     check(program.findStr("}"))
   test "for string a <- {\"a\", \"b\", \"c\"} do for string b <- {\"a\", \"b\", \"c\"} do for string c <- {\"a\", \"b\", \"c\"} do print(c) end end end":
     initTables()
@@ -390,7 +296,7 @@ suite "for":
     check(program.findStr("for ( std::string a : ( std::vector<std::string> ) { \"a\" , \"b\" , \"c\" } ) {"))
     check(program.findStr("for ( std::string b : ( std::vector<std::string> ) { \"a\" , \"b\" , \"c\" } ) {"))
     check(program.findStr("for ( std::string c : ( std::vector<std::string> ) { \"a\" , \"b\" , \"c\" } ) {"))
-    check(program.findStr("ka23::print ( c ) ;"))
+    check(program.findStr("grid::print ( c ) ;"))
     check(program.findStr("}"))
     check(program.findStr("}"))
     check(program.findStr("}"))
@@ -400,62 +306,62 @@ suite "len":
     initTables()
     let program = "array int a = {1, 2} len(a)".makeProgram(true)
     check(program.findStr("std::vector<int> a = ( std::vector<int> ) { 1 , 2 } ;"))
-    check(program.findStr("ka23::len ( a ) ;"))
+    check(program.findStr("grid::len ( a ) ;"))
 
   test "array int a = {1, 2} a |> len()":
     initTables()
     let program = "array int a = {1, 2} a |> len()".makeProgram(true)
     check(program.findStr("std::vector<int> a = ( std::vector<int> ) { 1 , 2 } ;"))
-    check(program.findStr("ka23::len ( a ) ;"))
+    check(program.findStr("grid::len ( a ) ;"))
 
 suite "head":
   test "array int x = {1, 2} print(x |> head() |> toString())":
     initTables()
     let program = "array int x = {1, 2} print(x |> head() |> toString())".makeProgram(true)
     check(program.findStr("std::vector<int> x = ( std::vector<int> ) { 1 , 2 } ;"))
-    check(program.findStr("ka23::print ( ka23::toString ( ka23::head ( x ) ) ) ;"))
+    check(program.findStr("grid::print ( grid::toString ( grid::head ( x ) ) ) ;"))
 
 suite "tail":
   test "array int x = {1, 2, -3} x |> tail()":
     initTables()
     let program = "array int x = {1, 2, -3} x |> tail()".makeProgram(true)
     check(program.findStr("std::vector<int> x = ( std::vector<int> ) { 1 , 2 , -3 } ;"))
-    check(program.findStr("ka23::tail ( x ) ;"))
+    check(program.findStr("grid::tail ( x ) ;"))
 
 suite "last":
   test "array int x = {1, 2} print(x |> last())":
     initTables()
     let program = "array int x = {1, 2} x |> last()".makeProgram(true)
     check(program.findStr("std::vector<int> x = ( std::vector<int> ) { 1 , 2 } ;"))
-    check(program.findStr("ka23::last ( x ) ;"))
+    check(program.findStr("grid::last ( x ) ;"))
 
 suite "init":
   test "array int x = {1, 2, -3} x |> init()":
     initTables()
     let program = "array int x = {1, 2, -3} x |> init()".makeProgram(true)
     check(program.findStr("std::vector<int> x = ( std::vector<int> ) { 1 , 2 , -3 } ;"))
-    check(program.findStr("ka23::init ( x ) ;"))
+    check(program.findStr("grid::init ( x ) ;"))
 
 suite "toString":
   test "string a = toString(10)":
     initTables()
     let program = "string a = toString(10)".makeProgram(true)
-    check(program.findStr("std::string a = ka23::toString ( 10 ) ;"))
+    check(program.findStr("std::string a = grid::toString ( 10 ) ;"))
   test "string a = toString(True)":
     initTables()
     let program = "string a = toString(True)".makeProgram(true)
-    check(program.findStr("std::string a = ka23::toString ( true ) ;"))
+    check(program.findStr("std::string a = grid::toString ( true ) ;"))
 
 suite "map":
   test "map({1, 2, 3}, plus(1))":
     initTables()
     let program = "map({1, 2, 3}, plus(1))".makeProgram(true)
-    check(program.findStr("ka23::map ( ( std::vector<int> ) { 1 , 2 , 3 } , [] ( int _i ) { return ka23::plus ( _i , 1 ) ; } ) ;"))
+    check(program.findStr("grid::map ( ( std::vector<int> ) { 1 , 2 , 3 } , [] ( int _i ) { return grid::plus ( _i , 1 ) ; } ) ;"))
   test "array int a = {1, 2, 3} map(a, plus(1))":
     initTables()
     let program = "array int a = {1, 2, 3} map(a, plus(1))".makeProgram(true)
     check(program.findStr("std::vector<int> a = ( std::vector<int> ) { 1 , 2 , 3 } ;"))
-    check(program.findStr("ka23::map ( a , [] ( int _i ) { return ka23::plus ( _i , 1 ) ; } ) ;"))
+    check(program.findStr("grid::map ( a , [] ( int _i ) { return grid::plus ( _i , 1 ) ; } ) ;"))
 
 # suite "mut":
   

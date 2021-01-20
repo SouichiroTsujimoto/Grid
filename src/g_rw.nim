@@ -1,4 +1,4 @@
-import ka2error
+import g_error
 import system, os
 
 var funcs_code = """
@@ -7,7 +7,7 @@ var funcs_code = """
 #include <vector>
 #include <functional>
 
-namespace ka23 {
+namespace grid {
   auto plus = [](auto a, auto b){
     return a + b;
   };
@@ -125,15 +125,14 @@ proc readSource*(name: string): string =
     echoErrorMessage("そのファイルは存在しません", false, -1)
 
 proc writeCpp*(name: string, code: string) =
-  var f: File = open(name ,FileMode.fmWrite)
-  defer: close(f)
-  f.write(code)
+  if name != "gridfuncs":
+    var f: File = open(name, FileMode.fmWrite)
+    defer: close(f)
+    f.write(code)
+  else:
+    echoErrorMessage("\"gridfuncs.cpp\"という名前は使用できません", false, -1)
   
-  if os.existsDir("ka2lib") == false:
-    os.createDir("ka2lib")
-  if os.existsFile("ka2lib/ka2funcs.cpp") == false:
-    # TODO 後で消す
-    echo "ka2funcsを生成しました"
-    var f: File = open("ka2lib/ka2funcs.cpp" ,FileMode.fmWrite)
+  if os.existsFile("gridfuncs.cpp") == false:
+    var f: File = open("gridfuncs.cpp" ,FileMode.fmWrite)
     defer: close(f)
     f.write(funcs_code)

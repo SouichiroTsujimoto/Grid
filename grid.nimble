@@ -6,9 +6,7 @@ description   = "A new awesome nimble package"
 license       = "MIT"
 srcDir        = "src"
 binDir        = "bin"
-bin           = @["ka23"]
-
-
+bin           = @["grid"]
 
 # Dependencies
 

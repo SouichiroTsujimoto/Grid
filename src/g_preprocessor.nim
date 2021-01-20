@@ -1,4 +1,5 @@
-import strutils, os, ka2error, ka2rw
+import g_error, g_rw
+import strutils, os
 
 proc preprocess*(input: string): string =
   var peekWord = ""

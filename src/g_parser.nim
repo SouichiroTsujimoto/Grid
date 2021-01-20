@@ -1,5 +1,5 @@
+import g_token, g_lexer, g_node, g_error
 import strutils
-import ka2token, ka2lexer, ka2node, ka2error
 
 # パーサクラス
 type Parser = ref object of RootObj
