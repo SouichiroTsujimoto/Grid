@@ -96,13 +96,6 @@ proc deleteScope(n: int, test: bool): seq[codeParts] =
 
     for i in n+1..scopeTable.len()-1:
       for ident in scopeTable[i]:
-        # if identTable[ident].mutable == true:
-        #   if identTable[ident].used == true:
-        #     result.add((OTHER, "delete"))
-        #     result.add((identTable[ident].Type, ident))
-        #     result.addSemicolon()
-        #   else:
-        #     echoErrorMessage("定義された一時変数が一度も使用されていません", test, node.token.Line)
         identTable.del(ident)
 
     scopeTable = new_scopeTable
@@ -195,15 +188,6 @@ proc funcTypesMatch(fn_type: string, arg_type: string): (bool, string) =
     return (false, "")
   else:
     return (true, fn_type_r)
-
-# proc funcTypeSplit(funcType: string, target: string): (bool, string, string) =
-#   var fnTs = funcType.split(target)
-#   if fnTs.len() == 1:
-#     return (false, "", funcType)
-
-#   fnTs[1] = fnTs[1..fnTs.len()-1].join(target)
-  
-#   return (true, fnTs[0], fnTs[1])
 
 proc typeFilter(Type: string, filter: string): (bool, string) =
   var ts = Type.split("|")
@@ -347,8 +331,7 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
   let number_t = INT & "|" & FLOAT
   let letter_t = CHAR & "|" & STRING
   var argsTypeC = argsType
-  # for _ in [argsTypeC.len()-1..2]:
-  #   argsTypeC.add("")
+
   case fn
   of "plus":
     if argsTypeC.len() == 0:
@@ -627,13 +610,6 @@ proc makeVarDefine(node: Node, var_name: string, namespace: string, type_cp: cod
     )))
   
   return (code, codeType)
-
-# proc addScopeTable(str: string) =
-#   if scopeTable.len()-1 == nestCount:
-#     scopeTable[nestCount].add(str)
-#   elif scopeTable.len()-1 < nestCount:
-#     scopeTable.setLen(nestCount)
-#     scopeTable.add(@[str])
 
 proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string) =
   var

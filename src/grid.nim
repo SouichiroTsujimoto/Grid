@@ -58,7 +58,8 @@ when isMainModule:
     sourceName = readLine(stdin)
   
   if cppFileName == "":
-    cppFileName = sourceName.split(".")[0] & ".cpp"
+    var file_name = sourceName.split("/")
+    cppFileName = file_name[filename.len()-1].split(".")[0] & ".cpp"
 
   # AST作成してC++を出力
   var
@@ -86,12 +87,21 @@ when isMainModule:
 
 #[
   TODO
-  ・ 変数のスコープチェックの仕方を変える
   ・ エラーメッセージのテストも作る
-  ・ 【優先】テストの更新 ✅
   ・ 関数の型チェック ✅
   ・ 括弧が二重になってるところを直す
   ・ 機能を増やす
+    ・ ~優先~
+      ・ 構造体 ✅
+      ・ '$'
+      ・ 複合リテラル
+      ・ range関数
+      ・ while文
+      ・ エラーメッセージを英語化できるようにする
+      ・ リファレンス的なのを用意する
+      ・ 関数オブジェクト
+      ・ モジュール(名前空間？)
+
     ・ ~配列~
       ・ 配列リテラルを関数に渡せるようにする ✅
       ・ at関数 ✅
@@ -99,29 +109,18 @@ when isMainModule:
       ・ filter関数
     ・ ~型~
       ・ 型のキャスト 🔺
-        ・ ＜'$'＞
       ・ void
     ・ ~IO~
       ・ 標準入力 🔺
+    
     ・ ~その他~
       ・ コメント ✅
       ・ case文
       ・ 辞書型
       ・ エスケープ文字 ✅
       ・ エラーメッセージに行番号を付ける ✅
-
-    ・ ~優先~
-      ・ ＜構造体＞ ✅
-      ・ 複合リテラル
-      ・ range関数
-      ・ 関数オブジェクト
-      ・ モジュール(名前空間？)
-      
       ・ include
       ・ import
-
-      ・ エラーメッセージを英語化できるようにする
-      ・ リファレンス的なのを用意する
       
       ・ g_funcsを自動生成 ✅
       ・ 最適化オプション

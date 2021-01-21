@@ -31,45 +31,6 @@ proc shiftToken(p: Parser) =
   p.curToken = p.peekToken
   p.peekToken = p.lexer.nextToken()
 
-# let文
-# proc parseLetStatement(p: Parser): Node =
-#   var node = Node(
-#     kind:        nkLetStatement,
-#     token:       p.curToken,
-#     child_nodes: @[],
-#   )
-#   p.shiftToken()
-#   node.child_nodes.add(p.parseType())
-
-#   if p.peekToken.Type != EQUAL:
-#     echoErrorMessage("初期化されていません", false, p.curToken.Line)
-#     return node
-  
-#   p.shiftToken()
-#   p.shiftToken()
-#   node.child_nodes.add(p.parseExpression(Lowest))
-
-#   return node
-
-# # var文
-# proc parseVarStatement(p: Parser): Node =
-#   var node = Node(
-#     kind:        nkVarStatement,
-#     token:       p.curToken,
-#     child_nodes: @[],
-#   )
-#   p.shiftToken()
-#   node.child_nodes.add(p.parseType())
-
-#   if p.peekToken.Type != EQUAL:
-#     return node
-
-#   p.shiftToken()
-#   p.shiftToken()
-#   node.child_nodes.add(p.parseExpression(Lowest))
-
-#   return node
-
 # return文
 proc parseReturnStatement(p: Parser): Node =
   var node = Node(
@@ -405,15 +366,6 @@ proc parseArrayLiteral(p: Parser): Node =
     return node
   else:
     return nil
-
-# 埋め込みC++コード 【保留】
-# proc parseCppCode(p: Parser): Node =
-#   let node = Node(
-#     kind: nkCppCode,
-#     token: p.curToken,
-#     cppCodeValue: p.curToken.Literal,
-#   )
-#   return node
 
 # nil値
 proc parseNilLiteral(p: Parser): Node =
@@ -852,7 +804,6 @@ proc parseExpression(p: Parser, precedence: Precedence): Node =
   of CHAR       : left = p.parseCharLiteral()
   of STRING     : left = p.parseStringLiteral()
   of MINUS      : left = p.parseMinusNum()
-  # of CPPCODE    : left = p.parseCppCode()
   of TRUE       : left = p.parseBoolLiteral()
   of FALSE      : left = p.parseBoolLiteral()
   of NIL        : left = p.parseNilLiteral()
@@ -876,8 +827,6 @@ proc parseExpression(p: Parser, precedence: Precedence): Node =
       left = p.parseAccessElement(left)
     of PIPE:
       left = p.parsePipeExpression(left)
-    # of INDEX:
-    #   left = p.parseAccessElement(left)
     else:
       return left
   

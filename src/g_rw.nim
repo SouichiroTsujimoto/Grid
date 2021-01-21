@@ -1,5 +1,5 @@
 import g_error
-import system, os
+import system, os, strutils
 
 var funcs_code = """
 #include <iostream>
@@ -117,7 +117,7 @@ namespace grid {
 
 proc readSource*(name: string): string =
   if os.existsFile(name):
-    var f: File = open(name , FileMode.fmRead)
+    var f: File = open(name, FileMode.fmRead)
     defer: close(f)
 
     return f.readAll()
@@ -125,14 +125,23 @@ proc readSource*(name: string): string =
     echoErrorMessage("そのファイルは存在しません", false, -1)
 
 proc writeCpp*(name: string, code: string) =
-  if name != "gridfuncs":
-    var f: File = open(name, FileMode.fmWrite)
-    defer: close(f)
-    f.write(code)
-  else:
+  if name == "gridfuncs":
     echoErrorMessage("\"gridfuncs.cpp\"という名前は使用できません", false, -1)
-  
-  if os.existsFile("gridfuncs.cpp") == false:
-    var f: File = open("gridfuncs.cpp" ,FileMode.fmWrite)
-    defer: close(f)
-    f.write(funcs_code)
+  elif name.endsWith(".cpp") == false:
+    echoErrorMessage("生成するファイル名には\".cpp\"の拡張子が必要です", false, -1)
+  else:
+    var cppfile: File = open(name, FileMode.fmWrite)
+    defer: close(cppfile)
+    cppfile.write(code)
+    
+    var path = name.split("/")
+    var writeDir = path[0..path.len()-2].join("/")
+    if writeDir == "":
+      writeDir = "gridfuncs.cpp"
+    else:
+      writeDir.add("/gridfuncs.cpp")
+      
+    if os.existsFile(writeDir) == false:
+      var funcsfile: File = open(writeDir ,FileMode.fmWrite)
+      defer: close(funcsfile)
+      funcsfile.write(funcs_code)
