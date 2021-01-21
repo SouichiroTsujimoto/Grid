@@ -1,6 +1,9 @@
-# これは何
+# Grid
 
-**Grid言語**。静的型付けでAltC++な言語です。
+[![MIT License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE)
+[![SecHack365](https://img.shields.io/badge/SecHack365-2020-ffd700.svg)](https://sechack365.nict.go.jp/)
+
+静的型付けでAltC++な言語です。
 
 # サンプルコード
 
