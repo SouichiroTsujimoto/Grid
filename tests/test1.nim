@@ -364,6 +364,10 @@ suite "map":
     check(program.findStr("grid::map ( a , [] ( int _i ) { return grid::plus ( _i , 1 ) ; } ) ;"))
 
 # suite "mut":
-  
+#   test "mut int a = 10 do a = 20 end":
+#     initTables()
+#     let program = "array int a = {1, 2, 3} map(a, plus(1))".makeProgram(true)
+#     check(program.findStr("std::vector<int> a = ( std::vector<int> ) { 1 , 2 , 3 } ;"))
+#     check(program.findStr("grid::map ( a , [] ( int _i ) { return grid::plus ( _i , 1 ) ; } ) ;"))
 
 # suite "later":

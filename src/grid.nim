@@ -122,7 +122,7 @@ when isMainModule:
       ・ include
       ・ import
       
-      ・ g_funcsを自動生成 ✅
+      ・ gridfuncs.cppを自動生成 ✅
       ・ 最適化オプション
       ・ エラーメッセージをちゃんと作る 🔺
       ・ てきとうすぎる変数名、関数名をどうにかする
