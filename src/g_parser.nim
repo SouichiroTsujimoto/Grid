@@ -276,15 +276,12 @@ proc parseCallExpression(p: Parser, left: Node): Node =
 
 # 複合リテラル
 proc parseCompoundLiteral(p: Parser, left: Node): Node =
-  if left.kind == nkIdent:
-    var node = Node(
-      kind:  nkCompoundLiteral,
-      token: p.curToken,
-      child_nodes: @[left, p.parseNodes(RBRACE)],
-    )
-    return node
-  else:
-    echoErrorMessage("無効な複合リテラルです", false, p.curToken.Line)
+  var node = Node(
+    kind:  nkCompoundLiteral,
+    token: p.curToken,
+    child_nodes: @[left, p.parseNodes(RBRACE)],
+  )
+  return node
 
 # 名前
 proc parseIdent(p: Parser): Node =
@@ -812,20 +809,28 @@ proc parseExpression(p: Parser, precedence: Precedence): Node =
   else          : left = p.parseType(true)
 
   while precedence < p.peekToken.tokenPrecedence() and p.peekToken.Type != EOF:
-    p.shiftToken()
 
-    case p.curToken.Type
+    case p.peekToken.Type
     of PLUS, MINUS, ASTERISC, SLASH, LT, GT, LE, GE, EE, NE:
+      p.shiftToken()
       left = p.parseInfixExpression(left)
     of EQUAL:
+      p.shiftToken()
       left = p.parseAssignExpression(left)
     of LPAREN:
+      p.shiftToken()
       left = p.parseCallExpression(left)
     of LBRACE:
-      left = p.parseCompoundLiteral(left)
+      if left.kind == nkIdent:
+        p.shiftToken()
+        left = p.parseCompoundLiteral(left)
+      else:
+        return left
     of LBRACKET:
+      p.shiftToken()
       left = p.parseAccessElement(left)
     of PIPE:
+      p.shiftToken()
       left = p.parsePipeExpression(left)
     else:
       return left

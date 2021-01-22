@@ -342,6 +342,13 @@ suite "init":
     check(program.findStr("std::vector<int> x = ( std::vector<int> ) { 1 , 2 , -3 } ;"))
     check(program.findStr("grid::init ( x ) ;"))
 
+suite "join":
+  test "array int x = {1, 2, -3} {1000, 2000} |> join(x)":
+    initTables()
+    let program = "array int x = {1, 2, -3} {1000, 2000} |> join(x)".makeProgram(true)
+    check(program.findStr("std::vector<int> x = ( std::vector<int> ) { 1 , 2 , -3 } ;"))
+    check(program.findStr("grid::join ( ( std::vector<int> ) { 1000 , 2000  } , x ) ;"))
+
 suite "toString":
   test "string a = toString(10)":
     initTables()
@@ -363,11 +370,13 @@ suite "map":
     check(program.findStr("std::vector<int> a = ( std::vector<int> ) { 1 , 2 , 3 } ;"))
     check(program.findStr("grid::map ( a , [] ( int _i ) { return grid::plus ( _i , 1 ) ; } ) ;"))
 
-# suite "mut":
-#   test "mut int a = 10 do a = 20 end":
-#     initTables()
-#     let program = "array int a = {1, 2, 3} map(a, plus(1))".makeProgram(true)
-#     check(program.findStr("std::vector<int> a = ( std::vector<int> ) { 1 , 2 , 3 } ;"))
-#     check(program.findStr("grid::map ( a , [] ( int _i ) { return grid::plus ( _i , 1 ) ; } ) ;"))
+suite "mut":
+  test "mut int a = 10 do a = 20 end":
+    initTables()
+    let program = "mut int a = 10 do a = 20 end".makeProgram(true)
+    check(program.findStr("{"))
+    check(program.findStr("int a = 10 ;"))
+    check(program.findStr("a = 10 ;"))
+    check(program.findStr("}"))
 
 # suite "later":

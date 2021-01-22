@@ -1,11 +1,13 @@
 #include "gridfuncs.cpp"
 
-typedef struct {
-  int a ;
-  std::string b ;
-} hoge ;
-
 int main ( int argc , char *argv[] ) {
-  hoge ahoge = ( hoge ) { 100 , "あ" } ;
-  grid::println ( ahoge.b ) ;
+  if ( ( ( 23 * 54 ) >= 1000 ) ) {
+    grid::println ( "a" ) ;
+  }
+  else if ( ( ( 18 * 54 ) >= 1000 ) ) {
+    grid::println ( "b" ) ;
+  }
+  else {
+    grid::println ( "c" ) ;
+  }
 }

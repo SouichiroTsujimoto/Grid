@@ -164,8 +164,8 @@ proc typePartMatch(type1: string, type2: string): (bool, seq[(string, string)]) 
   
   return (false, vars)
 
-# 返り値1: マッチ結果, 返り値2: 返り値の型
-proc funcTypesMatch(fn_type: string, arg_type: string): (bool, string) =
+# 返り値1: マッチ結果, 返り値2: 返り値の型, 返り値3: 型変数の値の配列
+proc funcTypesMatch(fn_type: string, arg_type: string): (bool, string, seq[(string, string)]) =
   # 引数部と返り値部を分ける
   var
     fn_type_a = fn_type.split("->")[0]
@@ -179,25 +179,24 @@ proc funcTypesMatch(fn_type: string, arg_type: string): (bool, string) =
     if match_res[0]:
       vars.add(match_res[1])
     else:
-      return (false, "")
+      return (false, "", @[])
 
   if fn_type_r.startsWith("@"):
     for (name, Type) in vars:
       if name == fn_type_r:
-        return (true, Type)
-    return (false, "")
+        return (true, Type, vars)
+    return (false, "", @[])
   else:
-    return (true, fn_type_r)
+    return (true, fn_type_r, vars)
 
-proc typeFilter(Type: string, filter: string): (bool, string) =
-  var ts = Type.split("|")
+proc typeFilter(types: seq[(string, string)], target: string, filter: string): (bool, string) =
   var fl = filter.split("|")
   var results: seq[string]
 
-  for i, part in ts:
+  for i, t in types:
     for f in fl:
-      if part == f:
-        results.add(part)
+      if t[0] == target and t[1] == f and results.contains(t[1]) == false:
+        results.add(t[1])
   
   if results == @[]:
     return (false, "")
@@ -238,7 +237,7 @@ proc conversionCppOperator(fn: string, argsType: seq[string]): (bool, string, st
     var ftm_res = funcTypesMatch("@a" & "+" & "@a" & "->" & "@a", argsType.join("+"))
     if ftm_res[0] == false:
       return (false, OTHER, "+")
-    var tf_res = ftm_res[1].typeFilter(number_t)
+    var tf_res = ftm_res[2].typeFilter("@a", number_t)
     if tf_res[0] == false:
       return (false, OTHER, "+")
     
@@ -247,7 +246,7 @@ proc conversionCppOperator(fn: string, argsType: seq[string]): (bool, string, st
     var ftm_res = funcTypesMatch("@a" & "+" & "@a" & "->" & "@a", argsType.join("+"))
     if ftm_res[0] == false:
       return (false, OTHER, "-")
-    var tf_res = ftm_res[1].typeFilter(number_t)
+    var tf_res = ftm_res[2].typeFilter("@a", number_t)
     if tf_res[0] == false:
       return (false, OTHER, "-")
     
@@ -256,7 +255,7 @@ proc conversionCppOperator(fn: string, argsType: seq[string]): (bool, string, st
     var ftm_res = funcTypesMatch("@a" & "+" & "@a" & "->" & "@a", argsType.join("+"))
     if ftm_res[0] == false:
       return (false, OTHER, "*")
-    var tf_res = ftm_res[1].typeFilter(number_t)
+    var tf_res = ftm_res[2].typeFilter("@a", number_t)
     if tf_res[0] == false:
       return (false, OTHER, "*")
     
@@ -265,7 +264,7 @@ proc conversionCppOperator(fn: string, argsType: seq[string]): (bool, string, st
     var ftm_res = funcTypesMatch("@a" & "+" & "@a" & "->" & "@a", argsType.join("+"))
     if ftm_res[0] == false:
       return (false, OTHER, "/")
-    var tf_res = ftm_res[1].typeFilter(number_t)
+    var tf_res = ftm_res[2].typeFilter("@a", number_t)
     if tf_res[0] == false:
       return (false, OTHER, "/")
     
@@ -274,7 +273,7 @@ proc conversionCppOperator(fn: string, argsType: seq[string]): (bool, string, st
     var ftm_res = funcTypesMatch("@a" & "+" & "@a" & "->" & BOOL, argsType.join("+"))
     if ftm_res[0] == false:
       return (false, OTHER, "<")
-    var tf_res = ftm_res[1].typeFilter(number_t)
+    var tf_res = ftm_res[2].typeFilter("@a", number_t)
     if tf_res[0] == false:
       return (false, OTHER, "<")
     
@@ -283,7 +282,7 @@ proc conversionCppOperator(fn: string, argsType: seq[string]): (bool, string, st
     var ftm_res = funcTypesMatch("@a" & "+" & "@a" & "->" & BOOL, argsType.join("+"))
     if ftm_res[0] == false:
       return (false, OTHER, ">")
-    var tf_res = ftm_res[1].typeFilter(number_t)
+    var tf_res = ftm_res[2].typeFilter("@a", number_t)
     if tf_res[0] == false:
       return (false, OTHER, ">")
     
@@ -292,7 +291,7 @@ proc conversionCppOperator(fn: string, argsType: seq[string]): (bool, string, st
     var ftm_res = funcTypesMatch("@a" & "+" & "@a" & "->" & BOOL, argsType.join("+"))
     if ftm_res[0] == false:
       return (false, OTHER, "<=")
-    var tf_res = ftm_res[1].typeFilter(number_t)
+    var tf_res = ftm_res[2].typeFilter("@a", number_t)
     if tf_res[0] == false:
       return (false, OTHER, "<=")
     
@@ -301,7 +300,7 @@ proc conversionCppOperator(fn: string, argsType: seq[string]): (bool, string, st
     var ftm_res = funcTypesMatch("@a" & "+" & "@a" & "->" & BOOL, argsType.join("+"))
     if ftm_res[0] == false:
       return (false, OTHER, ">=")
-    var tf_res = ftm_res[1].typeFilter(number_t)
+    var tf_res = ftm_res[2].typeFilter("@a", number_t)
     if tf_res[0] == false:
       return (false, OTHER, ">=")
     
@@ -310,7 +309,7 @@ proc conversionCppOperator(fn: string, argsType: seq[string]): (bool, string, st
     var ftm_res = funcTypesMatch("@a" & "+" & "@a" & "->" & BOOL, argsType.join("+"))
     if ftm_res[0] == false:
       return (false, OTHER, "==")
-    var tf_res = ftm_res[1].typeFilter(anything_t)
+    var tf_res = ftm_res[2].typeFilter("@a", number_t)
     if tf_res[0] == false:
       return (false, OTHER, "==")
     
@@ -319,7 +318,7 @@ proc conversionCppOperator(fn: string, argsType: seq[string]): (bool, string, st
     var ftm_res = funcTypesMatch("@a" & "+" & "@a" & "->" & BOOL, argsType.join("+"))
     if ftm_res[0] == false:
       return (false, OTHER, "!=")
-    var tf_res = ftm_res[1].typeFilter(anything_t)
+    var tf_res = ftm_res[2].typeFilter("@a", number_t)
     if tf_res[0] == false:
       return (false, OTHER, "!=")
     
@@ -340,7 +339,7 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
       var ftm_res = funcTypesMatch("@a" & "+" & "@a" & "->" & "@a", argsType.join("+"))
       if ftm_res[0] == false:
         return (false, OTHER, "grid::plus")
-      var tf_res = ftm_res[1].typeFilter(number_t)
+      var tf_res = ftm_res[2].typeFilter("@a", number_t)
       if tf_res[0] == false:
         return (false, OTHER, "grid::plus")
       
@@ -354,7 +353,7 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
       var ftm_res = funcTypesMatch("@a" & "+" & "@a" & "->" & "@a", argsType.join("+"))
       if ftm_res[0] == false:
         return (false, OTHER, "grid::minu")
-      var tf_res = ftm_res[1].typeFilter(number_t)
+      var tf_res = ftm_res[2].typeFilter("@a", number_t)
       if tf_res[0] == false:
         return (false, OTHER, "grid::minu")
       
@@ -368,7 +367,7 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
       var ftm_res = funcTypesMatch("@a" & "+" & "@a" & "->" & "@a", argsType.join("+"))
       if ftm_res[0] == false:
         return (false, OTHER, "grid::mult")
-      var tf_res = ftm_res[1].typeFilter(number_t)
+      var tf_res = ftm_res[2].typeFilter("@a", number_t)
       if tf_res[0] == false:
         return (false, OTHER, "grid::mult")
       
@@ -382,7 +381,7 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
       var ftm_res = funcTypesMatch("@a" & "+" & "@a" & "->" & "@a", argsType.join("+"))
       if ftm_res[0] == false:
         return (false, OTHER, "grid::divi")
-      var tf_res = ftm_res[1].typeFilter(number_t)
+      var tf_res = ftm_res[2].typeFilter("@a", number_t)
       if tf_res[0] == false:
         return (false, OTHER, "grid::divi")
       
@@ -1185,9 +1184,6 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
     else:
       echoErrorMessage("オペランドがありません", test, node.token.Line)
     code.addSemicolon()
-    echo "左と右"
-    echo lt
-    echo rt
     if typePartMatch(lt, rt)[0]:
       codeType = lt
     else:

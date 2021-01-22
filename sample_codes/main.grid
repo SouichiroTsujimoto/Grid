@@ -1,9 +1,9 @@
-struct hoge do
-  int a,
-  string b,
-end
-
 main do
-  hoge ahoge = hoge{100, "あ"}
-  println(ahoge.b)
+  if 23 * 54 >= 1000 do
+    println("a")
+  elif 18 * 54 >= 1000 do
+    println("b")
+  else
+    println("c")
+  end
 end
