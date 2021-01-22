@@ -347,7 +347,7 @@ suite "join":
     initTables()
     let program = "array int x = {1, 2, -3} {1000, 2000} |> join(x)".makeProgram(true)
     check(program.findStr("std::vector<int> x = ( std::vector<int> ) { 1 , 2 , -3 } ;"))
-    check(program.findStr("grid::join ( ( std::vector<int> ) { 1000 , 2000  } , x ) ;"))
+    check(program.findStr("grid::join ( ( std::vector<int> ) { 1000 , 2000 } , x ) ;"))
 
 suite "toString":
   test "string a = toString(10)":

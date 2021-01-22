@@ -1,9 +1,3 @@
 main do
-  if 23 * 54 >= 1000 do
-    println("a")
-  elif 18 * 54 >= 1000 do
-    println("b")
-  else
-    println("c")
-  end
+  array int x = {1, 2, -3} {1000, 2000} |> join(x)
 end

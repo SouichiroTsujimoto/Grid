@@ -277,7 +277,7 @@ proc conversionCppOperator(fn: string, argsType: seq[string]): (bool, string, st
     if tf_res[0] == false:
       return (false, OTHER, "<")
     
-    return (true, tf_res[1], "<")
+    return (true, BOOL, "<")
   of GT:
     var ftm_res = funcTypesMatch("@a" & "+" & "@a" & "->" & BOOL, argsType.join("+"))
     if ftm_res[0] == false:
@@ -286,7 +286,7 @@ proc conversionCppOperator(fn: string, argsType: seq[string]): (bool, string, st
     if tf_res[0] == false:
       return (false, OTHER, ">")
     
-    return (true, tf_res[1], ">")
+    return (true, BOOL, ">")
   of LE:
     var ftm_res = funcTypesMatch("@a" & "+" & "@a" & "->" & BOOL, argsType.join("+"))
     if ftm_res[0] == false:
@@ -295,7 +295,7 @@ proc conversionCppOperator(fn: string, argsType: seq[string]): (bool, string, st
     if tf_res[0] == false:
       return (false, OTHER, "<=")
     
-    return (true, tf_res[1], "<=")
+    return (true, BOOL, "<=")
   of GE:
     var ftm_res = funcTypesMatch("@a" & "+" & "@a" & "->" & BOOL, argsType.join("+"))
     if ftm_res[0] == false:
@@ -304,25 +304,25 @@ proc conversionCppOperator(fn: string, argsType: seq[string]): (bool, string, st
     if tf_res[0] == false:
       return (false, OTHER, ">=")
     
-    return (true, tf_res[1], ">=")
+    return (true, BOOL, ">=")
   of EE:
     var ftm_res = funcTypesMatch("@a" & "+" & "@a" & "->" & BOOL, argsType.join("+"))
     if ftm_res[0] == false:
       return (false, OTHER, "==")
-    var tf_res = ftm_res[2].typeFilter("@a", number_t)
+    var tf_res = ftm_res[2].typeFilter("@a", anything_t)
     if tf_res[0] == false:
       return (false, OTHER, "==")
-    
-    return (true, tf_res[1], "==")
+
+    return (true, BOOL, "==")
   of NE:
     var ftm_res = funcTypesMatch("@a" & "+" & "@a" & "->" & BOOL, argsType.join("+"))
     if ftm_res[0] == false:
       return (false, OTHER, "!=")
-    var tf_res = ftm_res[2].typeFilter("@a", number_t)
+    var tf_res = ftm_res[2].typeFilter("@a", anything_t)
     if tf_res[0] == false:
       return (false, OTHER, "!=")
     
-    return (true, tf_res[1], "!=")
+    return (true, BOOL, "!=")
 
 # 型のチェックをしてC++の関数に変換する
 proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, string) =
@@ -396,7 +396,7 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
       if ftm_res[0] == false:
         return (false, OTHER, "grid::print")
       
-      return (true, ftm_res[1], "grid::print")
+      return (true, NIL, "grid::print")
     else:
       return (false, OTHER, "")
   of "println":
@@ -407,7 +407,7 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
       if ftm_res[0] == false:
         return (false, OTHER, "grid::println")
       
-      return (true, ftm_res[1], "grid::println")
+      return (true, NIL, "grid::println")
     else:
       return (false, OTHER, "")
   of "len":
@@ -418,7 +418,7 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
       if ftm_res[0] == false:
         return (false, OTHER, "grid::len")
       
-      return (true, ftm_res[1], "grid::len")
+      return (true, INT, "grid::len")
     else:
       return (false, OTHER, "")
   of "join":
@@ -484,7 +484,7 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
       if ftm_res[0] == false:
         return (false, OTHER, "grid::toString")
       
-      return (true, ftm_res[1], "grid::toString")
+      return (true, STRING, "grid::toString")
     else:
       return (false, OTHER, "")
   of "at":
@@ -500,8 +500,7 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
       return (false, OTHER, "")
   of "readln":
     if argsTypeC.len() == 0:
-      let res_type = STRING
-      return (true, res_type, "grid::readln")
+      return (true, STRING, "grid::readln")
     else:
       return (false, OTHER, "")
   else:
