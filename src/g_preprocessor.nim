@@ -1,11 +1,12 @@
 import g_error, g_rw
 import strutils, os
 
-proc preprocess*(input: string): string =
+proc preprocess*(input: string, sourcepath: string): string =
   var peekWord = ""
   var lss: seq[string]
   var output: seq[string]
   var skip_flag = false
+  var sourcepath_split = sourcepath.split("/")
   
   var iss = input.split("\n")
   for line in iss:
@@ -23,15 +24,19 @@ proc preprocess*(input: string): string =
         skip_flag = false
         continue
 
-      if word.startsWith("#"):
-        case word
-        of "#include":
-          if os.existsFile(peekWord) == false:
-            echoErrorMessage("\"" & peekWord & "\"が見つからず、includeできませんでした", false, -1)
-          output.add(readSource(peekWord))
-          skip_flag = true
-        else:
-          output.add(word)
+      case word
+      of "include":
+        var filepath = (sourcepath_split[0..sourcepath_split.len()-2] & peekWord).join("/")
+        
+        if filepath == sourcepath:
+          echoErrorMessage("\"" & peekWord & "\"を読み込むことはできません", false, -1)
+        elif os.existsFile(filepath) == false:
+          echoErrorMessage("\"" & peekWord & "\"が見つからず、includeできませんでした", false, -1)
+        elif filepath.endsWith(".grid") == false:
+          echoErrorMessage("\"拡張子\".grid\"がありません " & peekWord & "\"", false, -1)
+        
+        output.add(readSource(filepath))
+        skip_flag = true
       else:
         output.add(word)
     

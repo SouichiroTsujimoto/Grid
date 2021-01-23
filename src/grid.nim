@@ -64,7 +64,7 @@ when isMainModule:
   # AST作成してC++を出力
   var
     input  = sourceName.readSource()
-    prepro = input.preprocess()
+    prepro = input.preprocess(sourceName)
 
   var asts   = prepro.makeAST()
 
@@ -90,8 +90,8 @@ when isMainModule:
 ・ ~優先~
   ・ # TODO: 今日やる
     ・ '$' ✅
-    ・ '&' 
-    ・ range関数
+    ・ '&' ✅
+    ・ range関数 
     
   ・ while文
   ・ テストの更新

@@ -45,12 +45,9 @@ proc parseReturnStatement(p: Parser): Node =
 proc parseFilePath(p: Parser): Node =
   var node = Node(
     kind:        nkFilePath,
-    token:       p.curToken,
+    token:       Token(Type: STRING, Literal: p.curToken.Literal),
     child_nodes: @[],
   )
-
-  if p.curToken.Type != STRING:
-    echoErrorMessage("ファイルパスが文字列リテラルではありません", false, p.curToken.Line)
   
   return node
 
