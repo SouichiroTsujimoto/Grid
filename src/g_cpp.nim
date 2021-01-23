@@ -114,13 +114,17 @@ proc memberSearch(member: seq[(string, IdentInfo)], target: string): (bool, Iden
   
   return (false, IdentInfo())
 
-proc identExistenceCheck(ident: string): (bool, IdentInfo) =
+proc identExistenceCheck(ident: string, init: bool): (bool, IdentInfo) =
   var ident_split = ident.split(".")
 
   if ident_split.len() == 1:
     if identTable.contains(ident_split[0]):
-      if identTable[ident_split[0]].path <= nesting and identTable[ident_split[0]].init == true:
-        return (true, identTable[ident_split[0]])
+      if identTable[ident_split[0]].path <= nesting:
+        if init:
+          if identTable[ident_split[0]].init == true:
+            return (true, identTable[ident_split[0]])
+        else:
+          return (true, identTable[ident_split[0]])
   else:
     if identTable.contains(ident_split[0]):
       if identTable[ident_split[0]].path <= nesting and identTable[ident_split[0]].init == true:
@@ -225,7 +229,7 @@ proc conversionCppType(Type: string, test: bool, line: int): (string, string) =
       if typeExistenceCheck(Type):
         return ("T_" & Type, typeTable[Type].code)
       else:
-        echoErrorMessage("\"" & Type & "\"が存在しません", test, line)
+        echoErrorMessage("型名:\"" & Type & "\" は存在しません", test, line)
 
 # 型のチェックをしてC++の演算子に変換する 
 proc conversionCppOperator(fn: string, argsType: seq[string]): (bool, string, string) =
@@ -573,12 +577,12 @@ proc makeVarDefine(node: Node, var_name: string, namespace: string, type_cp: cod
     var_name_full: string = var_name
   
   if namespace != "":
-    if identExistenceCheck(namespace)[0]:
+    if identExistenceCheck(namespace, init)[0]:
       var_name_full = namespace & "." & var_name_full
     else:
       echoErrorMessage("\"" & namespace & "\"が存在しません", test, node.token.Line)
   
-  if identExistenceCheck(var_name_full)[0]:
+  if identExistenceCheck(var_name_full, true)[0]:
     echoErrorMessage("既に定義されています", test, node.token.Line)
 
   if types[0] == ARRAY:
@@ -884,21 +888,25 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
 
   # 名前
   of nkIdent:
-    var check_res = identExistenceCheck(node.token.Literal)
+    var check_res = identExistenceCheck(node.token.Literal, true)
 
     if check_res[0]:
       code.add((IDENT, node.token.Literal))
+      code.addSemicolon()
       codeType = (identTable[node.token.Literal].Type)
       identTable[node.token.Literal].used = true
-    elif check_res[1] != IdentInfo():
-      code.add((IDENT, node.token.Literal))
-      codeType = (check_res[1].Type)
-      identTable[node.token.Literal.split(".")[0]].used = true
+    # elif check_res[1] != IdentInfo():
+    #   code.add((IDENT, node.token.Literal))
+    #   code.addSemicolon()
+    #   codeType = (check_res[1].Type)
+    #   echo check_res[1].init
+    #   identTable[node.token.Literal.split(".")[0]].used = true
     else:
       let ic = node.token.Literal.conversionCppFunction(@[])
       if ic[1] == NIL:
         echoErrorMessage("\"" & node.token.Literal & "\"が定義されていません", test, node.token.Line)
       code.add((ic[1], ic[2]))
+      code.addSemicolon()
       codeType = ic[1]
 
   # main文
@@ -908,7 +916,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
     
     var new_dost = true
     let di = node.child_nodes[0].makeCodeParts(test, new_dost)
-    if identExistenceCheck(di[0][1][1])[0]:
+    if identExistenceCheck(di[0][1][1], true)[0]:
       echoErrorMessage("既に定義されています", test, node.token.Line)
     # echo di
     code.add((OTHER, di[0][0].Code))
@@ -985,7 +993,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
     var new_dost = true
 
     let di = node.child_nodes[0].makeCodeParts(test, new_dost)
-    if identExistenceCheck(di[0][1][1])[0]:
+    if identExistenceCheck(di[0][1][1], true)[0]:
       echoErrorMessage("既に定義されています", test, node.token.Line)
     # echo di
     code.add(di[0][0])
@@ -1114,7 +1122,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
       code.add(l[0])
       lt = l[1]
       nestingIncrement()
-      if identExistenceCheck(l[0][1][1])[0]:
+      if identExistenceCheck(l[0][1][1], true)[0]:
         echoErrorMessage("既に定義されています", test, node.token.Line)
       IdentInfo(
         Type:    lt,
@@ -1182,7 +1190,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
         else:
           identTable[lmc_split[0]].init = true
           code.add((IDENT, lmc_split[0]))
-      lt = identTable[lmc].Type
+      lt = identExistenceCheck(lmc, true)[1].Type
 
       code.add((OTHER, "="))
       let r = node.child_nodes[1].makeCodeParts(test, dost)
@@ -1210,7 +1218,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
       argsCode.add(a[0].replaceSemicolon(@[(OTHER, "")]))
       argsType.add(a[1])
     let funcName = node.child_nodes[0].token.Literal
-    let iec = identExistenceCheck(funcName)[0]
+    let iec = identExistenceCheck(funcName, true)[0]
     if iec:
       let ftm = funcTypesMatch(identTable[funcName].Type, argsType.join("+"))
       if ftm[0]:
@@ -1278,7 +1286,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
       cpp_func_name = ccf[2]
       func_result_type = ccf[1]
     else:
-      if identExistenceCheck(func_name)[0] == false:
+      if identExistenceCheck(func_name, true)[0] == false:
         if ccf[1] == NIL:
           echoErrorMessage("存在しない関数です", test, node.token.Line)
         else:
@@ -1376,11 +1384,11 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
     for statement in node.child_nodes:
       type_cp = statement.token.Type.conversionCppType(test, node.token.Line)
       var_name = statement.child_nodes[0].token.Literal
+      mvd_res = makeVarDefine(node, var_name, "", type_cp, @[], test, false, false)
+      code.add(mvd_res[0].replaceSemicolon(@[(OTHER, "")]))
       if typeExistenceCheck(statement.token.Type):
         for m in typeTable[statement.token.Type].member:
           discard makeVarDefine(node, m[0], var_name, m[1].Type.conversionCppType(test, node.token.Line), @[], test, false, false)
-      mvd_res = makeVarDefine(node, var_name, "", type_cp, @[], test, false, false)
-      code.add(mvd_res[0].replaceSemicolon(@[(OTHER, "")]))
       code.add((OTHER, "="))
       code.add(makeInitValue(type_cp[0].removeT(), test, node.token.Line))
       code.addSemicolon()

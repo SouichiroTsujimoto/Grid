@@ -1,8 +1,9 @@
 struct hoge do
   int a,
-  int b,
+  bool b,
 end
 
 main do
-  hoge d = hoge{10, 10}
+  later hoge d
+  
 end

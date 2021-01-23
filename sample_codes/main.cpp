@@ -2,9 +2,10 @@
 
 typedef struct {
   int a ;
-  int b ;
+  bool b ;
 } hoge ;
 
 int main ( int argc , char *argv[] ) {
-  hoge d = ( hoge ) { 10 , 10 } ;
+  hoge d = { 0 , false } ;
+  d.a = 10 ;
 }

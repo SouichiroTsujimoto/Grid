@@ -24,7 +24,7 @@ proc parseCallExpression(p: Parser, left: Node): Node
 proc parseNodes(p: Parser, endToken: string): Node
 proc parseType(p: Parser, init: bool): Node
 proc parseNameProc(p: Parser, endToken: string): Node
-proc parseTypeIdent(p: Parser, init: bool): Node
+proc parseTypeIdent(p: Parser, left: Node, init: bool): Node
 
 # curTokenとpeekTokenを一つ進める
 proc shiftToken(p: Parser) =
@@ -282,6 +282,9 @@ proc parseCompoundLiteral(p: Parser, left: Node): Node =
 
 # 名前
 proc parseIdent(p: Parser): Node =
+  if p.curToken.Type != IDENT:
+    echoErrorMessage("無効な名前です", false, p.curToken.Line)
+
   var node = Node(
     kind:        nkIdent,
     token:       p.curToken,
@@ -538,20 +541,17 @@ proc parseArrayType(p: Parser, init: bool): Node =
   return node
 
 # ユーザー定義型
-proc parseTypeIdent(p: Parser, init: bool): Node =
-  echo p.curToken.Literal
-  echo "おい"
+proc parseTypeIdent(p: Parser, left: Node, init: bool): Node =
   # Token 特殊
   let node = Node(
     kind:  nkTypeIdent,
-    token: Token(Type: p.curToken.Literal, Literal: p.curToken.Literal, Line: p.curToken.Line),
+    token: Token(Type: left.token.Literal, Literal: left.token.Literal, Line: left.token.Line),
     child_nodes: @[],
   )
-  if p.peekToken.Type != IDENT:
+  if p.curToken.Type != IDENT:
     echoErrorMessage("変数名がありません", false, p.curToken.Line)
     return node
 
-  p.shiftToken()
   node.child_nodes.add(Node(
     kind:        nkIdent,
     token:       p.curToken,
@@ -560,7 +560,6 @@ proc parseTypeIdent(p: Parser, init: bool): Node =
   if init == false:
     return node
   
-  echo p.peekToken.Literal
   if p.peekToken.Type != EQUAL:
     echoErrorMessage("初期化されていません", false, p.curToken.Line)
     return node
@@ -796,7 +795,10 @@ proc parseType(p: Parser, init: bool): Node =
   of T_STRING   : return p.parseStringType(init)
   of T_BOOL     : return p.parseBoolType(init)
   of T_ARRAY    : return p.parseArrayType(init)
-  else          : return p.parseTypeIdent(init)
+  else:
+    var left = p.parseIdent()
+    p.shiftToken()
+    return p.parseTypeIdent(left, init)
 
 # 式の処理
 proc parseExpression(p: Parser, precedence: Precedence): Node =
@@ -844,7 +846,11 @@ proc parseExpression(p: Parser, precedence: Precedence): Node =
       p.shiftToken()
       left = p.parsePipeExpression(left)
     of IDENT:
-      left = p.parseTypeIdent(true)
+      if left.kind == nkIdent:
+        p.shiftToken()
+        left = p.parseTypeIdent(left, true)
+      else:
+        return left
     else:
       return left
   
