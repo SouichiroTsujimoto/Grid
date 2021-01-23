@@ -778,6 +778,19 @@ proc parseStruct(p: Parser): Node =
 
   return node
 
+# $
+proc parseDollarExpression(p: Parser): Node =
+  var node = Node(
+    kind:        nkDollarExpression,
+    token:       p.curToken,
+    child_nodes: @[],
+  )
+  let cp = p.curToken.tokenPrecedence()
+  p.shiftToken()
+  node.child_nodes.add(p.parseExpression(cp))
+
+  return node
+
 proc parseType(p: Parser, init: bool): Node =
   case p.curToken.Type
   of T_INT      : return p.parseIntType(init)
@@ -806,6 +819,7 @@ proc parseExpression(p: Parser, precedence: Precedence): Node =
   of NIL        : left = p.parseNilLiteral()
   of LPAREN     : left = p.parseGroupedExpression()
   of LBRACE     : left = p.parseArrayLiteral()
+  of DOLLAR     : left = p.parseDollarExpression()
   else          : left = p.parseType(true)
 
   while precedence < p.peekToken.tokenPrecedence() and p.peekToken.Type != EOF:

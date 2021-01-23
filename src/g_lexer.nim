@@ -197,6 +197,8 @@ proc nextToken*(l: Lexer): Token =
   of '{' : tok = Token(Type: LBRACE, Literal: $l.ch, Line: l.line)
   of '}' : tok = Token(Type: RBRACE, Literal: $l.ch, Line: l.line)
   of ':' : tok = Token(Type: COLON, Literal: $l.ch, Line: l.line)
+  of '$' : tok = Token(Type: DOLLAR, Literal: $l.ch, Line: l.line)
+  of '&' : tok = Token(Type: AMPERSAND, Literal: $l.ch, Line: l.line)
   else:
     if l.ch == '\n':
       l.nextLine()

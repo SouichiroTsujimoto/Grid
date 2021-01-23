@@ -28,6 +28,8 @@ const
   SLASH*        = "/"
   LARROW*       = "<-"
   RARROW*       = "->"
+  DOLLAR*       = "$"
+  AMPERSAND*    = "&"
   # 比較演算子
   LT*           = "<"
   GT*           = ">"

@@ -816,7 +816,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
     else:
       echoErrorMessage("不明なエラー", test, node.token.Line)
   
-  # TODO ユーザー定義型
+  # ユーザー定義型
   of nkTypeIdent:
     if node.child_nodes.len() == 1:
       var type_name = node.token.Type.conversionCppType(test, node.token.Line)
@@ -1067,7 +1067,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
     code.add((OTHER, ")"))
     code.addSemicolon()
     codeType = r[1]
-  
+
   # 中置
   of nkInfixExpression:
     if dost == false:
@@ -1150,7 +1150,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
     else:
       echoErrorMessage("添字がありません", test, node.token.Line)
 
-  # TODO 代入式
+  # 代入式
   of nkAssignExpression:
     var lt, rt: string
     if node.child_nodes.len() == 2:
@@ -1204,7 +1204,6 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
     let funcName = node.child_nodes[0].token.Literal
     let iec = identExistenceCheck(funcName)[0]
     if iec:
-      # TODO 不安
       let ftm = funcTypesMatch(identTable[funcName].Type, argsType.join("+"))
       if ftm[0]:
         code.add((IDENT, funcName))
@@ -1277,7 +1276,6 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
         else:
           echoErrorMessage("第二引数の関数の引数が正しくありません", test, node.token.Line)
       else:
-        # TODO 不安
         let ftm = funcTypesMatch(identTable[func_name].Type, array_type_split[1..array_type_split.len()-1].join("::") & func_arg_types.join("+"))
         if ftm[0]:
           cpp_func_name = func_name
@@ -1357,7 +1355,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
 
     nestingReset(original_nesting, test)
 
-  # TODO later文
+  # later文
   of nkLaterStatement:
     if dost == false:
       code.add((OTHER, "\n"))
@@ -1380,7 +1378,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
       code.addSemicolon()
       codeType = mvd_res[1]
   
-  # TODO struct文
+  # struct文
   of nkStruct:
     if dost == false:
       code.add((OTHER, "\n"))
@@ -1418,7 +1416,6 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
       code.addSemicolon()
 
     nestingReset(original_nesting, test)
-    #TODO
     TypeInfo(
       Type:    member_types.join("+"),
       member:  member_infos,

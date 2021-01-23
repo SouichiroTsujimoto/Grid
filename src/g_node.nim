@@ -54,6 +54,7 @@ type
     nkLaterStatement
     nkPipeExpression
     nkAccessElement
+    nkDollarExpression
 
   Node* = ref object of RootObj
     kind*:          NodeKind
@@ -71,6 +72,7 @@ type
     Product
     Generator
     Call
+    Prefix
 
 proc tokenPrecedence*(tok: Token): Precedence =
   case tok.Type
@@ -83,4 +85,5 @@ proc tokenPrecedence*(tok: Token): Precedence =
   of SLASH, ASTERISC:           return Product
   of LARROW:                    return Generator
   of LPAREN, LBRACKET, LBRACE:  return Call
+  of DOLLAR:                    return Prefix
   else:                         return Lowest

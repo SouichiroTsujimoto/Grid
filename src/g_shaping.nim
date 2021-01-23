@@ -50,6 +50,29 @@ proc astShaping*(inp_nodes: seq[Node], main_flag: bool, test: bool): (seq[Node],
       )
       out_nodes.add(new_node)
 
+    # $
+    of nkDollarExpression:
+      var res0 = inp_node.child_nodes.astShaping(new_main_flag, test)
+      let target = res0[0]
+      new_main_flag = res0[1]
+
+      var new_node = Node(
+        kind:        nkCallExpression,
+        token:       Token(Type: LPAREN, Literal: "()"),
+        child_nodes: @[
+        Node(
+          kind: nkIdent,
+          token: Token(Type: IDENT, Literal: "toString"),
+          child_nodes: @[],
+        ),
+        Node(
+          kind: nkArgs,
+          token: Token(Type: LPAREN, Literal: "()"),
+          child_nodes: target,
+        )],
+      )
+      out_nodes.add(new_node)
+
     # パイプライン演算子を前置記法の関数の形に変形
     of nkPipeExpression:
       if inp_node.child_nodes.len() != 2:
