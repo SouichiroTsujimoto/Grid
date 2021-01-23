@@ -201,6 +201,8 @@ proc typeFilter(types: seq[(string, string)], target: string, filter: string): (
     for f in fl:
       if t[0] == target and t[1] == f and results.contains(t[1]) == false:
         results.add(t[1])
+      elif f == "" and results.contains(t[1]) == false:
+        results.add(t[1])
   
   if results == @[]:
     return (false, "")
@@ -409,7 +411,7 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
       if ftm_res[0] == false:
         return (false, OTHER, "grid::print")
       
-      return (true, NIL, "grid::print")
+      return (true, ftm_res[1], "grid::print")
     else:
       return (false, OTHER, "")
   of "println":
@@ -420,7 +422,7 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
       if ftm_res[0] == false:
         return (false, OTHER, "grid::println")
       
-      return (true, NIL, "grid::println")
+      return (true, ftm_res[1], "grid::println")
     else:
       return (false, OTHER, "")
   of "len":
@@ -439,10 +441,14 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
       return (true, IDENT, "grid::join")
     elif argsTypeC.len() == 2:
       var ftm_res = funcTypesMatch("ARRAY::@a" & "+" & "ARRAY::@a" & "->" & "ARRAY::@a", argsType.join("+"))
+      
       if ftm_res[0] == false:
         return (false, OTHER, "grid::join")
+      var tf_res = ftm_res[2].typeFilter("@a", "")
+      if tf_res[0] == false:
+        return (false, OTHER, "grid::join")
       
-      return (true, ftm_res[1], "grid::join")
+      return (true, ARRAY & "::" & tf_res[1], "grid::join")
     else:
       return (false, OTHER, "")
   of "head":
@@ -452,8 +458,11 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
       var ftm_res = funcTypesMatch("ARRAY::@a" & "->" & "@a", argsType.join("+"))
       if ftm_res[0] == false:
         return (false, OTHER, "grid::head")
+      var tf_res = ftm_res[2].typeFilter("@a", "")
+      if tf_res[0] == false:
+        return (false, OTHER, "grid::head")
       
-      return (true, ftm_res[1], "grid::head")
+      return (true, tf_res[1], "grid::head")
     else:
       return (false, OTHER, "")
   of "tail":
@@ -463,8 +472,11 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
       var ftm_res = funcTypesMatch("ARRAY::@a" & "->" & "ARRAY::@a", argsType.join("+"))
       if ftm_res[0] == false:
         return (false, OTHER, "grid::tail")
+      var tf_res = ftm_res[2].typeFilter("@a", "")
+      if tf_res[0] == false:
+        return (false, OTHER, "grid::tail")
       
-      return (true, ftm_res[1], "grid::tail")
+      return (true, ARRAY & "::" & tf_res[1], "grid::tail")
     else:
       return (false, OTHER, "")
   of "last":
@@ -474,8 +486,11 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
       var ftm_res = funcTypesMatch("ARRAY::@a" & "->" & "@a", argsType.join("+"))
       if ftm_res[0] == false:
         return (false, OTHER, "grid::last")
+      var tf_res = ftm_res[2].typeFilter("@a", "")
+      if tf_res[0] == false:
+        return (false, OTHER, "grid::last")
       
-      return (true, ftm_res[1], "grid::last")
+      return (true, tf_res[1], "grid::last")
     else:
       return (false, OTHER, "")
   of "init":
@@ -485,8 +500,11 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
       var ftm_res = funcTypesMatch("ARRAY::@a" & "->" & "ARRAY::@a", argsType.join("+"))
       if ftm_res[0] == false:
         return (false, OTHER, "grid::init")
+      var tf_res = ftm_res[2].typeFilter("@a", "")
+      if tf_res[0] == false:
+        return (false, OTHER, "grid::init")
       
-      return (true, ftm_res[1], "grid::init")
+      return (true, ARRAY & "::" & tf_res[1], "grid::init")
     else:
       return (false, OTHER, "")
   of "toString":
@@ -497,7 +515,7 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
       if ftm_res[0] == false:
         return (false, OTHER, "grid::toString")
       
-      return (true, STRING, "grid::toString")
+      return (true, ftm_res[1], "grid::toString")
     else:
       return (false, OTHER, "")
   of "at":
@@ -507,8 +525,11 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
       var ftm_res = funcTypesMatch("ARRAY::@a" & "+" & INT & "->" & "@a", argsType.join("+"))
       if ftm_res[0] == false:
         return (false, OTHER, "grid::at")
+      var tf_res = ftm_res[2].typeFilter("@a", "")
+      if tf_res[0] == false:
+        return (false, OTHER, "grid::at")
       
-      return (true, ftm_res[1], "grid::at")
+      return (true, tf_res[1], "grid::at")
     else:
       return (false, OTHER, "")
   of "readln":

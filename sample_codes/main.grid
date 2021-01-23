@@ -1,9 +1,6 @@
-struct hoge do
-  int a,
-  bool b,
-end
-
 main do
-  later hoge d
+  {1}
+  |> join({2, 3})
+  |> map(plus(1))
   
 end

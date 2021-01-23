@@ -1,11 +1,5 @@
 #include "gridfuncs.cpp"
 
-typedef struct {
-  int a ;
-  bool b ;
-} hoge ;
-
 int main ( int argc , char *argv[] ) {
-  hoge d = { 0 , false } ;
-  d.a = 10 ;
+  grid::map ( grid::join ( ( std::vector<int> ) { 1 } , ( std::vector<int> ) { 2 , 3 } ) , [] ( int _i ) { return grid::plus ( _i , 1 ) ; } ) ;
 }
