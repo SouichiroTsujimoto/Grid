@@ -49,6 +49,7 @@
     "stdexcept": "cpp",
     "streambuf": "cpp",
     "typeinfo": "cpp",
-    "typeindex": "cpp"
+    "typeindex": "cpp",
+    "chrono": "cpp"
   },
 }

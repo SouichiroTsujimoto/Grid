@@ -64,6 +64,7 @@ type
   Precedence* = enum
     Lowest = 0
     Pipeline
+    TypeIdent
     Assign
     Ifexpression
     Equals
@@ -78,6 +79,7 @@ type
 proc tokenPrecedence*(tok: Token): Precedence =
   case tok.Type
   of PIPE:                      return Pipeline
+  of IDENT:                     return TypeIdent
   of EQUAL:                     return Assign
   of IFEX, COLON:               return Ifexpression
   of LT, GT, LE, GE:            return Lg

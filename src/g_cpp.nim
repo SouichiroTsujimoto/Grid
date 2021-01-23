@@ -237,7 +237,7 @@ proc conversionCppOperator(fn: string, argsType: seq[string]): (bool, string, st
     var ftm_res = funcTypesMatch("@a" & "+" & "@a" & "->" & "@a", argsType.join("+"))
     if ftm_res[0] == false:
       return (false, OTHER, "+")
-    var tf_res = ftm_res[2].typeFilter("@a", number_t)
+    var tf_res = ftm_res[2].typeFilter("@a", number_t & "|" & STRING)
     if tf_res[0] == false:
       return (false, OTHER, "+")
     
@@ -659,6 +659,9 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
   of nkStringLiteral:
     if dost == false:
       echoErrorMessage("文の外でstringリテラルを使用することはできません", test, node.token.Line)
+    code.add((OTHER, "("))
+    code.add(conversionCppType(T_STRING, test, node.token.Line))
+    code.add((OTHER, ")"))
     code.add((STRING, "\"" & node.token.Literal & "\""))
     code.addSemicolon()
     codeType = STRING

@@ -1,5 +1,10 @@
 #include "gridfuncs.cpp"
 
+typedef struct {
+  int a ;
+  int b ;
+} hoge ;
+
 int main ( int argc , char *argv[] ) {
-  std::vector<int> hoge = ( std::vector<int> ) { 1 , 2 , 3 } ;
+  hoge d = ( hoge ) { 10 , 10 } ;
 }

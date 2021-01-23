@@ -1,5 +1,8 @@
-include main.grid
+struct hoge do
+  int a,
+  int b,
+end
 
 main do
-  array int hoge = {1, 2, 3}
+  hoge d = hoge{10, 10}
 end

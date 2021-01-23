@@ -287,9 +287,6 @@ proc parseIdent(p: Parser): Node =
     token:       p.curToken,
     child_nodes: @[],
   )
-
-  if p.peekToken.Type == IDENT:
-    node = p.parseTypeIdent(true)
   
   return node
 
@@ -479,7 +476,7 @@ proc parseStringType(p: Parser, init: bool): Node =
   
   if init == false:
     return node
-  
+
   if p.peekToken.Type != EQUAL:
     echoErrorMessage("初期化されていません", false, p.curToken.Line)
     return node
@@ -542,6 +539,8 @@ proc parseArrayType(p: Parser, init: bool): Node =
 
 # ユーザー定義型
 proc parseTypeIdent(p: Parser, init: bool): Node =
+  echo p.curToken.Literal
+  echo "おい"
   # Token 特殊
   let node = Node(
     kind:  nkTypeIdent,
@@ -561,6 +560,7 @@ proc parseTypeIdent(p: Parser, init: bool): Node =
   if init == false:
     return node
   
+  echo p.peekToken.Literal
   if p.peekToken.Type != EQUAL:
     echoErrorMessage("初期化されていません", false, p.curToken.Line)
     return node
@@ -843,6 +843,8 @@ proc parseExpression(p: Parser, precedence: Precedence): Node =
     of PIPE:
       p.shiftToken()
       left = p.parsePipeExpression(left)
+    of IDENT:
+      left = p.parseTypeIdent(true)
     else:
       return left
   

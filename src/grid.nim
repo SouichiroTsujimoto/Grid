@@ -92,8 +92,9 @@ when isMainModule:
     ・ '$' ✅
     ・ '&' ✅
     ・ range関数 
+    ・ export文
+    ・ while文
     
-  ・ while文
   ・ テストの更新
   ・ 構造体 🔺
   ・ 複合リテラル 🔺
