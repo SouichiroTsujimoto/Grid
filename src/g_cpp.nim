@@ -323,6 +323,15 @@ proc conversionCppOperator(fn: string, argsType: seq[string]): (bool, string, st
       return (false, OTHER, "!=")
     
     return (true, BOOL, "!=")
+  of AMPERSAND:
+    var ftm_res = funcTypesMatch("@a" & "+" & "@a" & "->" & "@a", argsType.join("+"))
+    if ftm_res[0] == false:
+      return (false, OTHER, "&")
+    var tf_res = ftm_res[2].typeFilter("@a", STRING)
+    if tf_res[0] == false:
+      return (false, OTHER, "&")
+  
+    return (true, BOOL, "&")
 
 # 型のチェックをしてC++の関数に変換する
 proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, string) =
@@ -1124,10 +1133,6 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
         echoErrorMessage("指定している型と値の型が違います", test, node.token.Line)
     else:
       echoErrorMessage("式がありません", test, node.token.Line)
-
-  # パイプライン演算子
-  of nkPipeExpression:
-    echoErrorMessage("対象が関数ではありません", test, node.token.Line)
 
   # 配列の添字
   of nkAccessElement:

@@ -89,8 +89,8 @@ when isMainModule:
   TODO
 ・ ~優先~
   ・ # TODO: 今日やる
-    ・ '$'
-    ・ '&'
+    ・ '$' ✅
+    ・ '&' 
     ・ range関数
     
   ・ while文

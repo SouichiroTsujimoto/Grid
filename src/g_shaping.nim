@@ -50,35 +50,66 @@ proc astShaping*(inp_nodes: seq[Node], main_flag: bool, test: bool): (seq[Node],
       )
       out_nodes.add(new_node)
 
-    # $
+    # '$'をtoString関数の形に変形
     of nkDollarExpression:
-      var res0 = inp_node.child_nodes.astShaping(new_main_flag, test)
-      let target = res0[0]
-      new_main_flag = res0[1]
+      if inp_node.child_nodes.len() != 0:
+        var res0 = inp_node.child_nodes.astShaping(new_main_flag, test)
+        let target = res0[0]
+        new_main_flag = res0[1]
 
-      var new_node = Node(
-        kind:        nkCallExpression,
-        token:       Token(Type: LPAREN, Literal: "()"),
-        child_nodes: @[
-        Node(
-          kind: nkIdent,
-          token: Token(Type: IDENT, Literal: "toString"),
-          child_nodes: @[],
-        ),
-        Node(
-          kind: nkArgs,
-          token: Token(Type: LPAREN, Literal: "()"),
-          child_nodes: target,
-        )],
-      )
-      out_nodes.add(new_node)
+        var new_node = Node(
+          kind:        nkCallExpression,
+          token:       Token(Type: LPAREN, Literal: "()"),
+          child_nodes: @[
+          Node(
+            kind: nkIdent,
+            token: Token(Type: IDENT, Literal: "toString"),
+            child_nodes: @[],
+          ),
+          Node(
+            kind: nkArgs,
+            token: Token(Type: LPAREN, Literal: "()"),
+            child_nodes: target,
+          )],
+        )
+        out_nodes.add(new_node)
+      else:
+        echoErrorMessage("'$'の後ろに対象がありません", test, inp_node.token.Line)
+    
+    # '&'をjoin関数の形に変形
+    of nkInfixExpression:
+      if inp_node.token.Literal == AMPERSAND and inp_node.child_nodes.len() == 2:
+        var left = @[inp_node.child_nodes[0]].astShaping(new_main_flag, test)
+        new_main_flag = left[1]
+        var right = @[inp_node.child_nodes[1]].astShaping(new_main_flag, test)
+        new_main_flag = right[1]
+
+        var new_node = Node(
+          kind:        nkCallExpression,
+          token:       Token(Type: LPAREN, Literal: "()"),
+          child_nodes: @[
+          Node(
+            kind: nkIdent,
+            token: Token(Type: IDENT, Literal: "join"),
+            child_nodes: @[],
+          ),
+          Node(
+            kind: nkArgs,
+            token: Token(Type: LPAREN, Literal: "()"),
+            child_nodes: left[0] & right[0],
+          )],
+        )
+        out_nodes.add(new_node)
+      else:
+        # そのままで大丈夫
+        var new_node = makeNewNode(inp_node, new_main_flag, test)
+        new_main_flag = new_node[1]
+        out_nodes.add(new_node[0])
 
     # パイプライン演算子を前置記法の関数の形に変形
     of nkPipeExpression:
       if inp_node.child_nodes.len() != 2:
-        var new_node = makeNewNode(inp_node, new_main_flag, test)
-        new_main_flag = new_node[1]
-        out_nodes.add(new_node[0])
+        echoErrorMessage("\"|>\"のオペランドが間違っています", test, inp_node.token.Line)
       elif inp_node.child_nodes[1].kind == nkCallExpression or inp_node.child_nodes[1].kind == nkMapFunction:
         var res0 = @[inp_node.child_nodes[0]].astShaping(new_main_flag, test)
         let element = res0[0]
@@ -95,9 +126,7 @@ proc astShaping*(inp_nodes: seq[Node], main_flag: bool, test: bool): (seq[Node],
         )
         out_nodes.add(new_node)
       else:
-        var new_node = makeNewNode(inp_node, new_main_flag, test)
-        new_main_flag = new_node[1]
-        out_nodes.add(new_node[0])
+        echoErrorMessage("\"|>\"のオペランドが間違っています", test, inp_node.token.Line)
     else:
       var new_node = makeNewNode(inp_node, new_main_flag, test)
       new_main_flag = new_node[1]

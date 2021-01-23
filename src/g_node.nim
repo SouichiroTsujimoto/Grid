@@ -70,6 +70,7 @@ type
     Lg
     Sum
     Product
+    Join
     Generator
     Call
     Prefix
@@ -83,6 +84,7 @@ proc tokenPrecedence*(tok: Token): Precedence =
   of EE, NE:                    return Equals
   of PLUS, MINUS:               return Sum
   of SLASH, ASTERISC:           return Product
+  of AMPERSAND:                 return Join
   of LARROW:                    return Generator
   of LPAREN, LBRACKET, LBRACE:  return Call
   of DOLLAR:                    return Prefix
