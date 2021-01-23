@@ -1,6 +1,6 @@
 main do
-  {1}
-  |> join({2, 3})
-  |> map(plus(1))
-  
+  array int a = range(1000, 1002)
+  for int x <- a do
+    x |> toString() |> println()
+  end
 end

@@ -537,6 +537,17 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
       return (true, STRING, "grid::readln")
     else:
       return (false, OTHER, "")
+  of "range":
+    if argsTypeC.len() == 0:
+      return (true, IDENT, "grid::range")
+    elif argsTypeC.len() == 2:
+      var ftm_res = funcTypesMatch(INT & "+" & INT & "->" & ARRAY & "::" & INT, argsType.join("+"))
+      if ftm_res[0] == false:
+        return (false, OTHER, "grid::range")
+      
+      return (true, ARRAY & "::" & INT, "grid::range")
+    else:
+      return (false, OTHER, "")
   else:
     return (false, NIL, "NULL")
 

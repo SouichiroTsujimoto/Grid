@@ -108,4 +108,13 @@ namespace grid {
     return a;
   };
 
+  auto range = [](int a, int b){
+    std::vector<int> c(b-a+1, 0);
+    int size = (int)c.size();
+    for(int i = a; i < a + size; i++) {
+      c[i-a] = i;
+    }
+    return c;
+  };
+
 }
