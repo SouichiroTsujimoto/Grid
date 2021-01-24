@@ -1388,6 +1388,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
       echoErrorMessage("第二引数が正しくありません", test, node.token.Line)
 
     let func_name = node.child_nodes[1].child_nodes[1].child_nodes[0].token.Literal
+    let func_type = node.child_nodes[1].child_nodes[1].child_nodes[0].token.Type
     var cpp_func_name = ""
     var func_result_type = ""
     let array_CandT = node.child_nodes[1].child_nodes[0].makeCodeParts(test, dost)
@@ -1418,21 +1419,26 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
       cpp_func_name = ccf[2]
       func_result_type = ccf[1]
     else:
-      if identExistenceCheck(func_name, true)[0] == false:
-        if ccf[1] == NIL:
-          echoErrorMessage("存在しない関数です", test, node.token.Line)
-        else:
-          echoErrorMessage("第二引数の関数の引数が正しくありません", test, node.token.Line)
+      let ccf = conversionCppFunction(func_name, array_type_split[1..array_type_split.len()-1].join("::") & func_arg_types, test, node.token.Line)
+      if ccf[0]:
+        cpp_func_name = ccf[2]
+        func_result_type = ccf[1]
       else:
-        let ftm = funcTypesMatch(identTable[func_name].Type, array_type_split[1..array_type_split.len()-1].join("::") & func_arg_types.join("+"))
-        if ftm[0]:
-          cpp_func_name = func_name
-          func_result_type = ftm[1]
-        else:  
-          echoErrorMessage("第二引数の関数の引数が正しくありません", test, node.token.Line)
+        if identExistenceCheck(func_name, true)[0] == false:
+          if ccf[1] == NIL:
+            echoErrorMessage("\"" & func_name & "\"が存在しません", test, node.token.Line)
+          else:
+            echoErrorMessage("\"" & func_name & "\"の引数が正しくありません", test, node.token.Line)
+        else:
+          let ftm = funcTypesMatch(identTable[func_name].Type, array_type_split[1..array_type_split.len()-1].join("::") & func_arg_types.join("+"))
+          if ftm[0]:
+            cpp_func_name = func_name
+            func_result_type = ftm[1]
+          else:  
+            echoErrorMessage("\"" & func_name & "\"の引数が正しくありません", test, node.token.Line)
 
     if func_result_type.split("::") != array_type_split[1..array_type_split.len()-1]:
-      echoErrorMessage("第二引数の関数の返り値が正しくありません", test, node.token.Line)
+      echoErrorMessage("\"" & func_name & "\"が正しくありません", test, node.token.Line)
 
     code.add((IDENT, "grid::map"))
     code.add((OTHER, "("))
@@ -1460,13 +1466,135 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
     code.add((OTHER, ")"))
     code.add((LBRACE, "{"))
     code.add((OTHER, "return"))
-    code.add((OTHER, cpp_func_name))
-    code.add((OTHER, "("))
-    for i, arg in fn.child_nodes[1].child_nodes:
-      if i != 0:
-        code.add((OTHER, ","))
-      code.add(arg.makeCodeParts(test, dost)[0].replaceSemicolon(@[(OTHER, "")]))
+    if func_type == PREOP:
+      if fn.child_nodes[1].child_nodes.len() != 2:
+        echoErrorMessage("\"" & func_name & "\"の引数が間違っています", test, node.token.Line)
+      code.add((OTHER, "("))
+      code.add(fn.child_nodes[1].child_nodes[0].makeCodeParts(test, dost)[0].replaceSemicolon(@[(OTHER, "")]))
+      code.add((OTHER, cpp_func_name))
+      code.add(fn.child_nodes[1].child_nodes[1].makeCodeParts(test, dost)[0].replaceSemicolon(@[(OTHER, "")]))
+      code.add((OTHER, ")"))
+    else:
+      code.add((OTHER, cpp_func_name))
+      code.add((OTHER, "("))
+      for i, arg in fn.child_nodes[1].child_nodes:
+        if i != 0:
+          code.add((OTHER, ","))
+        code.add(arg.makeCodeParts(test, dost)[0].replaceSemicolon(@[(OTHER, "")]))
+      code.add((OTHER, ")"))
+    code.add((OTHER, ";"))
+    code.add((RBRACE, "}"))
     code.add((OTHER, ")"))
+    code.addSemicolon()
+
+    nestingReset(original_nesting, test)
+    codeType = array_type
+  
+  # filter関数
+  of nkFilterFunction:
+    if dost == false:
+      echoErrorMessage("文の外で関数を呼び出すことはできません", test, node.token.Line)
+
+    if node.child_nodes[1].child_nodes.len() != 2:
+      echoErrorMessage("引数の数が合いません", test, node.token.Line)
+    elif node.child_nodes[1].child_nodes[1].kind != nkCallExpression:
+      echoErrorMessage("第二引数が正しくありません", test, node.token.Line)
+
+    let func_name = node.child_nodes[1].child_nodes[1].child_nodes[0].token.Literal
+    let func_type = node.child_nodes[1].child_nodes[1].child_nodes[0].token.Type
+    var cpp_func_name = ""
+    var func_result_type = ""
+    let array_CandT = node.child_nodes[1].child_nodes[0].makeCodeParts(test, dost)
+    let array_content = array_CandT[0].replaceSemicolon(@[(OTHER, "")])
+    let array_type = array_CandT[1]
+    let array_type_split = array_type.split("::")
+    var fn = node.child_nodes[1].child_nodes[1]
+    
+    var func_arg_types: seq[string]
+    for nodes in fn.child_nodes[1].child_nodes:
+      func_arg_types.add(nodes.token.Type)
+
+    if array_type_split[0] != ARRAY:
+      echoErrorMessage("第一引数の型が正しくありません", test, node.token.Line)
+
+    let i_node = Node(
+      kind:        nkIdent,
+      token:       Token(Type: IDENT, Literal: "_i", Line: node.token.Line),
+      child_nodes: @[],
+    )
+    var original_nesting = nesting
+    nestingIncrement()
+    
+    fn.child_nodes[1].child_nodes = @[i_node] & fn.child_nodes[1].child_nodes
+
+    if func_type == PREOP:
+      let cco = conversionCppOperator(func_name, array_type_split[1..array_type_split.len()-1].join("::") & func_arg_types, test, node.token.Line)
+      cpp_func_name = cco[2]
+      func_result_type = cco[1]
+    else:
+      let ccf = conversionCppFunction(func_name, array_type_split[1..array_type_split.len()-1].join("::") & func_arg_types, test, node.token.Line)
+      if ccf[0]:
+        cpp_func_name = ccf[2]
+        func_result_type = ccf[1]
+      else:
+        if identExistenceCheck(func_name, true)[0] == false:
+          if ccf[1] == NIL:
+            echoErrorMessage("\"" & func_name & "\"が存在しません", test, node.token.Line)
+          else:
+            echoErrorMessage("\"" & func_name & "\"の引数が正しくありません", test, node.token.Line)
+        else:
+          let ftm = funcTypesMatch(identTable[func_name].Type, array_type_split[1..array_type_split.len()-1].join("::") & func_arg_types.join("+"))
+          if ftm[0]:
+            cpp_func_name = func_name
+            func_result_type = ftm[1]
+          else:  
+            echoErrorMessage("\"" & func_name & "\"の引数が正しくありません", test, node.token.Line)
+
+    if func_result_type != BOOL:
+      echoErrorMessage("\"" & func_name & "\"の返り値が正しくありません", test, node.token.Line)
+
+    code.add((IDENT, "grid::filter"))
+    code.add((OTHER, "("))
+    code.add(array_content)
+    code.add((OTHER, ","))
+    code.add((OTHER, "[]"))
+    code.add((OTHER, "("))
+    let ident = Node(
+      kind:        nkArrayType,
+      token:       Token(Type: "T_" & array_type_split[1..array_type_split.len()-1].join("::T_"), Literal:"{"),
+      child_nodes: @[Node(
+        kind:        nkIdent,
+        token:       Token(Type: IDENT, Literal: "_i"),
+        child_nodes: @[],
+      )],
+    )
+    IdentInfo(
+      Type:     array_type_split[1..array_type_split.len()-1].join("::"),
+      init:     true,
+      path:     nesting,
+      mutable:  false,
+      used:     false,
+    ).identRegistration("_i", nesting)
+    code.add(ident.makeCodeParts(test, dost)[0].replaceSemicolon(@[(OTHER, "")]))
+    code.add((OTHER, ")"))
+    code.add((LBRACE, "{"))
+    code.add((OTHER, "return"))
+    if func_type == PREOP:
+      if fn.child_nodes[1].child_nodes.len() != 2:
+        echoErrorMessage("\"" & func_name & "\"の引数が間違っています", test, node.token.Line)
+      code.add((OTHER, "("))
+      code.add(fn.child_nodes[1].child_nodes[0].makeCodeParts(test, dost)[0].replaceSemicolon(@[(OTHER, "")]))
+      code.add((OTHER, cpp_func_name))
+      code.add(fn.child_nodes[1].child_nodes[1].makeCodeParts(test, dost)[0].replaceSemicolon(@[(OTHER, "")]))
+      code.add((OTHER, ")"))
+    else:
+      code.add((OTHER, cpp_func_name))
+      code.add((OTHER, "("))
+      for i, arg in fn.child_nodes[1].child_nodes:
+        if i != 0:
+          code.add((OTHER, ","))
+        code.add(arg.makeCodeParts(test, dost)[0].replaceSemicolon(@[(OTHER, "")]))
+      code.add((OTHER, ")"))
     code.add((OTHER, ";"))
     code.add((RBRACE, "}"))
     code.add((OTHER, ")"))

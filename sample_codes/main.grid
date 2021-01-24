@@ -1,14 +1,29 @@
-main do
 /*
-  $(lt  (1,2))                         |> println()
-  lt    (1,2)            |> toString() |> println()
-  gt    (1,2)            |> toString() |> println()
-  lte   (1,2)            |> toString() |> println()
-  gte   (1,2)            |> toString() |> println()
-  equal ({1,2}, {1,2})   |> toString() |> println()
+def array array int lr(array int arr, int pivot, array int left, array int right) do
+  if len(arr) == 1 do
+    return {left, right}
+  elif arr[0] <= pivot do
+    array int new_left = join(left, {pivot})
+    return lr(init(arr), pivot, new_left, right)
+  else
+    array int new_right = join(right, {pivot})
+    return lr(init(arr), pivot, left, new_right)
+  end 
+end
+
+def array int quicksort(array int arr) do
+  int pivot = arr[len(arr)-1]
+  array array int left_right = lr(arr, pivot, {}, {})
+end
+
+main do
+  
+end
 */
-  nequal({1,2}, {2,2})   |> toString() |> println()
-  `==`({1,2},{1,2})      |> toString() |> println()
-  equal({1,2}, {1, 2})
-  {1, 2} & {3, 4}
+
+main do
+  filter({1, 2, 3}, `!=`(2))
+  |> at(1)
+  |> toString()
+  |> println()
 end

@@ -122,6 +122,14 @@ proc parseMapIdent(p: Parser): Node =
   )
   return node
 
+# filter関数
+proc parseFilterIdent(p: Parser): Node =
+  let node = Node(
+    kind:  nkFilterIdent,
+    token: p.curToken,
+  )
+  return node
+
 # def文
 proc parseDefineStatement(p: Parser): Node =
   var node = Node(
@@ -278,6 +286,13 @@ proc parseCallExpression(p: Parser, left: Node): Node =
       child_nodes: @[left, p.parseNodes(RPAREN)],
     )
     return node
+  elif left.kind == nkFilterIdent:
+    var node = Node(
+      kind:  nkFilterFunction,
+      token: p.curToken,
+      child_nodes: @[left, p.parseNodes(RPAREN)],
+    )
+    return node
   else:
     return left
 
@@ -293,7 +308,7 @@ proc parseCompoundLiteral(p: Parser, left: Node): Node =
 # 名前
 proc parseIdent(p: Parser): Node =
   if p.curToken.Type != IDENT:
-    echoErrorMessage("無効な名前です", false, p.curToken.Line)
+    echoErrorMessage("\"" & p.curToken.Literal & "\":無効な名前です", false, p.curToken.Line)
 
   var node = Node(
     kind:        nkIdent,
@@ -818,6 +833,7 @@ proc parseExpression(p: Parser, precedence: Precedence): Node =
   of IFEX       : left = p.parseIfExpression()
   of RETURN     : left = p.parseReturnStatement()
   of MAP        : left = p.parseMapIdent()
+  of FILTER     : left = p.parseFilterIdent()
   of INT        : left = p.parseIntLiteral()
   of FLOAT      : left = p.parseFloatLiteral()
   of CHAR       : left = p.parseCharLiteral()
@@ -842,7 +858,7 @@ proc parseExpression(p: Parser, precedence: Precedence): Node =
       p.shiftToken()
       left = p.parseAssignExpression(left)
     of LPAREN:
-      if left.kind == nkIdent or left.kind == nkMapIdent or left.kind == nkPrefixOperator:
+      if left.kind == nkIdent or left.kind == nkMapIdent or left.kind == nkFilterIdent or left.kind == nkPrefixOperator:
         p.shiftToken()
         left = p.parseCallExpression(left)
       else:
@@ -901,8 +917,6 @@ proc parseBlockStatement(p: Parser, endTokenTypes: seq[string]): Node =
 # 文の処理
 proc parseStatement(p: Parser): Node =
   case p.curToken.Type
-  # of LET:    return p.parseLetStatement()
-  # of VAR:    return p.parseVarStatement()
   of IMPORT:       return p.parseImport()
   of INCLUDE:      return p.parseInclude()
   of COMMENTBEGIN: return p.parseComment()

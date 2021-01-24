@@ -39,7 +39,7 @@ suite "operators":
   test "\"Hello\" == \"Hello\"":
     initTables()
     let program = "\"Hello\" == \"Hello\"".makeProgram(true)
-    check(program.findStr("( \"Hello\" == \"Hello\" )"))
+    check(program.findStr("( ( std::string ) \"Hello\" == ( std::string ) \"Hello\" )"))
 
 suite "plus":
   test "plus(1, 3)":
@@ -69,7 +69,7 @@ suite "|>":
   test "\"Hello\" |> print()":
     initTables()
     let program = "\"Hello\" |> print()".makeProgram(true)
-    check(program.findStr("print ( \"Hello\" )"))
+    check(program.findStr("print ( ( std::string ) \"Hello\" )"))
   test "1 |> plus(2) |> plus(3) |> divi(6)":
     initTables()
     let program = "1 |> plus(2) |> plus(3) |> divi(6)".makeProgram(true)
@@ -126,11 +126,11 @@ suite "string":
   test "string a = \"Hello\"":
     initTables()
     let program = "string a = \"Hello\"".makeProgram(true)
-    check(program.findStr("std::string a = \"Hello\" ;"))
+    check(program.findStr("std::string a = ( std::string ) \"Hello\" ;"))
   test "string a = \"hoge\thoge\"":
     initTables()
     let program = "string a = \"hoge\thoge\"".makeProgram(true)
-    check(program.findStr("std::string a = \"hoge\thoge\" ;"))
+    check(program.findStr("std::string a = ( std::string ) \"hoge\thoge\" ;"))
   test "string a = toString(1)":
     initTables()
     let program = "string a = toString(1)".makeProgram(true)
@@ -158,7 +158,7 @@ suite "array":
   test "array string a = {\"Hello\", \"World\"}":
     initTables()
     let program = "array string a = {\"Hello\", \"World\"}".makeProgram(true)
-    check(program.findStr("std::vector<std::string> a = ( std::vector<std::string> ) { \"Hello\" , \"World\" } ;"))
+    check(program.findStr("std::vector<std::string> a = ( std::vector<std::string> ) { ( std::string ) \"Hello\" , ( std::string ) \"World\" } ;"))
   test "array array int a = {{1, 2}, {1}}":
     initTables()
     let program = "array array int a = {{1, 2}, {1}}".makeProgram(true)
@@ -198,59 +198,59 @@ suite "if":
     initTables()
     let program = "if 1 + 1 <= 3 do print(\"OK\") end".makeProgram(true)
     check(program.findStr("if ( ( ( 1 + 1 ) <= 3 ) ) {"))
-    check(program.findStr("grid::print ( \"OK\" ) ;"))
+    check(program.findStr("grid::print ( ( std::string ) \"OK\" ) ;"))
     check(program.findStr("}"))
   test "if 5 + 5 == 10 do print(\"5 + 5 = 10\") else print(\"?\") end":
     initTables()
     let program = "if 5 + 5 == 10 do print(\"5 + 5 = 10\") else print(\"?\") end".makeProgram(true)
     check(program.findStr("if ( ( ( 5 + 5 ) == 10 ) ) {"))
-    check(program.findStr("grid::print ( \"5 + 5 = 10\" ) ;"))
+    check(program.findStr("grid::print ( ( std::string ) \"5 + 5 = 10\" ) ;"))
     check(program.findStr("}"))
     check(program.findStr("else {"))
-    check(program.findStr("grid::print ( \"?\" ) ;"))
+    check(program.findStr("grid::print ( ( std::string ) \"?\" ) ;"))
     check(program.findStr("}"))
   test "if True do return \"1\" elif True do return \"2\" else return \"3\" end":
     initTables()
     let program = "if True do return \"1\" elif True do return \"2\" else return \"3\" end".makeProgram(true)
     check(program.findStr("if ( true ) {"))
-    check(program.findStr("return ( \"1\" ) ;"))
+    check(program.findStr("return ( ( std::string ) \"1\" ) ;"))
     check(program.findStr("}"))
     check(program.findStr("else if ( true ) {"))
-    check(program.findStr("return ( \"2\" ) ;"))
+    check(program.findStr("return ( ( std::string ) \"2\" ) ;"))
     check(program.findStr("}"))
     check(program.findStr("else {"))
-    check(program.findStr("return ( \"3\" ) ;"))
+    check(program.findStr("return ( ( std::string ) \"3\" ) ;"))
     check(program.findStr("}"))
   test "if 1 == 3 do print(\"ok\") elif 4 != 5 do print(True) elif False do print(\"違う\") else print(\"else\") end":
     initTables()
     let program = "if 1 == 3 do print(\"ok\") elif 4 != 5 do print(toString(True)) elif False do print(\"違う\") else print(\"else\") end".makeProgram(true)
     check(program.findStr("if ( ( 1 == 3 ) ) {"))
-    check(program.findStr("grid::print ( \"ok\" ) ;"))
+    check(program.findStr("grid::print ( ( std::string ) \"ok\" ) ;"))
     check(program.findStr("}"))
     check(program.findStr("else if ( ( 4 != 5 ) ) {"))
-    check(program.findStr("grid::print ( grid::toString ( true ) ) ;"))
+    check(program.findStr("grid::print ( grid::boolToString ( true ) ) ;"))
     check(program.findStr("}"))
     check(program.findStr("else if ( false ) {"))
-    check(program.findStr("grid::print ( \"違う\" ) ;"))
+    check(program.findStr("grid::print ( ( std::string ) \"違う\" ) ;"))
     check(program.findStr("}"))
     check(program.findStr("else {"))
-    check(program.findStr("grid::print ( \"else\" ) ;"))
+    check(program.findStr("grid::print ( ( std::string ) \"else\" ) ;"))
     check(program.findStr("}"))
 
 suite "ifex":
   test "ifex 5 + 5 == 10 : \"5 + 5 = 10\" : \"?\"":
     initTables()
     let program = "ifex 5 + 5 == 10 : \"5 + 5 = 10\" : \"?\"".makeProgram(true)
-    check(program.findStr("( ( ( 5 + 5 ) == 10 ) ? \"5 + 5 = 10\" : \"?\" ) ;"))
+    check(program.findStr("( ( ( 5 + 5 ) == 10 ) ? ( std::string ) \"5 + 5 = 10\" : ( std::string ) \"?\" ) ;"))
   test "ifex True : \"1\" : ifex True : \"2\" : \"3\"":
     initTables()
     let program = "ifex True : \"1\" : ifex True : \"2\" : \"3\"".makeProgram(true)
-    check(program.findStr("( true ? \"1\" : ( true ? \"2\" : \"3\" ) ) ;"))
+    check(program.findStr("( true ? ( std::string ) \"1\" : ( true ? ( std::string ) \"2\" : ( std::string ) \"3\" ) ) ;"))
 
   test "ifex True : ifex False : \"1\" : \"4\" : ifex True : \"2\" : \"3\"":
     initTables()
     let program = "ifex True : ifex False : \"1\" : \"4\" : ifex True : \"2\" : \"3\"".makeProgram(true)
-    check(program.findStr("( true ? ( false ? \"1\" : \"4\" ) : ( true ? \"2\" : \"3\" ) ) ;"))
+    check(program.findStr("( true ? ( false ? ( std::string ) \"1\" : ( std::string ) \"4\" ) : ( true ? ( std::string ) \"2\" : ( std::string ) \"3\" ) ) ;"))
   test "int a = ifex 2 + 2 == 5 : 1984 : ifex 2 + 2 == 4 : 2020 : 0":
     initTables()
     let program = "int a = ifex 2 + 2 == 5 : 1984 : ifex 2 + 2 == 4 : 2020 : 0".makeProgram(true)
@@ -260,7 +260,7 @@ suite "print":
   test "print(\"Hello\")":
     initTables()
     let program = "print(\"Hello\")".makeProgram(true)
-    check(program.findStr("grid::print ( \"Hello\" ) ;"))
+    check(program.findStr("grid::print ( ( std::string ) \"Hello\" ) ;"))
   test "print(toString(2005))":
     initTables()
     let program = "print(toString(2005))".makeProgram(true)
@@ -287,15 +287,15 @@ suite "for":
   test "for string a <- {\"a\", \"b\", \"c\"} do print(a) end":
     initTables()
     let program = "for string a <- {\"a\", \"b\", \"c\"} do print(a) end".makeProgram(true)
-    check(program.findStr("for ( std::string a : ( std::vector<std::string> ) { \"a\" , \"b\" , \"c\" } ) {"))
+    check(program.findStr("for ( std::string a : ( std::vector<std::string> ) { ( std::string ) \"a\" , ( std::string ) \"b\" , ( std::string ) \"c\" } ) {"))
     check(program.findStr("grid::print ( a ) ;"))
     check(program.findStr("}"))
   test "for string a <- {\"a\", \"b\", \"c\"} do for string b <- {\"a\", \"b\", \"c\"} do for string c <- {\"a\", \"b\", \"c\"} do print(c) end end end":
     initTables()
     let program = "for string a <- {\"a\", \"b\", \"c\"} do for string b <- {\"a\", \"b\", \"c\"} do for string c <- {\"a\", \"b\", \"c\"} do print(c) end end end".makeProgram(true)
-    check(program.findStr("for ( std::string a : ( std::vector<std::string> ) { \"a\" , \"b\" , \"c\" } ) {"))
-    check(program.findStr("for ( std::string b : ( std::vector<std::string> ) { \"a\" , \"b\" , \"c\" } ) {"))
-    check(program.findStr("for ( std::string c : ( std::vector<std::string> ) { \"a\" , \"b\" , \"c\" } ) {"))
+    check(program.findStr("for ( std::string a : ( std::vector<std::string> ) { ( std::string ) \"a\" , ( std::string ) \"b\" , ( std::string ) \"c\" } ) {"))
+    check(program.findStr("for ( std::string b : ( std::vector<std::string> ) { ( std::string ) \"a\" , ( std::string ) \"b\" , ( std::string ) \"c\" } ) {"))
+    check(program.findStr("for ( std::string c : ( std::vector<std::string> ) { ( std::string ) \"a\" , ( std::string ) \"b\" , ( std::string ) \"c\" } ) {"))
     check(program.findStr("grid::print ( c ) ;"))
     check(program.findStr("}"))
     check(program.findStr("}"))
@@ -357,7 +357,7 @@ suite "toString":
   test "string a = toString(True)":
     initTables()
     let program = "string a = toString(True)".makeProgram(true)
-    check(program.findStr("std::string a = grid::toString ( true ) ;"))
+    check(program.findStr("std::string a = grid::boolToString ( true ) ;"))
 
 suite "map":
   test "map({1, 2, 3}, plus(1))":

@@ -88,7 +88,6 @@ namespace grid {
     return c;
   };
 
-  // TODO 仮
   auto filter = [](auto a, auto b) {
     decltype(a) c = {};
     for(auto d : a) {

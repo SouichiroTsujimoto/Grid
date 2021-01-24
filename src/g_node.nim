@@ -15,6 +15,7 @@ type
     nkTypeIdent
     nkStruct
     nkMapIdent
+    nkFilterIdent
     nkNilLiteral
     nkIntLiteral
     nkFloatLiteral
@@ -43,6 +44,7 @@ type
     nkExportStatement
     nkRetrunExpression
     nkMapFunction
+    nkFilterFunction
     nkForStatement
     nkExpressionStatement
     nkCallExpression

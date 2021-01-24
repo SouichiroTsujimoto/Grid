@@ -81,6 +81,7 @@ const
   # その他
   DOLLAR*       = "$"
   MAP*          = "MAP"
+  FILTER*       = "FILTER"
   FOR*          = "FOR"
   AUTO*         = "AUTO"
   FUNCTION*     = "FUNCTION"
@@ -101,6 +102,7 @@ let keywords = {
   "do"        : DO,
   "end"       : END,
   "map"       : MAP,
+  "filter"    : FILTER,
   "for"       : FOR,
   "mut"       : MUT,
   "later"     : LATER,

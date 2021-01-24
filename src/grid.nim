@@ -92,7 +92,7 @@ when isMainModule:
     ・ '$' ✅
     ・ '&' ✅
     ・ range関数 ✅
-    ・ export文
+    ・ filter関数
     ・ while文
     
   ・ テストの更新
@@ -109,7 +109,6 @@ when isMainModule:
   ・ 配列リテラルを関数に渡せるようにする ✅
   ・ at関数 ✅
   ・ map関数 ✅
-  ・ filter関数
 ・ ~型~
   ・ 型のキャスト 🔺
   ・ void
