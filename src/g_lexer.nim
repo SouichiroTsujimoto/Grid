@@ -110,6 +110,26 @@ proc readString(l: Lexer): string =
 
   return str
 
+proc readPreOp(l: Lexer): string =
+  l.nextChar()
+  if l.ch == '`':
+    l.nextChar()
+    return ""
+
+  var str: string
+  while l.peekChar()[0] != '`':
+    if l.peekChar()[1] == false:
+      echoErrorMessage("\"`\"が閉じられていません", false, l.line)
+    else:
+      str.add(l.ch)
+      l.nextChar()
+  str.add(l.ch)
+
+  l.nextChar()
+  l.nextChar()
+
+  return str
+
 proc skipWhitespace(l: Lexer) =
   while (l.ch == ' ' or l.ch == '\t') and l.input.len() > l.position:
     l.nextChar()
@@ -210,6 +230,9 @@ proc nextToken*(l: Lexer): Token =
     elif l.ch == '\"':
       let lit = l.readString()
       return Token(Type: STRING, Literal: lit, Line: l.line)
+    elif l.ch == '`':
+      let lit = l.readPreOp()
+      return Token(Type: PREOP, Literal: lit, Line: l.line)
     elif l.ch.isDigit():
       let (lit, decimal) = l.readNumber
       if decimal:

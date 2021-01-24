@@ -85,6 +85,7 @@ const
   FOR*          = "FOR"
   AUTO*         = "AUTO"
   FUNCTION*     = "FUNCTION"
+  PREOP*        = "PREOP"
   OTHER*        = "OTHER"
 
 let keywords = {

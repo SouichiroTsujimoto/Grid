@@ -32,6 +32,7 @@ type
     nkArrayType
     nkFunctionType
     nkInfixExpression
+    nkPrefixOperator
     nkGenerator
     nkAssignExpression
     nkLetStatement

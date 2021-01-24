@@ -1,25 +1,15 @@
 
-/*
-def array int quicksort(array int a) do
-  int pivot = a[len(a)-1]
-  
-end
-
 main do
-  array int a = range(1000, 1002)
-  for int x <- a do
-    x |> toString() |> println()
-  end
-end
-*/
-
-main do
+  /*
   $(lt  (1,2))                         |> println()
   lt    (1,2)            |> toString() |> println()
   gt    (1,2)            |> toString() |> println()
   lte   (1,2)            |> toString() |> println()
   gte   (1,2)            |> toString() |> println()
-  equal ({1, 2}, {1, 2}) |> toString() |> println()
-  nequal({1, 2}, {2, 2}) |> toString() |> println()
-  {1, 2} == {1, 2}       |> toString() |> println()
+  equal ({1,2}, {1,2})   |> toString() |> println()
+  nequal({1,2}, {2,2})   |> toString() |> println()
+  {1,2} == {1,2}         |> toString() |> println()
+  */
+  equal({1,2}, {1,2})
+  {1, 2} |> `==`({1,2})  |> toString() |> println()
 end

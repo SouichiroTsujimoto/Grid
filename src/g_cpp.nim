@@ -234,7 +234,7 @@ proc conversionCppType(Type: string, test: bool, line: int): (string, string) =
         echoErrorMessage("型名:\"" & Type & "\" は存在しません", test, line)
 
 # 型のチェックをしてC++の演算子に変換する 
-proc conversionCppOperator(fn: string, argsType: seq[string]): (bool, string, string) =
+proc conversionCppOperator(fn: string, argsType: seq[string], test: bool, line: int): (bool, string, string) =
   let anything_t = INT & "|" & FLOAT & "|" & CHAR & "|" & STRING & "|" & BOOL
   let number_t = INT & "|" & FLOAT
 
@@ -338,9 +338,11 @@ proc conversionCppOperator(fn: string, argsType: seq[string]): (bool, string, st
       return (false, OTHER, "&")
   
     return (true, BOOL, "&")
+  else:
+    echoErrorMessage("\"" & fn & "\"が存在しません", test, line)
 
 # 型のチェックをしてC++の関数に変換する
-proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, string) =
+proc conversionCppFunction(fn: string, argsType: seq[string], test: bool, line: int): (bool, string, string) =
   let anything_t = INT & "|" & FLOAT & "|" & CHAR & "|" & STRING & "|" & BOOL
   let number_t = INT & "|" & FLOAT
   let letter_t = CHAR & "|" & STRING
@@ -403,7 +405,6 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
       return (true, tf_res[1], "grid::divi")
     else:
       return (false, OTHER, "")
-  
   of "lt":
     if argsTypeC.len() == 0:
       return (true, IDENT, "grid::lt")
@@ -641,7 +642,7 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
     else:
       return (false, OTHER, "")
   else:
-    return (false, NIL, "NULL")
+    echoErrorMessage("\"" & fn & "\"が存在しません", test, line)
 
 proc replaceSemicolon(parts: seq[codeParts], obj: seq[codeParts]): seq[codeParts] =
   if parts.len() == 0:
@@ -1026,7 +1027,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
     #   echo check_res[1].init
     #   identTable[node.token.Literal.split(".")[0]].used = true
     else:
-      let ic = node.token.Literal.conversionCppFunction(@[])
+      let ic = node.token.Literal.conversionCppFunction(@[], test, node.token.Line)
       if ic[1] == NIL:
         echoErrorMessage("\"" & node.token.Literal & "\"が定義されていません", test, node.token.Line)
       code.add((ic[1], ic[2]))
@@ -1225,7 +1226,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
     l = node.child_nodes[0].makeCodeParts(test, dost)
     r = node.child_nodes[1].makeCodeParts(test, dost)
     if l[1] == r[1]:
-      let oc = node.token.Literal.conversionCppOperator(@[l[1], r[1]])
+      let oc = node.token.Literal.conversionCppOperator(@[l[1], r[1]], test, node.token.Line)
       if oc[0] == false:
         echoErrorMessage("オペランドの型が間違っています", test, node.token.Line)
       code.add(((OTHER, "(")))
@@ -1342,32 +1343,48 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
       argsCode.add(a[0].replaceSemicolon(@[(OTHER, "")]))
       argsType.add(a[1])
     let funcName = node.child_nodes[0].token.Literal
-    let iec = identExistenceCheck(funcName, true)[0]
-    if iec:
-      let ftm = funcTypesMatch(identTable[funcName].Type, argsType.join("+"))
-      if ftm[0]:
-        code.add((IDENT, funcName))
-        codeType = ftm[1]
-      else:
-        echoErrorMessage("引数の型が正しくありません", test, node.token.Line)
-    else:
-      let ccf = conversionCppFunction(funcName, argsType)
-      if ccf[0]:
-        code.add((IDENT, ccf[2]))
-        codeType = ccf[1]
-      else:
-        if ccf[1] == OTHER:
-          echoErrorMessage("引数の型が正しくありません", test, node.token.Line)
-        else:
-          echoErrorMessage("\"" & funcName & "\"が定義されていません", test, node.token.Line)
     
-    code.add((OTHER, "("))
-    for i, argc in argsCode:
-      if i != 0:
-        code.add((OTHER, ","))
-      code.add(argc)
-    code.add((OTHER, ")"))
-    code.addSemicolon()
+    if node.child_nodes[0].token.Type == PREOP:
+      if argsType.len() != 2:
+        echoErrorMessage("\"" & funcName & "\"の引数が間違っています", test, node.token.Line)
+      
+      let oc = funcName.conversionCppOperator(argsType, test, node.token.Line)
+      if oc[0] == false:
+        echoErrorMessage("オペランドの型が間違っています", test, node.token.Line)
+      code.add(((OTHER, "(")))
+      code.add(argsCode[0].replaceSemicolon(@[(OTHER, "")]))
+      code.add((node.token.Type, oc[2]))
+      code.add(argsCode[1].replaceSemicolon(@[(OTHER, "")]))
+      code.add(((OTHER, ")")))
+      code.addSemicolon()
+      codeType = oc[1]
+    else:
+      let iec = identExistenceCheck(funcName, true)[0]
+      if iec:
+        let ftm = funcTypesMatch(identTable[funcName].Type, argsType.join("+"))
+        if ftm[0]:
+          code.add((IDENT, funcName))
+          codeType = ftm[1]
+        else:
+          echoErrorMessage("\"" & funcName & "\"の引数が間違っています", test, node.token.Line)
+      else:
+        let ccf = conversionCppFunction(funcName, argsType, test, node.token.Line)
+        if ccf[0]:
+          code.add((IDENT, ccf[2]))
+          codeType = ccf[1]
+        else:
+          if ccf[1] == OTHER:
+            echoErrorMessage("\"" & funcName & "\"の引数が間違っています", test, node.token.Line)
+          else:
+            echoErrorMessage("\"" & funcName & "\"が定義されていません", test, node.token.Line)
+      
+      code.add((OTHER, "("))
+      for i, argc in argsCode:
+        if i != 0:
+          code.add((OTHER, ","))
+        code.add(argc)
+      code.add((OTHER, ")"))
+      code.addSemicolon()
 
   # map関数
   of nkMapFunction:
@@ -1405,7 +1422,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
     
     fn.child_nodes[1].child_nodes = @[i_node] & fn.child_nodes[1].child_nodes
 
-    let ccf = conversionCppFunction(func_name, array_type_split[1..array_type_split.len()-1].join("::") & func_arg_types)
+    let ccf = conversionCppFunction(func_name, array_type_split[1..array_type_split.len()-1].join("::") & func_arg_types, test, node.token.Line)
     if ccf[0]:
       cpp_func_name = ccf[2]
       func_result_type = ccf[1]

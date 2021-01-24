@@ -160,6 +160,16 @@ proc parseInfixExpression(p: Parser, left: Node): Node =
   )
   return node
 
+# TODO 前置演算子
+proc parsePrefixOperator(p: Parser): Node =
+  var node = Node(
+    kind:        nkPrefixOperator,
+    token:       p.curToken,
+    child_nodes: @[],
+  )
+
+  return node
+
 # Generator
 proc parseGenerator(p: Parser, left: Node): Node =
   let operator = p.curToken
@@ -254,7 +264,7 @@ proc parseNameProc(p: Parser, endToken: string): Node =
 
 # 関数呼び出しの処理
 proc parseCallExpression(p: Parser, left: Node): Node =
-  if left.kind == nkIdent:
+  if left.kind == nkIdent or left.kind == nkPrefixOperator:
     var node = Node(
       kind:  nkCallExpression,
       token: p.curToken,
@@ -804,10 +814,10 @@ proc parseType(p: Parser, init: bool): Node =
 proc parseExpression(p: Parser, precedence: Precedence): Node =
   var left: Node
   case p.curToken.Type
+  of IDENT      : left = p.parseIdent()
   of IFEX       : left = p.parseIfExpression()
   of RETURN     : left = p.parseReturnStatement()
   of MAP        : left = p.parseMapIdent()
-  of IDENT      : left = p.parseIdent()
   of INT        : left = p.parseIntLiteral()
   of FLOAT      : left = p.parseFloatLiteral()
   of CHAR       : left = p.parseCharLiteral()
@@ -819,6 +829,7 @@ proc parseExpression(p: Parser, precedence: Precedence): Node =
   of LPAREN     : left = p.parseGroupedExpression()
   of LBRACE     : left = p.parseArrayLiteral()
   of DOLLAR     : left = p.parseDollarExpression()
+  of PREOP      : left = p.parsePrefixOperator()
   else          : left = p.parseType(true)
 
   while precedence < p.peekToken.tokenPrecedence() and p.peekToken.Type != EOF:
