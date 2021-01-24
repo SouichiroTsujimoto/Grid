@@ -28,8 +28,6 @@ const
   SLASH*        = "/"
   LARROW*       = "<-"
   RARROW*       = "->"
-  DOLLAR*       = "$"
-  AMPERSAND*    = "&"
   # 比較演算子
   LT*           = "<"
   GT*           = ">"
@@ -81,6 +79,7 @@ const
   T_ARRAY*      = "T_ARRAY"
   T_FUNCTION*   = "T_FUNCTION"
   # その他
+  DOLLAR*       = "$"
   MAP*          = "MAP"
   FOR*          = "FOR"
   AUTO*         = "AUTO"

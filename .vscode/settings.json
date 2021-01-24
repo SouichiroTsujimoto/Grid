@@ -50,6 +50,8 @@
     "streambuf": "cpp",
     "typeinfo": "cpp",
     "typeindex": "cpp",
-    "chrono": "cpp"
+    "chrono": "cpp",
+    "ctime": "cpp",
+    "ratio": "cpp"
   },
 }

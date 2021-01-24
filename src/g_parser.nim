@@ -279,7 +279,7 @@ proc parseCallExpression(p: Parser, left: Node): Node =
     )
     return node
   else:
-    echoErrorMessage("無効な関数呼び出しです", false, p.curToken.Line)
+    return left
 
 # 複合リテラル
 proc parseCompoundLiteral(p: Parser, left: Node): Node =
@@ -835,15 +835,18 @@ proc parseExpression(p: Parser, precedence: Precedence): Node =
   while precedence < p.peekToken.tokenPrecedence() and p.peekToken.Type != EOF:
 
     case p.peekToken.Type
-    of PLUS, MINUS, ASTERISC, SLASH, LT, GT, LTE, GTE, EE, NE, AMPERSAND:
+    of PLUS, MINUS, ASTERISC, SLASH, LT, GT, LTE, GTE, EE, NE:
       p.shiftToken()
       left = p.parseInfixExpression(left)
     of EQUAL:
       p.shiftToken()
       left = p.parseAssignExpression(left)
     of LPAREN:
-      p.shiftToken()
-      left = p.parseCallExpression(left)
+      if left.kind == nkIdent or left.kind == nkMapIdent or left.kind == nkPrefixOperator:
+        p.shiftToken()
+        left = p.parseCallExpression(left)
+      else:
+        return left
     of LBRACE:
       if left.kind == nkIdent:
         p.shiftToken()

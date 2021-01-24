@@ -91,7 +91,7 @@ when isMainModule:
   ・ # TODO: 今日やる
     ・ '$' ✅
     ・ '&' ✅
-    ・ range関数 
+    ・ range関数 ✅
     ・ export文
     ・ while文
     

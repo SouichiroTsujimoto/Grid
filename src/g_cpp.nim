@@ -329,15 +329,6 @@ proc conversionCppOperator(fn: string, argsType: seq[string], test: bool, line: 
       return (false, OTHER, "!=")
     
     return (true, BOOL, "!=")
-  of AMPERSAND:
-    var ftm_res = funcTypesMatch("@a" & "+" & "@a" & "->" & "@a", argsType.join("+"))
-    if ftm_res[0] == false:
-      return (false, OTHER, "&")
-    var tf_res = ftm_res[2].typeFilter("@a", STRING)
-    if tf_res[0] == false:
-      return (false, OTHER, "&")
-  
-    return (true, BOOL, "&")
   else:
     echoErrorMessage("\"" & fn & "\"が存在しません", test, line)
 

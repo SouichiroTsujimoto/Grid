@@ -1,15 +1,14 @@
-
 main do
-  /*
+/*
   $(lt  (1,2))                         |> println()
   lt    (1,2)            |> toString() |> println()
   gt    (1,2)            |> toString() |> println()
   lte   (1,2)            |> toString() |> println()
   gte   (1,2)            |> toString() |> println()
   equal ({1,2}, {1,2})   |> toString() |> println()
+*/
   nequal({1,2}, {2,2})   |> toString() |> println()
-  {1,2} == {1,2}         |> toString() |> println()
-  */
-  equal({1,2}, {1,2})
-  {1, 2} |> `==`({1,2})  |> toString() |> println()
+  `==`({1,2},{1,2})      |> toString() |> println()
+  equal({1,2}, {1, 2})
+  {1, 2} & {3, 4}
 end
