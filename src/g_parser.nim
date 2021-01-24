@@ -824,7 +824,7 @@ proc parseExpression(p: Parser, precedence: Precedence): Node =
   while precedence < p.peekToken.tokenPrecedence() and p.peekToken.Type != EOF:
 
     case p.peekToken.Type
-    of PLUS, MINUS, ASTERISC, SLASH, LT, GT, LE, GE, EE, NE, AMPERSAND:
+    of PLUS, MINUS, ASTERISC, SLASH, LT, GT, LTE, GTE, EE, NE, AMPERSAND:
       p.shiftToken()
       left = p.parseInfixExpression(left)
     of EQUAL:

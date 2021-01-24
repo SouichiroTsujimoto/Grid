@@ -82,7 +82,7 @@ proc tokenPrecedence*(tok: Token): Precedence =
   of IDENT:                     return TypeIdent
   of EQUAL:                     return Assign
   of IFEX, COLON:               return Ifexpression
-  of LT, GT, LE, GE:            return Lg
+  of LT, GT, LTE, GTE:          return Lg
   of EE, NE:                    return Equals
   of PLUS, MINUS:               return Sum
   of SLASH, ASTERISC:           return Product

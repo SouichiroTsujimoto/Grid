@@ -293,7 +293,7 @@ proc conversionCppOperator(fn: string, argsType: seq[string]): (bool, string, st
       return (false, OTHER, ">")
     
     return (true, BOOL, ">")
-  of LE:
+  of LTE:
     var ftm_res = funcTypesMatch("@a" & "+" & "@a" & "->" & BOOL, argsType.join("+"))
     if ftm_res[0] == false:
       return (false, OTHER, "<=")
@@ -302,7 +302,7 @@ proc conversionCppOperator(fn: string, argsType: seq[string]): (bool, string, st
       return (false, OTHER, "<=")
     
     return (true, BOOL, "<=")
-  of GE:
+  of GTE:
     var ftm_res = funcTypesMatch("@a" & "+" & "@a" & "->" & BOOL, argsType.join("+"))
     if ftm_res[0] == false:
       return (false, OTHER, ">=")
@@ -315,7 +315,7 @@ proc conversionCppOperator(fn: string, argsType: seq[string]): (bool, string, st
     var ftm_res = funcTypesMatch("@a" & "+" & "@a" & "->" & BOOL, argsType.join("+"))
     if ftm_res[0] == false:
       return (false, OTHER, "==")
-    var tf_res = ftm_res[2].typeFilter("@a", anything_t)
+    var tf_res = ftm_res[2].typeFilter("@a", "")
     if tf_res[0] == false:
       return (false, OTHER, "==")
 
@@ -324,7 +324,7 @@ proc conversionCppOperator(fn: string, argsType: seq[string]): (bool, string, st
     var ftm_res = funcTypesMatch("@a" & "+" & "@a" & "->" & BOOL, argsType.join("+"))
     if ftm_res[0] == false:
       return (false, OTHER, "!=")
-    var tf_res = ftm_res[2].typeFilter("@a", anything_t)
+    var tf_res = ftm_res[2].typeFilter("@a", "")
     if tf_res[0] == false:
       return (false, OTHER, "!=")
     
@@ -403,6 +403,92 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
       return (true, tf_res[1], "grid::divi")
     else:
       return (false, OTHER, "")
+  
+  of "lt":
+    if argsTypeC.len() == 0:
+      return (true, IDENT, "grid::lt")
+    elif argsTypeC.len() == 2:
+      var ftm_res = funcTypesMatch("@a" & "+" & "@a" & "->" & BOOL, argsType.join("+"))
+      if ftm_res[0] == false:
+        return (false, OTHER, "grid::lt")
+      var tf_res = ftm_res[2].typeFilter("@a", number_t)
+      if tf_res[0] == false:
+        return (false, OTHER, "grid::lt")
+      
+      return (true, BOOL, "grid::lt")
+    else:
+      return (false, OTHER, "")
+  of "gt":
+    if argsTypeC.len() == 0:
+      return (true, IDENT, "grid::gt")
+    elif argsTypeC.len() == 2:
+      var ftm_res = funcTypesMatch("@a" & "+" & "@a" & "->" & BOOL, argsType.join("+"))
+      if ftm_res[0] == false:
+        return (false, OTHER, "grid::gt")
+      var tf_res = ftm_res[2].typeFilter("@a", number_t)
+      if tf_res[0] == false:
+        return (false, OTHER, "grid::gt")
+      
+      return (true, BOOL, "grid::gt")
+    else:
+      return (false, OTHER, "")
+  of "lte":
+    if argsTypeC.len() == 0:
+      return (true, IDENT, "grid::lte")
+    elif argsTypeC.len() == 2:
+      var ftm_res = funcTypesMatch("@a" & "+" & "@a" & "->" & BOOL, argsType.join("+"))
+      if ftm_res[0] == false:
+        return (false, OTHER, "grid::lte")
+      var tf_res = ftm_res[2].typeFilter("@a", number_t)
+      if tf_res[0] == false:
+        return (false, OTHER, "grid::lte")
+      
+      return (true, BOOL, "grid::lte")
+    else:
+      return (false, OTHER, "")
+  of "gte":
+    if argsTypeC.len() == 0:
+      return (true, IDENT, "grid::gte")
+    elif argsTypeC.len() == 2:
+      var ftm_res = funcTypesMatch("@a" & "+" & "@a" & "->" & BOOL, argsType.join("+"))
+      if ftm_res[0] == false:
+        return (false, OTHER, "grid::gte")
+      var tf_res = ftm_res[2].typeFilter("@a", number_t)
+      if tf_res[0] == false:
+        return (false, OTHER, "grid::gte")
+      
+      return (true, BOOL, "grid::gte")
+    else:
+      return (false, OTHER, "")
+  of "equal":
+    if argsTypeC.len() == 0:
+      return (true, IDENT, "grid::equal")
+    elif argsTypeC.len() == 2:
+      var ftm_res = funcTypesMatch("@a" & "+" & "@a" & "->" & BOOL, argsType.join("+"))
+      if ftm_res[0] == false:
+        return (false, OTHER, "grid::equal")
+      var tf_res = ftm_res[2].typeFilter("@a", "")
+      if tf_res[0] == false:
+        return (false, OTHER, "grid::equal")
+      
+      return (true, BOOL, "grid::equal")
+    else:
+      return (false, OTHER, "")
+  of "nequal":
+    if argsTypeC.len() == 0:
+      return (true, IDENT, "grid::nequal")
+    elif argsTypeC.len() == 2:
+      var ftm_res = funcTypesMatch("@a" & "+" & "@a" & "->" & BOOL, argsType.join("+"))
+      if ftm_res[0] == false:
+        return (false, OTHER, "grid::nequal")
+      var tf_res = ftm_res[2].typeFilter("@a", "")
+      if tf_res[0] == false:
+        return (false, OTHER, "grid::nequal")
+      
+      return (true, BOOL, "grid::nequal")
+    else:
+      return (false, OTHER, "")
+  
   of "print":
     if argsTypeC.len() == 0:
       return (true, IDENT, "grid::print")
@@ -511,11 +597,17 @@ proc conversionCppFunction(fn: string, argsType: seq[string]): (bool, string, st
     if argsTypeC.len() == 0:
       return (true, IDENT, "grid::toString")
     elif argsTypeC.len() == 1:
-      var ftm_res = funcTypesMatch(anything_t & "->" & STRING, argsType.join("+"))
+      var ftm_res = funcTypesMatch("@a" & "->" & STRING, argsType.join("+"))
       if ftm_res[0] == false:
         return (false, OTHER, "grid::toString")
-      
-      return (true, ftm_res[1], "grid::toString")
+      # boolの時だけ関数名が変わる
+      var tf_res = ftm_res[2].typeFilter("@a", anything_t)
+      if tf_res[0] == false:
+        return (false, OTHER, "grid::toString")
+      elif tf_res[1] == BOOL:
+        return (true, STRING, "grid::boolToString")
+      else:
+        return (true, STRING, "grid::toString")
     else:
       return (false, OTHER, "")
   of "at":

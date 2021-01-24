@@ -140,7 +140,7 @@ proc nextToken*(l: Lexer): Token =
       let ch = l.ch
       l.nextChar()
       let literal = $ch & $l.ch
-      tok = Token(Type: LE, Literal: literal, Line: l.line)
+      tok = Token(Type: LTE, Literal: literal, Line: l.line)
     elif l.peekChar()[0] == '-':
       let ch = l.ch
       l.nextChar()
@@ -153,7 +153,7 @@ proc nextToken*(l: Lexer): Token =
       let ch = l.ch
       l.nextChar()
       let literal = $ch & $l.ch
-      tok = Token(Type: GE, Literal: literal, Line: l.line)
+      tok = Token(Type: GTE, Literal: literal, Line: l.line)
     else:
       tok = Token(Type: GT, Literal: $l.ch, Line: l.line)
   of '|':
