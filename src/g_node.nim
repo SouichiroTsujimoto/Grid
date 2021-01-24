@@ -58,6 +58,7 @@ type
     nkPipeExpression
     nkAccessElement
     nkDollarExpression
+    nkDefaultValue
 
   Node* = ref object of RootObj
     kind*:          NodeKind

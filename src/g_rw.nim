@@ -32,20 +32,19 @@ namespace grid {
     return a > b;
   };
 
-  auto le = [](auto a, auto b){
+  auto lte = [](auto a, auto b){
     return a <= b;
   };
 
-  auto ge = [](auto a, auto b){
+  auto gte = [](auto a, auto b){
     return a >= b;
   };
 
-  auto ee = [](auto a, auto b){
+  auto equal = [](auto a, auto b){
     return a == b;
   };
 
-  // ne関数
-  auto ne = [](auto a, auto b){
+  auto nequal = [](auto a, auto b){
     return a != b;
   };
 
@@ -93,8 +92,22 @@ namespace grid {
     return c;
   };
 
+  auto filter = [](auto a, auto b) {
+    decltype(a) c = {};
+    for(auto d : a) {
+      if(b(d) == true) {
+        c.push_back(d);
+      }
+    }
+    return c;
+  };
+
   auto print = [](auto a){
     std::cout << a;
+  };
+  
+  auto println = [](auto a){
+    std::cout << a << "\n";
   };
 
   auto toString = [](auto a){
@@ -102,17 +115,31 @@ namespace grid {
     return b;
   };
 
-  auto println = [](auto a){
-    std::cout << a << "\n";
+  auto boolToString = [](bool a){
+    if(a){
+      return "true";
+    } else {
+      return "false";
+    }
   };
-
+  
   auto readln = [](){
     std::string a = "";
     std::cin >> a;
     return a;
   };
 
+  auto range = [](int a, int b){
+    std::vector<int> c(b-a+1, 0);
+    int size = (int)c.size();
+    for(int i = a; i < a + size; i++){
+      c[i-a] = i;
+    }
+    return c;
+  };
+
 }
+
 """
 
 proc readSource*(name: string): string =

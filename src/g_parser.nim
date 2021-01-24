@@ -410,13 +410,18 @@ proc parseIntType(p: Parser, init: bool): Node =
   node.child_nodes.add(Node(
     kind:        nkIdent,
     token:       p.curToken,
+    child_nodes: @[],
   ))
   
   if init == false:
     return node
   
   if p.peekToken.Type != EQUAL:
-    echoErrorMessage("初期化されていません", false, p.curToken.Line)
+    # echoErrorMessage("初期化されていません", false, p.curToken.Line)
+    node.child_nodes.add(Node(
+      kind: nkDefaultValue,
+      token: Token(Type: DEFAULT_VALUE, Literal: DEFAULT_VALUE, Line: p.curToken.Line),
+    ))
     return node
   
   p.shiftToken()
@@ -440,13 +445,18 @@ proc parseFloatType(p: Parser, init: bool): Node =
   node.child_nodes.add(Node(
     kind:        nkIdent,
     token:       p.curToken,
+    child_nodes: @[],
   ))
   
   if init == false:
     return node
   
   if p.peekToken.Type != EQUAL:
-    echoErrorMessage("初期化されていません", false, p.curToken.Line)
+    # echoErrorMessage("初期化されていません", false, p.curToken.Line)
+    node.child_nodes.add(Node(
+      kind: nkDefaultValue,
+      token: Token(Type: DEFAULT_VALUE, Literal: DEFAULT_VALUE, Line: p.curToken.Line),
+    ))
     return node
   
   p.shiftToken()
@@ -470,13 +480,18 @@ proc parseCharType(p: Parser, init: bool): Node =
   node.child_nodes.add(Node(
     kind:        nkIdent,
     token:       p.curToken,
+    child_nodes: @[],
   ))
   
   if init == false:
     return node
   
   if p.peekToken.Type != EQUAL:
-    echoErrorMessage("初期化されていません", false, p.curToken.Line)
+    # echoErrorMessage("初期化されていません", false, p.curToken.Line)
+    node.child_nodes.add(Node(
+      kind: nkDefaultValue,
+      token: Token(Type: DEFAULT_VALUE, Literal: DEFAULT_VALUE, Line: p.curToken.Line),
+    ))
     return node
   
   p.shiftToken()
@@ -500,13 +515,18 @@ proc parseStringType(p: Parser, init: bool): Node =
   node.child_nodes.add(Node(
     kind:        nkIdent,
     token:       p.curToken,
+    child_nodes: @[],
   ))
   
   if init == false:
     return node
 
   if p.peekToken.Type != EQUAL:
-    echoErrorMessage("初期化されていません", false, p.curToken.Line)
+    # echoErrorMessage("初期化されていません", false, p.curToken.Line)
+    node.child_nodes.add(Node(
+      kind: nkDefaultValue,
+      token: Token(Type: DEFAULT_VALUE, Literal: DEFAULT_VALUE, Line: p.curToken.Line),
+    ))
     return node
   
   p.shiftToken()
@@ -530,13 +550,18 @@ proc parseBoolType(p: Parser, init: bool): Node =
   node.child_nodes.add(Node(
     kind:        nkIdent,
     token:       p.curToken,
+    child_nodes: @[],
   ))
   
   if init == false:
     return node
   
   if p.peekToken.Type != EQUAL:
-    echoErrorMessage("初期化されていません", false, p.curToken.Line)
+    # echoErrorMessage("初期化されていません", false, p.curToken.Line)
+    node.child_nodes.add(Node(
+      kind: nkDefaultValue,
+      token: Token(Type: DEFAULT_VALUE, Literal: DEFAULT_VALUE, Line: p.curToken.Line),
+    ))
     return node
   
   p.shiftToken()
@@ -580,13 +605,18 @@ proc parseTypeIdent(p: Parser, left: Node, init: bool): Node =
   node.child_nodes.add(Node(
     kind:        nkIdent,
     token:       p.curToken,
+    child_nodes: @[],
   ))
   
   if init == false:
     return node
   
   if p.peekToken.Type != EQUAL:
-    echoErrorMessage("初期化されていません", false, p.curToken.Line)
+    # echoErrorMessage("初期化されていません", false, p.curToken.Line)
+    node.child_nodes.add(Node(
+      kind: nkDefaultValue,
+      token: Token(Type: DEFAULT_VALUE, Literal: DEFAULT_VALUE, Line: p.curToken.Line),
+    ))
     return node
   
   p.shiftToken()

@@ -663,7 +663,7 @@ proc makeInitValue(Type: string, test: bool, line: int): seq[codeParts] =
   of CHAR:
     result = @[(CHAR, "\'\'")]
   of STRING:
-    result = @[(STRING, "\"\"")]
+    result = @[(OTHER, "("), (OTHER, "std::string"), (OTHER, ")"), (STRING, "\"\"")]
   of BOOL:
     result = @[(BOOL, "false")]
   of ARRAY:
@@ -714,9 +714,13 @@ proc makeVarDefine(node: Node, var_name: string, namespace: string, type_cp: cod
   #   code.add((OTHER, "const"))
   code.add(type_cp)
   code.add((IDENT, var_name_full))
+  
   if init:
     code.add((OTHER, "="))
-    code.add(value)
+    if value[0].Code == DEFAULT_VALUE:
+      code.add(codeType.makeInitValue(test, node.token.Line))
+    else:
+      code.add(value)
   code.addSemicolon()
 
   if namespace == "":
@@ -744,6 +748,12 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
     codeType: string
   
   case node.kind
+
+  # デフォルト値
+  of nkDefaultValue:
+    code.add((node.token.Type, node.token.Literal))
+    code.addSemicolon()
+    codeType = node.token.Type
 
   # リテラル
   of nkIntLiteral:
@@ -835,7 +845,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
         type_cp = node.token.Type.conversionCppType(test, node.token.Line)
         var_name = node.child_nodes[0].token.Literal
         value = node.child_nodes[1].makeCodeParts(test, new_dost)
-      if type_cp[0].removeT() == value[1]:
+      if type_cp[0].removeT() == value[1] or DEFAULT_VALUE == value[1]:
         var mvd_res = makeVarDefine(node, var_name, "", type_cp, value[0], test, false, true)
         code.add(mvd_res[0])
         codeType = mvd_res[1]
@@ -855,7 +865,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
         type_cp = node.token.Type.conversionCppType(test, node.token.Line)
         var_name = node.child_nodes[0].token.Literal
         value = node.child_nodes[1].makeCodeParts(test, new_dost)
-      if type_cp[0].removeT() == value[1]:
+      if type_cp[0].removeT() == value[1] or DEFAULT_VALUE == value[1]:
         var mvd_res = makeVarDefine(node, var_name, "", type_cp, value[0], test, false, true)
         code.add(mvd_res[0])
         codeType = mvd_res[1]
@@ -875,7 +885,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
         type_cp = node.token.Type.conversionCppType(test, node.token.Line)
         var_name = node.child_nodes[0].token.Literal
       var value = node.child_nodes[1].makeCodeParts(test, new_dost)
-      if type_cp[0].removeT() == value[1]:
+      if type_cp[0].removeT() == value[1] or DEFAULT_VALUE == value[1]:
         var mvd_res = makeVarDefine(node, var_name, "", type_cp, value[0], test, false, true)
         code.add(mvd_res[0])
         codeType = mvd_res[1]
@@ -895,7 +905,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
         type_cp = node.token.Type.conversionCppType(test, node.token.Line)
         var_name = node.child_nodes[0].token.Literal
         value = node.child_nodes[1].makeCodeParts(test, new_dost)
-      if type_cp[0].removeT() == value[1]:
+      if type_cp[0].removeT() == value[1] or DEFAULT_VALUE == value[1]:
         var mvd_res = makeVarDefine(node, var_name, "", type_cp, value[0], test, false, true)
         code.add(mvd_res[0])
         codeType = mvd_res[1]
@@ -915,7 +925,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
         type_cp = node.token.Type.conversionCppType(test, node.token.Line)
         var_name = node.child_nodes[0].token.Literal
         value = node.child_nodes[1].makeCodeParts(test, new_dost)
-      if type_cp[0].removeT() == value[1]:
+      if type_cp[0].removeT() == value[1] or DEFAULT_VALUE == value[1]:
         var mvd_res = makeVarDefine(node, var_name, "", type_cp, value[0], test, false, true)
         code.add(mvd_res[0])
         codeType = mvd_res[1]
@@ -939,7 +949,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
         type_cp = node.token.Type.conversionCppType(test, node.token.Line)
         var_name = node.child_nodes[0].token.Literal
         value = node.child_nodes[1].makeCodeParts(test, new_dost)
-      if type_cp[0].removeT() == value[1]:
+      if type_cp[0].removeT() == value[1] or DEFAULT_VALUE == value[1]:
         var mvd_res = makeVarDefine(node, var_name, "", type_cp, value[0], test, false, true)
         code.add(mvd_res[0])
         codeType = mvd_res[1]
@@ -961,7 +971,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
         type_cp = node.token.Type.conversionCppType(test, node.token.Line)
         var_name = node.child_nodes[0].token.Literal
         value = node.child_nodes[1].makeCodeParts(test, new_dost)
-      if type_cp[0].removeT() == value[1]:
+      if type_cp[0].removeT() == value[1] or DEFAULT_VALUE == value[1]:
         var mvd_res = makeVarDefine(node, var_name, "", type_cp, value[0], test, false, true)
         for m in typeTable[node.token.Type.removeT()].member:
           discard makeVarDefine(node, m[0], var_name, m[1].Type.conversionCppType(test, node.token.Line), @[], test, false, true)
@@ -1444,7 +1454,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
     code.add((OTHER, "("))
     code.add(array_content)
     code.add((OTHER, ","))
-    code.add((OTHER, "[]"))
+    code.add((OTHER, "[=]"))
     code.add((OTHER, "("))
     let ident = Node(
       kind:        nkArrayType,
@@ -1557,7 +1567,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
     code.add((OTHER, "("))
     code.add(array_content)
     code.add((OTHER, ","))
-    code.add((OTHER, "[]"))
+    code.add((OTHER, "[=]"))
     code.add((OTHER, "("))
     let ident = Node(
       kind:        nkArrayType,
@@ -1617,7 +1627,7 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
       var type_cp = statement.token.Type.conversionCppType(test, node.token.Line)
       var var_name = statement.child_nodes[0].token.Literal
       var value = statement.child_nodes[1].makeCodeParts(test, new_dost)
-      if type_cp[0].removeT() == value[1]:
+      if type_cp[0].removeT() == value[1] or DEFAULT_VALUE == value[1]:
         var mvd_res = makeVarDefine(node, var_name, "", type_cp, value[0], test, true, true)
         code.add(mvd_res[0])
         codeType = mvd_res[1]
