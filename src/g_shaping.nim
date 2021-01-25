@@ -80,7 +80,7 @@ proc astShaping*(inp_nodes: seq[Node], main_flag: bool, test: bool): (seq[Node],
     of nkPipeExpression:
       if inp_node.child_nodes.len() != 2:
         echoErrorMessage("\"|>\"のオペランドが間違っています", test, inp_node.token.Line)
-      elif inp_node.child_nodes[1].kind == nkCallExpression or inp_node.child_nodes[1].kind == nkMapFunction:
+      elif inp_node.child_nodes[1].kind == nkCallExpression or inp_node.child_nodes[1].kind == nkMapFunction or inp_node.child_nodes[1].kind == nkFilterFunction:
         var res0 = @[inp_node.child_nodes[0]].astShaping(new_main_flag, test)
         let element = res0[0]
         new_main_flag = res0[1]

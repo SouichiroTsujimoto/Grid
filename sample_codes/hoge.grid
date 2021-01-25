@@ -1,6 +1,0 @@
-def int x(int a) do
-  return a + 10
-end
-def int y(int a) do
-  return a - 10
-end

@@ -330,7 +330,7 @@ proc conversionCppOperator(fn: string, argsType: seq[string], test: bool, line: 
     
     return (true, BOOL, "!=")
   else:
-    echoErrorMessage("\"" & fn & "\"が存在しません", test, line)
+    return (false, OTHER, "")
 
 # 型のチェックをしてC++の関数に変換する
 proc conversionCppFunction(fn: string, argsType: seq[string], test: bool, line: int): (bool, string, string) =
@@ -633,7 +633,7 @@ proc conversionCppFunction(fn: string, argsType: seq[string], test: bool, line: 
     else:
       return (false, OTHER, "")
   else:
-    echoErrorMessage("\"" & fn & "\"が存在しません", test, line)
+    return (false, OTHER, "")
 
 proc replaceSemicolon(parts: seq[codeParts], obj: seq[codeParts]): seq[codeParts] =
   if parts.len() == 0:
@@ -1424,10 +1424,10 @@ proc makeCodeParts(node: Node, test: bool, dost: bool): (seq[codeParts], string)
     
     fn.child_nodes[1].child_nodes = @[i_node] & fn.child_nodes[1].child_nodes
 
-    let ccf = conversionCppFunction(func_name, array_type_split[1..array_type_split.len()-1].join("::") & func_arg_types, test, node.token.Line)
-    if ccf[0]:
-      cpp_func_name = ccf[2]
-      func_result_type = ccf[1]
+    if func_type == PREOP:
+      let cco = conversionCppOperator(func_name, array_type_split[1..array_type_split.len()-1].join("::") & func_arg_types, test, node.token.Line)
+      cpp_func_name = cco[2]
+      func_result_type = cco[1]
     else:
       let ccf = conversionCppFunction(func_name, array_type_split[1..array_type_split.len()-1].join("::") & func_arg_types, test, node.token.Line)
       if ccf[0]:

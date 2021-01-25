@@ -154,7 +154,7 @@ suite "array":
   test "array int a = map({1, 2, 3}, mult(10))":
     initTables()
     let program = "array int a = map({1, 2, 3}, mult(10))".makeProgram(true)
-    check(program.findStr("std::vector<int> a = grid::map ( ( std::vector<int> ) { 1 , 2 , 3 } , [] ( int _i ) { return grid::mult ( _i , 10 ) ; } ) ;"))
+    check(program.findStr("std::vector<int> a = grid::map ( ( std::vector<int> ) { 1 , 2 , 3 } , [=] ( int _i ) { return grid::mult ( _i , 10 ) ; } ) ;"))
   test "array string a = {\"Hello\", \"World\"}":
     initTables()
     let program = "array string a = {\"Hello\", \"World\"}".makeProgram(true)
@@ -363,12 +363,12 @@ suite "map":
   test "map({1, 2, 3}, plus(1))":
     initTables()
     let program = "map({1, 2, 3}, plus(1))".makeProgram(true)
-    check(program.findStr("grid::map ( ( std::vector<int> ) { 1 , 2 , 3 } , [] ( int _i ) { return grid::plus ( _i , 1 ) ; } ) ;"))
+    check(program.findStr("grid::map ( ( std::vector<int> ) { 1 , 2 , 3 } , [=] ( int _i ) { return grid::plus ( _i , 1 ) ; } ) ;"))
   test "array int a = {1, 2, 3} map(a, plus(1))":
     initTables()
     let program = "array int a = {1, 2, 3} map(a, plus(1))".makeProgram(true)
     check(program.findStr("std::vector<int> a = ( std::vector<int> ) { 1 , 2 , 3 } ;"))
-    check(program.findStr("grid::map ( a , [] ( int _i ) { return grid::plus ( _i , 1 ) ; } ) ;"))
+    check(program.findStr("grid::map ( a , [=] ( int _i ) { return grid::plus ( _i , 1 ) ; } ) ;"))
 
 suite "mut":
   test "mut int a = 10 do a = 20 end":
@@ -378,5 +378,99 @@ suite "mut":
     check(program.findStr("int a = 10 ;"))
     check(program.findStr("a = 10 ;"))
     check(program.findStr("}"))
+  test "mut array string a do a = {\"Hello\", \"World\"} println(a[0]) end":
+    initTables()
+    let program = "mut array string a do a = {\"Hello\", \"World\"} println(a[0]) end".makeProgram(true)
+    check(program.findStr("{"))
+    check(program.findStr("std::vector<std::string> a = ( std::vector<std::string> ) {} ;"))
+    check(program.findStr("a = ( std::vector<std::string> ) { ( std::string ) \"Hello\" , ( std::string ) \"World\" } ;"))
+    check(program.findStr("grid::println ( a [ 0 ] )"))
+    check(program.findStr("}"))
 
-# suite "later":
+suite "later":
+  test "later bool a a = True":
+    initTables()
+    let program = "later bool a a = True".makeProgram(true)
+    check(program.findStr("bool a = false ;"))
+    check(program.findStr("a = true"))
+  test "later int a mut int b = 10 do b = b * 20 a = b end $a |> println()":
+    initTables()
+    let program = "later int a mut int b = 10 do b = b * 20 a = b end $a |> println()".makeProgram(true)
+    check(program.findStr("int a = 0 ;"))
+    check(program.findStr("{"))
+    check(program.findStr("int b = 10 ;"))
+    check(program.findStr("b = ( b * 20 ) ;"))
+    check(program.findStr("a = b ;"))
+    check(program.findStr("}"))
+    check(program.findStr("grid::println ( grid::toString ( a ) ) ;"))
+
+suite "defaultValue":
+  test "int a $a |> println()":
+    initTables()
+    let program = "int a $a |> println()".makeProgram(true)
+    check(program.findStr("int a = 0 ;"))
+    check(program.findStr("grid::println ( grid::toString ( a ) )"))
+  test "mut string a do println(a) end":
+    initTables()
+    let program = "mut string a do println(a) end".makeProgram(true)
+    check(program.findStr("{"))
+    check(program.findStr("std::string a = ( std::string ) \"\" ;"))
+    check(program.findStr("grid::println ( a )"))
+    check(program.findStr("}"))
+
+suite "filter":
+  test "array int a = {1, 2, 3, 4, 5} filter(a, lt(3))":
+    initTables()
+    let program = "array int a = {1, 2, 3, 4, 5} filter(a, lt(3))".makeProgram(true)
+    check(program.findStr("std::vector<int> a = ( std::vector<int> ) { 1 , 2 , 3 , 4 , 5 } ;"))
+    check(program.findStr("grid::filter ( a , [=] ( int _i ) { return grid::lt ( _i , 3 ) ; } ) ;"))
+  test "{1, 2, 3, 4, 5} |> filter(nequal(4)) |> last() |> toString() |> println()":
+    initTables()
+    let program = "{1, 2, 3, 4, 5} |> filter(nequal(4)) |> last() |> toString() |> println()".makeProgram(true)
+    check(program.findStr("grid::println ( grid::toString ( grid::last ( grid::filter ( ( std::vector<int> ) { 1 , 2 , 3 , 4 , 5 } , [=] ( int _i ) { return grid::nequal ( _i , 4 ) ; } ) ) ) ) ;"))
+
+suite "$":
+  test "$False |> println()":
+    initTables()
+    let program = "$False |> println()".makeProgram(true)
+    check(program.findStr("grid::println ( grid::boolToString ( false ) ) ;"))
+  test "$(1 + 2 * 4 + 1) + $(10 * 4) |> println()":
+    initTables()
+    let program = "$(1 + 2 * 4 + 1) + $(10 * 4) |> println()".makeProgram(true)
+    check(program.findStr("grid::println ( ( grid::toString ( ( ( 1 + ( 2 * 4 ) ) + 1 ) ) + grid::toString ( ( 10 * 4 ) ) ) ) ;"))
+
+suite "``":
+  test "array int a = {1, 2, 3, 4, 5} filter(a, `==`(3))":
+    initTables()
+    let program = "array int a = {1, 2, 3, 4, 5} filter(a, `==`(3))".makeProgram(true)
+    check(program.findStr("std::vector<int> a = ( std::vector<int> ) { 1 , 2 , 3 , 4 , 5 } ;"))
+    check(program.findStr("grid::filter ( a , [=] ( int _i ) { return ( _i == 3 ) ; } ) ;"))
+  test "array int a = {1, 2, 3, 4, 5} map(a, `*`(3))":
+    initTables()
+    let program = "array int a = {1, 2, 3, 4, 5} map(a, `*`(3))".makeProgram(true)
+    check(program.findStr("std::vector<int> a = ( std::vector<int> ) { 1 , 2 , 3 , 4 , 5 } ;"))
+    check(program.findStr("grid::map ( a , [=] ( int _i ) { return ( _i * 3 ) ; } ) ;"))
+
+suite "range":
+  test "for int i <- range(0, 9) do $i |> println() end":
+    initTables()
+    let program = "for int i <- range(0, 9) do $i |> println() end".makeProgram(true)
+    check(program.findStr("for ( int i : grid::range ( 0 , 9 ) ) {"))
+    check(program.findStr("grid::println ( grid::toString ( i ) ) ;"))
+    check(program.findStr("}"))
+  test "def int FizzBuzz(int num) do if num / 15 * 15 == num do \"FizzBuzz\" |> println() elif num / 5 * 5 == num do \"Buzz\" |> println() elif num / 3 * 3 == num do \"Fizz\" |> println() else $num |> println() end return num end":
+    initTables()
+    let program = "def int FizzBuzz(int num) do if num / 15 * 15 == num do \"FizzBuzz\" |> println() elif num / 5 * 5 == num do \"Buzz\" |> println() elif num / 3 * 3 == num do \"Fizz\" |> println() else $num |> println() end return num end".makeProgram(false)
+    check(program.findStr("int FizzBuzz ( int num ) {"))
+    check(program.findStr("if ( ( ( ( num / 15 ) * 15 ) == num ) ) {"))
+    check(program.findStr("grid::println ( ( std::string ) \"FizzBuzz\" ) ;"))
+    check(program.findStr("else if ( ( ( ( num / 5 ) * 5 ) == num ) ) {"))
+    check(program.findStr("grid::println ( ( std::string ) \"Buzz\" ) ;"))
+    check(program.findStr("}"))
+    check(program.findStr("else if ( ( ( ( num / 3 ) * 3 ) == num ) ) {"))
+    check(program.findStr("grid::println ( ( std::string ) \"Fizz\" ) ;"))
+    check(program.findStr("}"))
+    check(program.findStr("else {"))
+    check(program.findStr("grid::println ( grid::toString ( num ) ) ;"))
+    check(program.findStr("}"))
+    check(program.findStr("return ( num ) ;"))
