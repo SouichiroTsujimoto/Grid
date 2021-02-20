@@ -1,24 +1,14 @@
-/*
-def array int sort(array int arr) do
-  if len(arr) <= 1 do
-    return arr
+def array int sort(array int a) do
+  if len(a) <= 1 do
+    return a
+  else
+    int pivot = a[0]
+    array int left = a |> tail() |> filter(`<`(pivot))
+    array int right = a |> tail() |> filter(`>=`(pivot))
+    return sort(left) |> join({pivot}) |> join(sort(right))
   end
-
-  int pivot = arr[len(arr)/2]
-  array int middle = filter(arr, `==`(pivot))
-  array int left   = filter(arr, `<`(pivot))
-  array int right  = filter(arr, `>`(pivot))
-
-  return sort(left) |> join(middle) |> join(sort(right))
 end
-
 
 main do
-  array int res = sort({4, 1, 3, 1, 2, 9, 1, 3, 4, 6, 3, 4 ,2 ,5 ,6 ,4 ,7 ,3 ,8 ,2})
-  for int elem <- res do
-    $elem |> println()
-  end
+  array int a = sort({1, 3, 45, 27, 7, 10, 1, 1, 5, 2, 4, 9, 2, 6, 13, 12})
 end
-*/
-
-def int FizzBuzz(int num) do if num / 15 * 15 == num do "FizzBuzz" |> println() elif num / 5 * 5 == num do "Buzz" |> println() elif num / 3 * 3 == num do "Fizz" |> println() else $num |> println() end return num end main do map(range(1, 50), FizzBuzz()) end

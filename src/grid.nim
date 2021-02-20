@@ -84,19 +84,12 @@ when isMainModule:
   cppCode.add(makeCppCode(root, 0, test))
 
   writeCpp(cppFileName, cppCode)
-
+  
 #[
   TODO
 ・ ~優先~
-  ・ # TODO: 今日やる
-    ・ '$' ✅
-    ・ '&' ✅
-    ・ range関数 ✅
-    ・ filter関数
-    ・ while文
-    
-  ・ テストの更新
-  ・ 構造体 🔺
+  ・ テストの更新 ✅
+  ・ 構造体 🔺 <-これやる
   ・ 複合リテラル 🔺
   ・ エラーメッセージを英語化できるようにする
   ・ リファレンス的なのを用意する
