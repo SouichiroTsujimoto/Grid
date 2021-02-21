@@ -46,4 +46,5 @@ gridfuncs.cppが同じディレクトリに存在しないとコンパイルで�
 | -ast | 実行時に生成されたASTを画面に出力 |
 
 # ドキュメント
-https://zenn.dev/kennai/articles/6f0e713dca3f65
+
+https://gist.github.com/SouichirouTujimoto/ccf7882e7ed77e5cf01607be46cc00e5
